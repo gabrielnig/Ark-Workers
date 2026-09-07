@@ -39,6 +39,11 @@ the Laravel backend and React frontend.
   `SECURITY.md` §2
 - **Stack** — Laravel/PostgreSQL backend, React/Capacitor frontend,
   decided and documented in `ARCHITECTURE.md` §1
+- **iOS is a confirmed future target, not launch scope** — Capacitor was
+  specifically chosen to make this a low-effort addition later rather
+  than a rewrite. Practical implication for every frontend decision from
+  here on: no Android-only native plugins or assumptions, build against
+  Capacitor's cross-platform plugin API only (`ARCHITECTURE.md` §1)
 
 ## 3. Known Unknowns (Immediate Roadmap)
 
@@ -53,6 +58,8 @@ the Laravel backend and React frontend.
    flagged as one of the highest-risk/highest-effort pieces
 5. Set up CI/CD and the security-scanning-harness cadence once there's
    code to scan
+6. iOS build — deferred, not urgent, but revisit target timing once
+   Android is stable (see `ARCHITECTURE.md` §9)
 
 ## 4. Unknown Knowns (Implicit Design Patterns)
 
