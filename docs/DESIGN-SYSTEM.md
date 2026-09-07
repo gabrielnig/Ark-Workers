@@ -35,6 +35,35 @@ combination and the flat-corporate-green dashboard look.
 
 ---
 
+## 1.5 Final Logo
+
+The final ArkWorkers mark: a cross above an ark/roofline silhouette
+sheltering three worker figures (hard hat, cap, and a third worker),
+recolored into the exact system palette below (originally supplied in a
+different gold/brown colorway and recolored via cluster-based color
+mapping to fit this system).
+
+Assets, all in `docs/assets/logo/`:
+- `full_lockup_light_mode.png` — icon + wordmark, for light backgrounds
+- `full_lockup_dark_mode.png` — icon + wordmark, colors inverted for dark
+  backgrounds (moss-300 accent instead of moss-600 for contrast)
+- `icon_light_mode.png` / `icon_dark_mode.png` — rounded-square app icon,
+  both theme variants
+- `monochrome_dark_transparent.png` / `monochrome_light_transparent.png`
+  — single-color mark on transparent, for placement on any background or
+  busy imagery
+- `favicon_64.png` / `favicon_32.png` / `favicon_16.png` — standard
+  favicon sizes
+- `icon_48px_actual.png` — true-size render at mobile app icon scale
+
+**Known limitation:** at 48px actual size, the mark reads clearly as a
+cross-and-people emblem silhouette, but individual facial/clothing detail
+compresses into solid blobs. This is normal for a detailed mark at icon
+scale — if a crisper small-size read is ever needed, the monochrome
+version simplifies better than the full-color version at tiny sizes.
+
+---
+
 ## 2. Color System
 
 ### 2.1 Core Palette
@@ -215,12 +244,17 @@ ArkWorkers as-is — not duplicated in this document:
 ## 8. Open Decisions
 
 ```
+[x] Logo: finalized — see Section 1.5. Full asset set in docs/assets/logo/
 [ ] Icon set: commission/select a specific icon library (e.g. Phosphor,
     Lucide) consistent with the rounded, warm direction — not yet chosen
 [ ] Confirm Nunito licensing/self-hosting approach for the PWA (avoid a
     render-blocking Google Fonts request on slow mobile connections)
 [ ] Empty-state illustrations: worth a small custom illustration set for
     "no tasks today" / "space fully clean" moments, or keep text-only?
+[ ] Logo wordmark uses a serif display face, distinct from Nunito used
+    elsewhere in the UI — confirm this is intentional (common pattern:
+    logotype differs from body/UI type) rather than an inconsistency to
+    fix
 ```
 
 ---
