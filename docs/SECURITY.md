@@ -123,7 +123,7 @@ family via the Quarters records).
 - Sessions tied to a device identifier where practical, since staff
   devices are often shared or fixed per role/shift rather than 1:1
   personal devices — this needs an explicit product decision (see
-  Section 9, Open Decision #1).
+  Section 12, Open Decision #1).
 - Auto-logout after a defined inactivity period for roles with access to
   sensitive zones (Admin, Facility Manager) — shorter timeout than for
   Cleaning Staff/Security roles doing routine task logging.
@@ -197,7 +197,7 @@ API route.
   vehicle's assigned driver only — not the full staff list.
 - Document expiry alerts (Section 7) should notify Admin/Facility Manager
   by default; the assigned driver optionally, depending on your
-  preference — flagging as an open decision (Section 9).
+  preference — flagging as an open decision (Section 12).
 
 ---
 
@@ -303,7 +303,179 @@ table above is a starting proposal, not a final policy.
 
 ---
 
-## 8. Infrastructure & VPS-Specific Hardening
+## 8. Data-at-Rest Encryption (Field-Level)
+
+Applying `shared-protocols/SECURITY-BASELINE.md`'s crypto-shredding
+pattern concretely to ArkWorkers' actual fields, per the NDPA's
+"safeguards proportionate to sensitivity" requirement (§2.2):
+
+| Field | Encrypt at rest? | Rationale |
+|---|---|---|
+| Staff/driver phone numbers | Yes — AES-256-GCM, per-user key | PII under NDPA |
+| Staff full names | Yes | PII under NDPA |
+| Vehicle document numbers (insurance policy #, registration #) | Yes | Sensitive administrative data, real-world fraud value if leaked |
+| PIN/password hashes | N/A — already one-way hashed, not reversibly encrypted | Hashing, not encryption, is the correct control here |
+| Task completion timestamps, routine names, space names | No | Operational metadata, not PII; encrypting it adds cost with no compliance benefit |
+| Task-proof photo/video content | Storage-isolated (§5.1) rather than field-encrypted | Media files use access-control isolation, not per-field crypto — encrypting large binary media per-user is impractical; restrict via the space/role grant instead |
+
+On staff offboarding or a data-subject deletion request, destroy that
+user's `DEK_u` per the crypto-shredding pattern rather than manually
+deleting/redacting rows — this satisfies NDPA erasure requirements without
+touching backup archives directly.
+
+---
+
+## 9. API & Network Hardening
+
+This section inlines concrete, ArkWorkers-specific values rather than
+deferring to the shared baseline — the baseline states the pattern, this
+states the numbers.
+
+### 8.1 Rate Limiting (concrete limits)
+| Endpoint class | Limit | Window | Action on breach |
+|---|---|---|---|
+| Login / OTP request | 5 attempts | per 15 min per account+IP | Lock account 15 min, log attempt |
+| Password/PIN reset request | 3 requests | per hour per account | Temporary block, alert Admin if repeated |
+| General authenticated API (task/routine CRUD) | 120 requests | per minute per user | 429 response, exponential backoff advised to client |
+| Task-proof media upload | 20 uploads | per hour per user | 429 response; generous enough for a normal shift, tight enough to block abuse |
+| Public/unauthenticated routes (health check, login page) | 30 requests | per minute per IP | 429 response |
+| Daily summary report generation | 10 requests | per hour per admin | Prevents accidental report-generation loops from overloading the VPS |
+
+Implement as token-bucket middleware at the API gateway/application layer,
+not just relying on any upstream proxy — the VPS's Nginx layer can add a
+coarse first line of defense, but per-user/per-account limits need to be
+enforced in the application since Nginx alone can't see authenticated
+identity.
+
+### 8.2 CORS Policy
+- Production: explicit allowlist of the PWA's own domain(s)
+  (`arkworkers.app`, `www.arkworkers.app`) — **never** a wildcard `*`.
+- No credentials-mode CORS requests accepted from any origin outside the
+  allowlist.
+- Local/staging environments use a separate, clearly-labeled allowlist
+  entry — never reuse the production allowlist for a dev URL.
+
+### 8.3 Security Response Headers
+Every response from the application must set:
+```
+Content-Security-Policy: default-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'
+Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+Referrer-Policy: strict-origin-when-cross-origin
+Permissions-Policy: geolocation=(self), camera=(self), microphone=()
+```
+- `camera=(self)` is intentional — the app legitimately needs camera
+  access for task-proof photo/video capture; every other sensitive
+  permission is denied by default.
+- CSP should be tightened further once the actual frontend build tooling
+  is chosen (e.g. removing `'unsafe-inline'` for styles if a CSS-in-JS
+  approach requiring it isn't used).
+
+### 8.4 CSRF Protection
+- All state-changing requests (POST/PUT/PATCH/DELETE) from the PWA
+  require a CSRF token (double-submit cookie or synchronizer token
+  pattern) in addition to the session cookie — session cookies alone are
+  not sufficient given `SameSite=Lax` still allows top-level navigation
+  GETs.
+- The Android app is not cookie-based (uses bearer tokens in headers), so
+  it is inherently less exposed to classic CSRF — but any hybrid
+  WebView usage within the Android app must still enforce this.
+
+### 8.5 Dependency & Supply Chain Tracking
+- Maintain a Software Bill of Materials (SBOM) — generated automatically
+  on each build (e.g. `npm audit` / `composer audit` / equivalent for the
+  chosen stack, wired into CI).
+- Dependency updates checked against CVE/NVD databases before merge, not
+  auto-merged blindly (per shared baseline A06).
+- Lockfile integrity enforced — `package-lock.json`/`composer.lock`
+  committed and verified in CI, not regenerated silently on deploy.
+- Run `shared-protocols/security-scanning-harness.md`'s `/customize` pass
+  once the stack is chosen, then schedule it per the cadence table in
+  that document (PR-level, nightly, weekly pre-release).
+
+### 8.6 Admin & Privileged Route Hardening
+- Admin/Pastor and Facility Manager routes get a **shorter session
+  timeout** than field-staff routes — concrete value: 30 minutes idle
+  timeout for Admin-tier roles vs. 4–8 hours (shift-length) for
+  Cleaning Staff/Security/Drivers roles doing routine task logging.
+- Consider IP-based alerting (not hard blocking, since Admin may travel)
+  for Admin-tier logins from a new/unrecognized network — notify via the
+  existing daily-report channel rather than building a separate alert
+  system.
+- Brute-force protection beyond the rate limit in 8.1: after 5 failed
+  attempts, require a CAPTCHA or equivalent friction step before allowing
+  further attempts, rather than only a time-based lockout.
+
+### 8.7 Third-Party / Vendor Risk
+Applies to whatever gets integrated later (SMS/OTP provider, email
+provider, push notification service):
+- Any third-party service that touches personal data (phone numbers for
+  OTP, email addresses) must be checked for NDPA-adequate data handling
+  before integration — cross-border data transfer rules apply if the
+  vendor processes data outside Nigeria (see Section 2).
+- API keys for third-party services scoped to minimum required
+  permissions, stored per Section 11's secrets handling, rotated
+  periodically (define a cadence once a vendor is chosen — 90 days is a
+  reasonable default).
+- No third-party analytics/tracking SDK gets added without an explicit
+  privacy-notice update, per NDPA consent requirements.
+
+---
+
+## 10. Incident Response Plan
+
+A response plan exists independently of the NDPA's 72-hour notification
+clock — the clock starts when a breach is confirmed, so the first hours
+matter most and need a defined process, not an improvised one.
+
+### 9.1 First Hour — Contain
+1. Identify scope: which accounts, spaces, or data categories are
+   affected. Check whether the Prophet's Quarters restricted data is
+   involved — this changes the severity classification immediately.
+2. Revoke/rotate any credentials suspected compromised (session tokens,
+   API keys, DB credentials if the breach vector suggests DB exposure).
+3. If the breach is an active intrusion (not just a discovered
+   vulnerability), take the affected service offline rather than leaving
+   it exposed while investigating — a short planned outage beats an
+   ongoing compromise.
+
+### 9.2 First 24 Hours — Assess & Document
+4. Determine root cause (which control failed) and whether it's still
+   exploitable elsewhere in the system.
+5. Log the incident in the breach register (Section 2.2): what happened,
+   when discovered, data categories affected, number of individuals
+   affected, remediation taken.
+6. Assess whether the breach is "likely to pose high risk to individuals'
+   rights" under NDPA — if yes, this triggers the 72-hour NDPC
+   notification clock and direct notification to affected individuals.
+
+### 9.3 Within 72 Hours — Notify (if high risk)
+7. Notify NDPC per NDPA breach notification requirements.
+8. Notify affected individuals directly with clear instructions (what
+   happened, what data, what they should do).
+
+### 9.4 After — Remediate & Review
+9. Patch the root cause; verify the fix (ideally via an independent
+   check, not just the person who wrote the fix confirming it works —
+   same principle as the Grader Agent stage in
+   `security-scanning-harness.md`).
+10. Post-incident review: update this document if the incident revealed a
+    gap in the controls above.
+
+### 9.5 Roles During an Incident
+- **Admin/Pastor** — final decision authority on external notification
+  and any public-facing communication.
+- **Facility Manager / technical lead** (you, Unique, or whoever holds
+  deploy access) — technical containment and remediation.
+- No single-point-of-failure: at least one other person besides the
+  primary developer should have emergency access credentials, stored
+  securely (not just "only Unique can log into the VPS") — a bus-factor
+  risk for a single self-hosted deployment.
+
+---
+
+## 11. Infrastructure & VPS-Specific Hardening
 
 Since ArkWorkers is self-hosted with no managed BaaS (per project
 overview), the full burden of infrastructure security sits with this
@@ -332,7 +504,7 @@ deployment specifically:
 
 ---
 
-## 9. Open Decisions Needed Before Build
+## 12. Open Decisions Needed Before Build
 
 ```
 [ ] Device-bound sessions: are staff devices personal (1:1) or shared/
@@ -349,7 +521,7 @@ deployment specifically:
 
 ---
 
-## 10. Cross-Reference
+## 13. Cross-Reference
 
 This document should be read alongside:
 - `docs/PRD.md` — the underlying data/feature requirements this security
@@ -364,7 +536,7 @@ This document should be read alongside:
 
 ---
 
-## 11. Next Steps (per agreed roadmap)
+## 14. Next Steps (per agreed roadmap)
 
 1. ✅ Requirements brainstorm (PRD.md)
 2. ✅ Security & compliance documentation (this document)
