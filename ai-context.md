@@ -1,7 +1,7 @@
 # AI Context Matrix — ArkWorkers.app
 
-**Last updated:** Pre-build (documentation phase complete, no code written yet)
-**Update this file at the end of every significant work session** — this
+**Last updated:** End of Phase 1 build session (backend scaffold complete)
+**Update this file at the end of every significant work session**, this
 is the first thing any future session (Claude or human) should read.
 
 ---
@@ -16,12 +16,25 @@ Spaces → Assets (of configurable Asset Types) → Routines → Tasks, with a
 role-based + space-level-restricted authorization system (the Prophet's
 Quarters is the concrete case driving this design).
 
-**Current state: documentation-complete, zero code written.** PRD,
-Security/Compliance spec, Design System, Architecture, and industry
-Research are all finalized and in the repo. Logo is finalized. Backup
-strategy (3-2-1 with a physical offsite copy) is decided. Next step is
-scaffolding the Laravel backend — Phase 1 per the build plan in
-`RESEARCH.md` §7.
+**Current state: Phase 1 backend scaffold complete.** Laravel 13 app
+lives in `arkworkers-api/`. Migrations for the full core data model,
+PIN/OTP auth, and the space-restriction Policy layer are built and
+tested: 44 tests passing, 102 assertions. See `arkworkers-api/`
+directly for the code, this file stays high-level.
+
+Standing process rules now in force for every future session (see
+`docs/TDD-PROTOCOL.md` for the full version):
+- Tests written alongside implementation, full suite must be green in
+  the sandbox before anything is pushed or deployed.
+- Plain CSS only on the frontend, never Tailwind, even though Google
+  Stitch mockups are generated in Tailwind. Stitch is a reference
+  point only. Every UI piece gets a mockup shown for approval before
+  the real build.
+- Minimal/YAGNI code discipline: no unrequested abstractions, simplest
+  solution that actually works, never at the expense of security,
+  validation, or accessibility.
+- No em dashes or en dashes anywhere in code, comments, commit
+  messages, or UI copy. No comments that restate the obvious.
 
 ---
 
@@ -57,11 +70,14 @@ scaffolding the Laravel backend — Phase 1 per the build plan in
 
 ## 3. Known Unknowns (Immediate Roadmap)
 
-1. **Phase 1 (starting now):** scaffold Laravel backend — migrations for
-   the core data model, auth setup, Policy classes. Build and test
-   authorization first, before any other feature, per `RESEARCH.md` §7.
-2. Phase 2: core task loop (list, detail, completion, basic proof
-   upload)
+1. **Phase 1: complete.** Laravel backend scaffolded in `arkworkers-api/`.
+   Migrations for Spaces, Asset Types, Assets, Routines, Tasks, Users,
+   Vehicles. PIN/OTP auth with rate limiting. SpacePolicy, AssetPolicy,
+   RoutinePolicy, TaskPolicy, all delegating through SpacePolicy for
+   the space-restriction check. 44 tests passing.
+2. **Phase 2 (next): core task loop.** Task list, detail, completion,
+   basic proof upload (non-resumable first), and Space/Asset CRUD
+   controllers for Admin/Facility Manager.
 3. Phase 3: offline reliability layer (sync, resumable upload, conflict
    resolution) — flagged by research as the phase most critical not to
    rush or skip
@@ -93,11 +109,12 @@ scaffolding the Laravel backend — Phase 1 per the build plan in
 
 ## 5. Unknown Unknowns (The Blindspot Log)
 
-No code exists yet, so no code-level blindspots have been found. This
-section activates once implementation starts — run the audit protocol
-from `shared-protocols/ai-context-protocol.md` after the first major
-milestone (e.g. after the data model + auth are scaffolded) rather than
-waiting until the whole app is built.
+**Phase 1 self-audit findings (found and fixed, see LESSONS.md):** an
+unused parameter left over from an earlier policy draft, a cascade
+delete that would have silently destroyed task audit history, and a
+missing rate limit on the OTP request endpoint. None of these were
+caught by the tests that were already passing, since tests only prove
+what they were written to check. A deliberate audit pass found them.
 
 **Pre-emptive risk flagged from documentation review, not yet
 code-verified:** the offline-sync re-validation logic

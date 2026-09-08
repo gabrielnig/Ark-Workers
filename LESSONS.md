@@ -8,6 +8,35 @@ the actual problem was, what to do differently going forward.
 
 ---
 
+## Phase 1 / Backend Scaffold
+
+### A green test suite does not mean an audit is unnecessary
+**What happened:** after building migrations, models, Policies, and
+PIN/OTP auth with 42 tests passing, a deliberate senior-dev-style audit
+pass (not prompted by any failing test) found three real issues: an
+unused parameter left over from an earlier draft of AssetPolicy, a
+cascade delete on tasks.assigned_user_id that would silently destroy
+audit-relevant task history if a user was ever deleted, and a missing
+rate limit on the OTP request endpoint that would let it be used to
+SMS-bomb a phone number.
+**Lesson:** passing tests only prove the code does what the tests
+check for, not that nothing was missed. Run a deliberate audit pass
+looking specifically for unused code, cascade/delete behavior on
+audit-relevant tables, and missing rate limits on any endpoint that
+sends something to a third party (SMS, email), at the end of a major
+build phase, not just when something fails.
+
+### Em dashes and over-explained comments crept into code, not just prose
+**What happened:** while writing migrations, models, and Policy
+classes, doc-comments and inline comments picked up em dashes and
+over-explained "what" instead of "why", the same AI-writing tells
+flagged for user-facing copy also show up in code comments if not
+actively watched for.
+**Lesson:** the "no em dashes, comments explain why not what" rule
+applies to every line written, including code comments and commit
+messages, not just UI-facing text. Grep for the em dash character
+across the whole diff before considering a batch done.
+
 ## Pre-Build / Documentation Phase
 
 ### Backups need a physical/offline layer, not just cloud redundancy

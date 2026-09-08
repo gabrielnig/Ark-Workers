@@ -7,7 +7,25 @@ Changelog (keepachangelog.com) — newest at top.
 
 ## [Unreleased]
 
-### Documentation Phase (pre-code) — COMPLETE
+### Phase 1 (backend scaffold + auth) - COMPLETE
+- Laravel 13 app scaffolded in `arkworkers-api/` (SQLite for local/test,
+  PostgreSQL for staging/production per ARCHITECTURE.md §1)
+- Migrations for the full core data model: users (phone/PIN, no
+  email/password), spaces, space_access_grants, asset_types, assets,
+  routines, tasks, vehicles, otp_codes, personal_access_tokens
+- SpacePolicy, AssetPolicy, RoutinePolicy, TaskPolicy, all delegating
+  through SpacePolicy for the space-restriction check per
+  SECURITY.md §4.2, built and tested first per RESEARCH.md §7
+- PIN and OTP login via Sanctum, rate limited at 5 attempts / 15
+  minutes per SECURITY.md §3.1
+- `docs/TDD-PROTOCOL.md` added: binding process document, tests
+  written alongside implementation, full sandbox suite green before
+  any push or deploy
+- 44 tests passing, 102 assertions, Laravel Pint clean
+- Self-audit pass after the suite was green found and fixed 3 issues,
+  see LESSONS.md
+
+### Documentation Phase (pre-code) - COMPLETE
 - Added `PRD.md` — full requirements brainstorm
 - Added `SECURITY.md` — security & NDPA compliance specification
   (later expanded with API/network hardening, incident response,
