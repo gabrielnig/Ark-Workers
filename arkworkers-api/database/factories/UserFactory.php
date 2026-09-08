@@ -12,41 +12,28 @@ use Illuminate\Support\Str;
  */
 class UserFactory extends Factory
 {
-    /**
-     * The current PIN being used by the factory.
-     */
-    protected static ?string $pin;
+    protected static ?string $password;
 
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         return [
             'name' => fake()->name(),
-            'phone' => fake()->unique()->numerify('+234##########'),
-            'phone_verified_at' => now(),
+            'email' => fake()->unique()->safeEmail(),
+            'email_verified_at' => now(),
+            'password' => static::$password ??= Hash::make('password'),
+            'phone' => null,
             'role' => User::ROLE_CLEANING_STAFF,
-            'pin_hash' => static::$pin ??= Hash::make('123456'),
             'remember_token' => Str::random(10),
         ];
     }
 
-    /**
-     * Indicate that the model's phone number is unverified.
-     */
     public function unverified(): static
     {
         return $this->state(fn (array $attributes) => [
-            'phone_verified_at' => null,
+            'email_verified_at' => null,
         ]);
     }
 
-    /**
-     * Set a specific role for this user.
-     */
     public function role(string $role): static
     {
         return $this->state(fn (array $attributes) => [

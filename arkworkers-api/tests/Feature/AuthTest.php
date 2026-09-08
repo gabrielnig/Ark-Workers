@@ -19,175 +19,150 @@ class AuthTest extends TestCase
         RateLimiter::clear('*');
     }
 
-    public function test_user_can_log_in_with_a_correct_pin(): void
+    public function test_registering_creates_an_unverified_user_and_an_email_otp(): void
     {
-        $user = User::factory()->create(['pin_hash' => Hash::make('123456')]);
-
-        $response = $this->postJson('/api/auth/login-pin', [
-            'phone' => $user->phone,
-            'pin' => '123456',
+        $response = $this->postJson('/api/auth/register', [
+            'name' => 'Test User',
+            'email' => 'test@example.com',
+            'password' => 'a-strong-password',
+            'role' => User::ROLE_CLEANING_STAFF,
         ]);
 
-        $response->assertOk()->assertJsonStructure(['token', 'user']);
+        $response->assertCreated();
+
+        $user = User::where('email', 'test@example.com')->first();
+        $this->assertNotNull($user);
+        $this->assertNull($user->email_verified_at);
+        $this->assertNotNull(OtpCode::where('user_id', $user->id)->first());
     }
 
-    public function test_login_fails_with_an_incorrect_pin(): void
+    public function test_registration_accepts_an_optional_phone_number(): void
     {
-        $user = User::factory()->create(['pin_hash' => Hash::make('123456')]);
+        $this->postJson('/api/auth/register', [
+            'name' => 'Test User',
+            'email' => 'test@example.com',
+            'password' => 'a-strong-password',
+            'phone' => '+2348012345678',
+            'role' => User::ROLE_DRIVER,
+        ])->assertCreated();
 
-        $response = $this->postJson('/api/auth/login-pin', [
-            'phone' => $user->phone,
-            'pin' => '000000',
-        ]);
-
-        $response->assertStatus(401);
+        $this->assertSame('+2348012345678', User::where('email', 'test@example.com')->first()->phone);
     }
 
-    public function test_login_fails_for_an_unknown_phone_without_revealing_that(): void
+    public function test_registration_fails_with_a_duplicate_email(): void
     {
-        $response = $this->postJson('/api/auth/login-pin', [
-            'phone' => '+2340000000000',
-            'pin' => '123456',
-        ]);
+        User::factory()->create(['email' => 'taken@example.com']);
 
-        // Same 401 shape as a wrong PIN, so the endpoint cannot be used
-        // to enumerate which numbers are registered.
-        $response->assertStatus(401)->assertJson(['message' => 'Invalid phone or PIN.']);
+        $this->postJson('/api/auth/register', [
+            'name' => 'Test User',
+            'email' => 'taken@example.com',
+            'password' => 'a-strong-password',
+            'role' => User::ROLE_CLEANING_STAFF,
+        ])->assertStatus(422);
     }
 
-    public function test_login_fails_for_an_otp_only_user_with_no_pin_set(): void
+    public function test_user_can_verify_email_with_the_correct_code(): void
     {
-        $user = User::factory()->create(['pin_hash' => null]);
+        $user = User::factory()->unverified()->create();
+        $otp = OtpCode::factory()->for($user)->create(['code_hash' => Hash::make('654321')]);
 
-        $response = $this->postJson('/api/auth/login-pin', [
-            'phone' => $user->phone,
-            'pin' => '123456',
-        ]);
-
-        $response->assertStatus(401);
-    }
-
-    public function test_otp_request_is_rate_limited(): void
-    {
-        $user = User::factory()->create();
-
-        for ($i = 0; $i < 5; $i++) {
-            $this->postJson('/api/auth/otp/request', ['phone' => $user->phone])->assertOk();
-        }
-
-        $this->postJson('/api/auth/otp/request', ['phone' => $user->phone])
-            ->assertStatus(429);
-    }
-
-    public function test_pin_login_locks_out_after_five_failed_attempts(): void
-    {
-        $user = User::factory()->create(['pin_hash' => Hash::make('123456')]);
-
-        for ($i = 0; $i < 5; $i++) {
-            $this->postJson('/api/auth/login-pin', [
-                'phone' => $user->phone,
-                'pin' => 'wrong',
-            ])->assertStatus(401);
-        }
-
-        $this->postJson('/api/auth/login-pin', [
-            'phone' => $user->phone,
-            'pin' => '123456',
-        ])->assertStatus(429);
-    }
-
-    public function test_a_successful_login_clears_the_rate_limiter(): void
-    {
-        $user = User::factory()->create(['pin_hash' => Hash::make('123456')]);
-
-        $this->postJson('/api/auth/login-pin', [
-            'phone' => $user->phone,
-            'pin' => 'wrong',
-        ]);
-
-        $this->postJson('/api/auth/login-pin', [
-            'phone' => $user->phone,
-            'pin' => '123456',
+        $this->postJson('/api/auth/verify-email', [
+            'email' => $user->email,
+            'code' => '654321',
         ])->assertOk();
 
-        // Rate limiter cleared, so a subsequent wrong attempt is not
-        // immediately locked out from the earlier failure.
-        $this->postJson('/api/auth/login-pin', [
-            'phone' => $user->phone,
-            'pin' => 'wrong',
-        ])->assertStatus(401);
-    }
-
-    public function test_otp_request_always_returns_the_same_message_whether_or_not_the_phone_is_registered(): void
-    {
-        $user = User::factory()->create();
-
-        $known = $this->postJson('/api/auth/otp/request', ['phone' => $user->phone]);
-        $unknown = $this->postJson('/api/auth/otp/request', ['phone' => '+2340000000001']);
-
-        $known->assertOk();
-        $unknown->assertOk();
-        $this->assertSame($known->json('message'), $unknown->json('message'));
-    }
-
-    public function test_otp_request_creates_a_usable_hashed_code(): void
-    {
-        $user = User::factory()->create();
-
-        $this->postJson('/api/auth/otp/request', ['phone' => $user->phone]);
-
-        $otp = OtpCode::where('user_id', $user->id)->first();
-
-        $this->assertNotNull($otp);
-        $this->assertTrue($otp->isUsable());
-        $this->assertNotEquals($otp->code_hash, '123456');
-    }
-
-    public function test_user_can_verify_a_valid_otp_and_receive_a_token(): void
-    {
-        $user = User::factory()->create();
-        $otp = OtpCode::factory()->for($user)->create([
-            'code_hash' => Hash::make('654321'),
-        ]);
-
-        $response = $this->postJson('/api/auth/otp/verify', [
-            'phone' => $user->phone,
-            'code' => '654321',
-        ]);
-
-        $response->assertOk()->assertJsonStructure(['token', 'user']);
+        $this->assertNotNull($user->fresh()->email_verified_at);
         $this->assertNotNull($otp->fresh()->consumed_at);
     }
 
-    public function test_an_already_consumed_otp_cannot_be_reused(): void
+    public function test_email_verification_fails_with_the_wrong_code(): void
     {
-        $user = User::factory()->create();
-        OtpCode::factory()->for($user)->create([
-            'code_hash' => Hash::make('654321'),
-            'consumed_at' => now(),
-        ]);
+        $user = User::factory()->unverified()->create();
+        OtpCode::factory()->for($user)->create(['code_hash' => Hash::make('654321')]);
 
-        $response = $this->postJson('/api/auth/otp/verify', [
-            'phone' => $user->phone,
-            'code' => '654321',
-        ]);
-
-        $response->assertStatus(401);
+        $this->postJson('/api/auth/verify-email', [
+            'email' => $user->email,
+            'code' => '000000',
+        ])->assertStatus(401);
     }
 
-    public function test_an_expired_otp_cannot_be_used(): void
+    public function test_a_consumed_or_expired_otp_cannot_verify_email(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->unverified()->create();
         OtpCode::factory()->for($user)->create([
             'code_hash' => Hash::make('654321'),
             'expires_at' => now()->subMinute(),
         ]);
 
-        $response = $this->postJson('/api/auth/otp/verify', [
-            'phone' => $user->phone,
+        $this->postJson('/api/auth/verify-email', [
+            'email' => $user->email,
             'code' => '654321',
+        ])->assertStatus(401);
+    }
+
+    public function test_verified_user_can_log_in_with_correct_credentials(): void
+    {
+        $user = User::factory()->create(['password' => Hash::make('a-strong-password')]);
+
+        $this->postJson('/api/auth/login', [
+            'email' => $user->email,
+            'password' => 'a-strong-password',
+        ])->assertOk()->assertJsonStructure(['token', 'user']);
+    }
+
+    public function test_login_fails_with_an_incorrect_password(): void
+    {
+        $user = User::factory()->create(['password' => Hash::make('a-strong-password')]);
+
+        $this->postJson('/api/auth/login', [
+            'email' => $user->email,
+            'password' => 'wrong-password',
+        ])->assertStatus(401);
+    }
+
+    public function test_login_fails_for_an_unknown_email_without_revealing_that(): void
+    {
+        $response = $this->postJson('/api/auth/login', [
+            'email' => 'nobody@example.com',
+            'password' => 'whatever',
         ]);
 
-        $response->assertStatus(401);
+        $response->assertStatus(401)->assertJson(['message' => 'Invalid email or password.']);
+    }
+
+    public function test_login_is_blocked_for_an_unverified_email(): void
+    {
+        $user = User::factory()->unverified()->create(['password' => Hash::make('a-strong-password')]);
+
+        $this->postJson('/api/auth/login', [
+            'email' => $user->email,
+            'password' => 'a-strong-password',
+        ])->assertStatus(403);
+    }
+
+    public function test_login_locks_out_after_five_failed_attempts(): void
+    {
+        $user = User::factory()->create(['password' => Hash::make('a-strong-password')]);
+
+        for ($i = 0; $i < 5; $i++) {
+            $this->postJson('/api/auth/login', [
+                'email' => $user->email,
+                'password' => 'wrong',
+            ])->assertStatus(401);
+        }
+
+        $this->postJson('/api/auth/login', [
+            'email' => $user->email,
+            'password' => 'a-strong-password',
+        ])->assertStatus(429);
+    }
+
+    public function test_a_successful_login_clears_the_rate_limiter(): void
+    {
+        $user = User::factory()->create(['password' => Hash::make('a-strong-password')]);
+
+        $this->postJson('/api/auth/login', ['email' => $user->email, 'password' => 'wrong']);
+        $this->postJson('/api/auth/login', ['email' => $user->email, 'password' => 'a-strong-password'])->assertOk();
+        $this->postJson('/api/auth/login', ['email' => $user->email, 'password' => 'wrong'])->assertStatus(401);
     }
 }

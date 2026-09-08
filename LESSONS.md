@@ -10,6 +10,21 @@ the actual problem was, what to do differently going forward.
 
 ## Phase 1 / Backend Scaffold
 
+### Auth design changed mid-phase: PIN/phone-OTP replaced with email + password
+**What happened:** Phase 1 built, tested, and shipped a phone-number +
+PIN/OTP login flow per the original SECURITY.md §3.1. Partway through
+the same session, the decision came to drop SMS entirely for cost
+reasons, in favor of email + password login with an email-OTP
+verification step at signup. Phone became an optional profile field.
+**Lesson:** the migration, model, factory, controller, routes, and
+every test in the auth layer had to be reworked, not just the parts
+that looked auth-related. A cost/channel decision like "no SMS" cuts
+across the whole login surface, not just one file, budget for a full
+pass through migrations, models, controllers, and tests together
+rather than patching pieces in isolation. SECURITY.md and
+ARCHITECTURE.md were updated in the same session so the next session
+does not build against the stale phone/PIN spec.
+
 ### A green test suite does not mean an audit is unnecessary
 **What happened:** after building migrations, models, Policies, and
 PIN/OTP auth with 42 tests passing, a deliberate senior-dev-style audit

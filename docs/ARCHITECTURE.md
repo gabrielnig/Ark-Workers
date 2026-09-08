@@ -100,7 +100,9 @@ Directly implements the modular structure from `PRD.md` §2:
   status (pending/completed/overdue)
 - **task_proofs** — id, task_id, file_path, file_type, uploaded_at,
   chunk_upload_session_id (for resumable upload tracking)
-- **users** — id, name, phone, role, pin_hash (or password_hash)
+- **users** — id, name, email, password_hash, phone (optional, not used
+  for auth), role. Auth is email + password with an email-OTP
+  verification step at signup, see `SECURITY.md` §3.1
 - **vehicles** — id, plate_number, assigned_driver_id, document_expiry
   dates (JSON or separate table per document type)
 - **vehicle_logs** — id, vehicle_id, type (fuel/mileage/service),

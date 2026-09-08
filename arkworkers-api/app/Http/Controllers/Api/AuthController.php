@@ -12,14 +12,15 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Validator;
 
 /**
- * PIN and OTP login, per SECURITY.md §3.1. No password auth: staff are
- * low-tech-literacy, so a PIN (device-bound session) or phone+OTP is
- * the login path, not a complex password.
+ * Email + password auth, with an email-OTP step at signup to verify
+ * the address. No SMS anywhere, per the decision to avoid that cost
+ * entirely. Phone is an optional profile field only, never used for
+ * login or verification.
  */
 class AuthController extends Controller
 {
     /**
-     * Max login attempts before the account/IP pair is locked out, per
+     * Max attempts before the account/IP pair is locked out, per
      * SECURITY.md §3.1.
      */
     private const MAX_ATTEMPTS = 5;
@@ -29,93 +30,46 @@ class AuthController extends Controller
      */
     private const DECAY_SECONDS = 900;
 
-    public function loginWithPin(Request $request): JsonResponse
+    public function register(Request $request): JsonResponse
     {
         $data = Validator::make($request->all(), [
-            'phone' => ['required', 'string'],
-            'pin' => ['required', 'string'],
+            'name' => ['required', 'string'],
+            'email' => ['required', 'email', 'unique:users,email'],
+            'password' => ['required', 'string', 'min:12'],
+            'phone' => ['nullable', 'string'],
+            'role' => ['required', 'string', 'in:'.implode(',', User::ROLES)],
         ])->validate();
 
-        $key = $this->throttleKey('pin', $data['phone'], $request->ip());
+        $user = User::create([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'password' => $data['password'],
+            'phone' => $data['phone'] ?? null,
+            'role' => $data['role'],
+        ]);
 
-        if (RateLimiter::tooManyAttempts($key, self::MAX_ATTEMPTS)) {
-            return response()->json([
-                'message' => 'Too many attempts. Try again later.',
-            ], 429);
-        }
-
-        $user = User::where('phone', $data['phone'])->first();
-
-        if (! $user || ! $user->pin_hash || ! Hash::check($data['pin'], $user->pin_hash)) {
-            RateLimiter::hit($key, self::DECAY_SECONDS);
-
-            return response()->json(['message' => 'Invalid phone or PIN.'], 401);
-        }
-
-        RateLimiter::clear($key);
+        $this->issueEmailOtp($user);
 
         return response()->json([
-            'token' => $user->createToken('pin-login')->plainTextToken,
-            'user' => $user,
-        ]);
+            'message' => 'Registered. Check your email for a verification code.',
+        ], 201);
     }
 
-    public function requestOtp(Request $request): JsonResponse
+    public function verifyEmailOtp(Request $request): JsonResponse
     {
         $data = Validator::make($request->all(), [
-            'phone' => ['required', 'string'],
-        ])->validate();
-
-        $key = $this->throttleKey('otp-request', $data['phone'], $request->ip());
-
-        if (RateLimiter::tooManyAttempts($key, self::MAX_ATTEMPTS)) {
-            return response()->json([
-                'message' => 'Too many attempts. Try again later.',
-            ], 429);
-        }
-
-        RateLimiter::hit($key, self::DECAY_SECONDS);
-
-        $user = User::where('phone', $data['phone'])->first();
-
-        // Same response whether or not the phone exists, so the
-        // endpoint cannot be used to enumerate registered numbers.
-        if ($user) {
-            $code = (string) random_int(100000, 999999);
-
-            OtpCode::create([
-                'user_id' => $user->id,
-                'code_hash' => Hash::make($code),
-                'expires_at' => now()->addMinutes(5),
-            ]);
-
-            // Sending the code (SMS gateway) is deferred to Phase 2
-            // infra setup; logged here for local/sandbox testing only.
-            logger()->info("OTP for {$user->phone}: {$code}");
-        }
-
-        return response()->json(['message' => 'If that number is registered, a code has been sent.']);
-    }
-
-    public function verifyOtp(Request $request): JsonResponse
-    {
-        $data = Validator::make($request->all(), [
-            'phone' => ['required', 'string'],
+            'email' => ['required', 'email'],
             'code' => ['required', 'string'],
         ])->validate();
 
-        $key = $this->throttleKey('otp', $data['phone'], $request->ip());
+        $key = $this->throttleKey('verify-email', $data['email'], $request->ip());
 
         if (RateLimiter::tooManyAttempts($key, self::MAX_ATTEMPTS)) {
-            return response()->json([
-                'message' => 'Too many attempts. Try again later.',
-            ], 429);
+            return response()->json(['message' => 'Too many attempts. Try again later.'], 429);
         }
 
-        $user = User::where('phone', $data['phone'])->first();
-        $otp = $user
-            ? $user->otpCodes()->latest()->first()
-            : null;
+        $user = User::where('email', $data['email'])->first();
+        $otp = $user ? $user->otpCodes()->latest()->first() : null;
 
         if (! $user || ! $otp || ! $otp->isUsable() || ! Hash::check($data['code'], $otp->code_hash)) {
             RateLimiter::hit($key, self::DECAY_SECONDS);
@@ -125,16 +79,63 @@ class AuthController extends Controller
 
         RateLimiter::clear($key);
         $otp->update(['consumed_at' => now()]);
-        $user->forceFill(['phone_verified_at' => $user->phone_verified_at ?? now()])->save();
+        $user->forceFill(['email_verified_at' => now()])->save();
+
+        return response()->json(['message' => 'Email verified. You can now log in.']);
+    }
+
+    public function login(Request $request): JsonResponse
+    {
+        $data = Validator::make($request->all(), [
+            'email' => ['required', 'email'],
+            'password' => ['required', 'string'],
+        ])->validate();
+
+        $key = $this->throttleKey('login', $data['email'], $request->ip());
+
+        if (RateLimiter::tooManyAttempts($key, self::MAX_ATTEMPTS)) {
+            return response()->json(['message' => 'Too many attempts. Try again later.'], 429);
+        }
+
+        $user = User::where('email', $data['email'])->first();
+
+        if (! $user || ! Hash::check($data['password'], $user->password)) {
+            RateLimiter::hit($key, self::DECAY_SECONDS);
+
+            return response()->json(['message' => 'Invalid email or password.'], 401);
+        }
+
+        if (! $user->email_verified_at) {
+            RateLimiter::hit($key, self::DECAY_SECONDS);
+
+            return response()->json(['message' => 'Please verify your email before logging in.'], 403);
+        }
+
+        RateLimiter::clear($key);
 
         return response()->json([
-            'token' => $user->createToken('otp-login')->plainTextToken,
+            'token' => $user->createToken('login')->plainTextToken,
             'user' => $user,
         ]);
     }
 
-    private function throttleKey(string $prefix, string $phone, ?string $ip): string
+    private function issueEmailOtp(User $user): void
     {
-        return "{$prefix}:{$phone}:{$ip}";
+        $code = (string) random_int(100000, 999999);
+
+        OtpCode::create([
+            'user_id' => $user->id,
+            'code_hash' => Hash::make($code),
+            'expires_at' => now()->addMinutes(15),
+        ]);
+
+        // Sending the actual email is deferred to Phase 2 mail setup,
+        // logged here for local/sandbox testing only.
+        logger()->info("Email verification code for {$user->email}: {$code}");
+    }
+
+    private function throttleKey(string $prefix, string $identifier, ?string $ip): string
+    {
+        return "{$prefix}:{$identifier}:{$ip}";
     }
 }

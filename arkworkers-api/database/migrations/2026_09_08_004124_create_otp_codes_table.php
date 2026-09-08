@@ -10,6 +10,8 @@ return new class extends Migration
     {
         Schema::create('otp_codes', function (Blueprint $table) {
             $table->id();
+            // Used for the email-verification step at signup, not for
+            // login. Login is email + password.
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('code_hash');
             $table->timestamp('expires_at');

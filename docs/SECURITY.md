@@ -103,18 +103,22 @@ family via the Quarters records).
 ## 3. Identity, Authentication & Session Security
 
 ### 3.1 Authentication
+**Decision update (Phase 1 build):** SMS was ruled out entirely for
+cost reasons. Login is email + password. Registration requires an
+email-OTP verification step (a 6-digit code sent to the registrant's
+email, expiring in 15 minutes) before the account can log in. Phone
+number is collected as an optional profile field only, never used for
+login, verification, or password reset. The PIN/phone-OTP design
+originally specified below was built, tested, then replaced with this
+before Phase 1 closed, see LESSONS.md for the change.
 - Passwords: prioritize length over complexity rules; minimum 12
   characters recommended; never block paste in password fields (per
   `UI-UX-STANDARD.md`); use `autocomplete="new-password"`.
 - Passwords stored via a strong adaptive hash (bcrypt/argon2), never
   reversible encryption, never plaintext.
-- Given the low-tech-literacy staff base (cleaning, security, drivers),
-  favor **PIN + device-bound session** or **phone-number + OTP** login over
-  complex password requirements — reduces support burden without reducing
-  security, since risk is mitigated by device possession + short session
-  lifetimes instead of password complexity.
-- Rate-limit login attempts: max 5 attempts per 15 minutes per
-  account/IP, per the shared security baseline.
+- Rate-limit login attempts and email-OTP verification attempts: max 5
+  attempts per 15 minutes per account/IP, per the shared security
+  baseline.
 
 ### 3.2 Sessions
 - Session tokens are short-lived, refreshed via secure refresh tokens

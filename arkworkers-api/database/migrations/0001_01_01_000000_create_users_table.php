@@ -14,16 +14,16 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            // Phone is the primary identifier for login (PIN or OTP),
-            // per SECURITY.md §3.1, low-tech-literacy staff base.
-            $table->string('phone')->unique();
-            $table->timestamp('phone_verified_at')->nullable();
+            // Email is the primary identifier for registration/login,
+            // per the decision to avoid SMS cost entirely.
+            $table->string('email')->unique();
+            $table->timestamp('email_verified_at')->nullable();
+            $table->string('password');
+            // Optional profile field, not used for auth.
+            $table->string('phone')->nullable();
             // One of: admin, pastor, facility_manager, cleaning_staff,
             // maintenance, security, driver, per SECURITY.md §4.1.
             $table->string('role');
-            // Adaptive hash (bcrypt) of the user's PIN. Nullable because
-            // a user provisioned for OTP-only login may not have a PIN set.
-            $table->string('pin_hash')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

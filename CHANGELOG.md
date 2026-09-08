@@ -7,6 +7,16 @@ Changelog (keepachangelog.com) — newest at top.
 
 ## [Unreleased]
 
+### Phase 1 follow-up: auth switched to email + password
+- Replaced phone + PIN/OTP login (built and tested earlier this
+  session) with email + password, plus an email-OTP verification step
+  at signup. Reason: dropping SMS entirely for cost.
+- Phone is now an optional profile field only, not used for auth
+- Migration, User model, factory, AuthController, routes, and the full
+  AuthTest suite reworked accordingly
+- SECURITY.md §3.1 and ARCHITECTURE.md §3 updated to match
+- 44 tests passing, 96 assertions, Pint clean
+
 ### Phase 1 (backend scaffold + auth) - COMPLETE
 - Laravel 13 app scaffolded in `arkworkers-api/` (SQLite for local/test,
   PostgreSQL for staging/production per ARCHITECTURE.md §1)

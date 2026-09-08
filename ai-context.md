@@ -18,7 +18,8 @@ Quarters is the concrete case driving this design).
 
 **Current state: Phase 1 backend scaffold complete.** Laravel 13 app
 lives in `arkworkers-api/`. Migrations for the full core data model,
-PIN/OTP auth, and the space-restriction Policy layer are built and
+email + password auth (with email-OTP signup verification), and the
+space-restriction Policy layer are built and
 tested: 44 tests passing, 102 assertions. See `arkworkers-api/`
 directly for the code, this file stays high-level.
 
@@ -72,7 +73,8 @@ Standing process rules now in force for every future session (see
 
 1. **Phase 1: complete.** Laravel backend scaffolded in `arkworkers-api/`.
    Migrations for Spaces, Asset Types, Assets, Routines, Tasks, Users,
-   Vehicles. PIN/OTP auth with rate limiting. SpacePolicy, AssetPolicy,
+   Vehicles. Email + password auth with an email-OTP signup verification
+   step, rate limited. No SMS anywhere, cost decision. SpacePolicy, AssetPolicy,
    RoutinePolicy, TaskPolicy, all delegating through SpacePolicy for
    the space-restriction check. 44 tests passing.
 2. **Phase 2 (next): core task loop.** Task list, detail, completion,
