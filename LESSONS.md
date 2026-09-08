@@ -8,6 +8,26 @@ the actual problem was, what to do differently going forward.
 
 ---
 
+## Phase 2 / Core Task Loop
+
+### Data-loss policy needs deciding per entity, not assumed uniform
+**What happened:** the Phase 1 audit fixed a cascade-delete that would
+have wiped task history if a user was deleted. Building Asset CRUD in
+Phase 2 surfaced the same class of problem on a different entity:
+deleting an Asset cascaded through Routines and Tasks, wiping their
+history too. The fix here was different from the Users fix, soft
+delete with a 30-day grace period and scheduled pruning, rather than
+blocking the delete outright.
+**Lesson:** "don't lose data" is not one fix applied everywhere, it is
+a decision made per entity based on what that entity's history means.
+Users needed a permanent record with no deletion path at all, since
+the whole point is tracking what a person did regardless of active
+status. Assets needed the opposite: deletion is a normal, frequent
+operation (decommissioning equipment), so blocking it outright would
+be the wrong fix, soft delete plus a grace period preserves history
+without preventing the everyday action. Ask which shape fits before
+copying the previous fix.
+
 ## Phase 1 / Backend Scaffold
 
 ### Auth design changed mid-phase: PIN/phone-OTP replaced with email + password

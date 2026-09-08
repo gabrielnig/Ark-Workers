@@ -16,12 +16,24 @@ Spaces → Assets (of configurable Asset Types) → Routines → Tasks, with a
 role-based + space-level-restricted authorization system (the Prophet's
 Quarters is the concrete case driving this design).
 
-**Current state: Phase 1 backend scaffold complete.** Laravel 13 app
-lives in `arkworkers-api/`. Migrations for the full core data model,
-email + password auth (with email-OTP signup verification), and the
-space-restriction Policy layer are built and
-tested: 44 tests passing, 102 assertions. See `arkworkers-api/`
-directly for the code, this file stays high-level.
+**Current state: Phase 1 complete, Phase 2 in progress.** Laravel 13
+app lives in `arkworkers-api/`. Phase 1: migrations for the full core
+data model, email + password auth (with email-OTP signup
+verification), space-restriction Policy layer. Phase 2 so far: full
+CRUD controllers for Spaces, Assets, Asset Types (genuinely open-ended,
+new asset types need zero code changes), Task list/detail/manual-
+assignment/completion, non-resumable proof upload, Asset soft-delete
+with a 30-day grace period before permanent pruning. 70 tests passing,
+141 assertions. See `arkworkers-api/` directly for the code, this file
+stays high-level.
+
+**Data-loss policy, decided per entity (see LESSONS.md for the
+reasoning):** Users are never deletable, restrictOnDelete blocks it
+outright, since the whole point is a permanent record of what someone
+did regardless of active status. Assets are soft-deleted with a 30-day
+grace period, then permanently pruned via a daily scheduled job,
+deletion is a normal frequent action (decommissioning), so history is
+preserved without blocking the action itself.
 
 Standing process rules now in force for every future session (see
 `docs/TDD-PROTOCOL.md` for the full version):
