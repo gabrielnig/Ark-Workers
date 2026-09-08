@@ -88,8 +88,14 @@ Directly implements the modular structure from `PRD.md` §2:
 - **assets** — id, asset_type_id, space_id, name, metadata (JSON, varies
   by type — e.g. vehicle plate number vs. AC unit refrigerant type)
 - **routines** — id, asset_id (nullable) or asset_type_id (for
-  type-level defaults), name, schedule (cron-like or trigger-based),
-  requires_proof (bool)
+  type-level defaults), name, calendar_interval_days (nullable),
+  meter_threshold (nullable, e.g. runtime hours or mileage), requires_proof
+  (bool). Supports hybrid triggers: if both `calendar_interval_days` and
+  `meter_threshold` are set, the task fires on whichever condition is met
+  first, and both counters reset from the completion point — this is the
+  pattern used by mature CMMS platforms (see `RESEARCH.md` §5) and is
+  directly relevant to the generator (runtime hours) and vehicles
+  (mileage), which both already need usage-based triggers per `PRD.md`.
 - **tasks** — id, routine_id, assigned_user_id, due_at, completed_at,
   status (pending/completed/overdue)
 - **task_proofs** — id, task_id, file_path, file_type, uploaded_at,
