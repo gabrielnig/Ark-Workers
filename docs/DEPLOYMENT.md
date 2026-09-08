@@ -28,6 +28,20 @@ assumption "it's a small update":
 [ ] Backup taken immediately before deploy, verified restorable
 ```
 
+## 2.5 Backup Schedule (3-2-1, per SECURITY.md §11)
+
+```
+[ ] Nightly: automated encrypted DB + media backup to an off-VPS cloud
+    provider (different company than the VPS host)
+[ ] Monthly (or after any major milestone): download latest backup to a
+    physical external drive, stored off the church network
+[ ] Quarterly: actually test-restore from the physical copy to a
+    scratch environment — confirm it works, don't assume it does
+[ ] Decide and document: who is responsible for the monthly physical
+    backup step (a person, not just "the system") — this is the one
+    step in the chain that isn't automatable
+```
+
 ## 3. Deploy Steps (fill in once the pipeline exists)
 
 ```
