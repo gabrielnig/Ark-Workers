@@ -40,10 +40,13 @@ Once there's a real codebase, run
 PR-level for changed files, nightly on core branches, weekly full sweep
 before any release.
 
-## 4. Not Yet Decided
+## 4. Decided / Not Yet Decided
 
+Test framework for Laravel: **PHPUnit**, decided and in use since
+Phase 1, see `TDD-PROTOCOL.md`.
+
+Still open:
 ```
-[ ] Test framework choice for Laravel (Pest vs. PHPUnit)
 [ ] Frontend test framework (Vitest, Jest)
 [ ] CI integration — run tests automatically on every push?
 ```

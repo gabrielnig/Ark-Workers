@@ -1,41 +1,68 @@
-# ArkWorkers.app — Developer Setup
+# ArkWorkers.app - Developer Setup
 
-**Status:** stub — filled in once the repos are scaffolded.
+**Status:** backend is scaffolded and running (Phase 1 and 2 complete).
+Frontend not yet started.
 
 ---
 
 ## Prerequisites
 
+- PHP 8.3+, with `pdo_sqlite` (local dev/test), `pdo_pgsql`
+  (staging/production), `gd` (image proof uploads in tests), `mbstring`,
+  `xml`, `curl`, `zip`
+- Composer 2.x
+- PostgreSQL (staging/production only, SQLite is used for local dev
+  and the automated test suite, both use the same database-agnostic
+  migrations)
+- Node.js (once the React frontend starts)
+
+## Backend Setup (`arkworkers-api/`)
+
 ```
-[ ] PHP version (Laravel's current LTS requirement — confirm at
-    scaffold time)
-[ ] PostgreSQL version
-[ ] Node.js version (for the React frontend)
-[ ] Composer, npm/yarn
+cd arkworkers-api
+composer install
+cp .env.example .env
+php artisan key:generate
+touch database/database.sqlite   # local dev uses SQLite
+php artisan migrate
+php artisan serve
 ```
 
-## Backend Setup (`arkworkers-api`)
+## Running Tests
 
 ```
-[ ] git clone <repo>
-[ ] composer install
-[ ] cp .env.example .env — fill in local DB credentials, never commit
-    real secrets (per SECURITY.md §11)
-[ ] php artisan key:generate
-[ ] php artisan migrate --seed
-[ ] php artisan serve
+cd arkworkers-api
+php artisan test
 ```
 
-## Frontend Setup (`arkworkers-web`)
+Per `docs/TDD-PROTOCOL.md`, the full suite must pass before anything is
+pushed or deployed. As of the last session: 71 tests, 144 assertions.
+
+## Code Style
+
+```
+cd arkworkers-api
+./vendor/bin/pint
+```
+
+Run before every commit. Also grep the diff for em dashes/en dashes
+before considering a batch done, per the standing no-AI-writing-tells
+rule (see `ai-context.md`).
+
+## Frontend Setup (`arkworkers-web`) - not started yet
 
 ```
 [ ] git clone <repo>
 [ ] npm install
-[ ] cp .env.example .env.local — point to local API URL
+[ ] cp .env.example .env.local - point to local API URL
 [ ] npm run dev
 ```
 
-## Android (Capacitor) Setup
+Plain CSS only, never Tailwind, per the standing UI rule in
+`ai-context.md`, even though Google Stitch mockups are generated in
+Tailwind.
+
+## Android (Capacitor) Setup - not started yet
 
 ```
 [ ] npx cap add android
@@ -43,9 +70,9 @@
 [ ] Open in Android Studio to run on device/emulator
 ```
 
-## iOS (Capacitor) — Future, Not Needed at Launch
+## iOS (Capacitor) - Future, Not Needed at Launch
 
-Not set up yet — deferred per `ARCHITECTURE.md` §1 and §9. Documented
+Not set up yet, deferred per `ARCHITECTURE.md` §1 and §9. Documented
 here so it's not forgotten and so it's clear it's a low-effort addition,
 not a rewrite, when the time comes:
 
@@ -67,10 +94,16 @@ step stays this simple when it happens.
 Before pushing any change touching auth, Space/Asset queries, or file
 uploads, use the Quick-Use Security Prompts in
 `shared-protocols/SECURITY-BASELINE.md` (Appendix) against the specific
-files changed — don't wait for a scheduled scan to catch an
+files changed, don't wait for a scheduled scan to catch an
 authorization bug.
 
 ## Common Issues
 
-(Populate this section as real setup problems get hit — cross-reference
-`LESSONS.md` for anything that turns into a recurring pattern.)
+- **"GD extension is not installed"** when running tests that fake an
+  image upload (`UploadedFile::fake()->image(...)`): install
+  `php8.3-gd` (or the equivalent for your PHP version) and restart.
+  Hit during Phase 2 proof-upload test development.
+
+(Populate this section further as real setup problems get hit,
+cross-reference `LESSONS.md` for anything that turns into a recurring
+pattern.)

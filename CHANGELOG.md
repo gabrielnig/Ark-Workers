@@ -28,6 +28,18 @@ Changelog (keepachangelog.com) — newest at top.
   foreign-key conflict instead of a clean 409
 - 70 tests passing, 141 assertions, Pint clean
 
+### Phase 2 closeout: logout endpoint, full documentation pass
+- Added `POST /auth/logout` (token revocation), the one real gap left
+  after Phase 2's endpoint list, login with no logout is a genuine
+  pending item, not deferred scope
+- Full documentation audit across both repos: API.md, RESEARCH.md,
+  USER-GUIDE.md, DEV-SETUP.md, TESTING.md, HANDOVER.md updated to
+  match what's actually built, no doc left saying "no code exists yet"
+- Added `AI-CODE-FOOTPRINT.md` and `PROJECT-DOCUMENT-CHECKLIST.md` to
+  the shared-protocols repo (this was requested earlier in the Phase 1
+  session and had been missed until this closeout pass)
+- 71 tests passing, 144 assertions, Pint clean
+
 ### Phase 1 follow-up: auth switched to email + password
 - Replaced phone + PIN/OTP login (built and tested earlier this
   session) with email + password, plus an email-OTP verification step

@@ -265,19 +265,23 @@ recommended even later)
 Based on this research plus the existing documentation, here's the
 phasing recommendation:
 
-### Phase 1 — Foundation (backend + auth, no UI polish yet)
+### Phase 1 - Foundation (backend + auth, no UI polish yet) - COMPLETE
 - Laravel scaffold: migrations for Spaces, Asset Types, Assets,
   Routines, Tasks, Users, Vehicles
-- Authorization Policies (the space-restriction model) — build and
-  **test this first and most thoroughly**, before any other feature,
-  since every other feature depends on it being correct
-- Basic auth (PIN/OTP per `SECURITY.md` §3.1)
+- Authorization Policies (the space-restriction model), built and
+  tested first, before any other feature
+- Auth: email + password with an email-OTP signup verification step
+  (changed from the originally planned PIN/phone-OTP to avoid SMS
+  cost entirely, see LESSONS.md for the change)
 
-### Phase 2 — Core Task Loop (the actual daily-use MVP)
-- Task list view, task detail, task completion
-- Photo/video proof upload (non-resumable version first — get the happy
-  path working before adding resumability)
-- Basic Space/Asset CRUD for Admin/Facility Manager
+### Phase 2 - Core Task Loop (the actual daily-use MVP) - COMPLETE
+- Task list view, task detail, manual task assignment, task completion
+- Photo/video proof upload, non-resumable, real file-content
+  validation, stored outside the web root
+- Space/Asset/Asset Type CRUD for Admin/Facility Manager, asset types
+  are genuinely open-ended with no code change needed for a new one
+- Asset deletion is soft-delete with a 30-day grace period before
+  permanent pruning, not a hard wipe, see `ai-context.md`
 
 ### Phase 3 — Reliability Layer (what makes it usable in the real
 conditions the research confirmed matter most)

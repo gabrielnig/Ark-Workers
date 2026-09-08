@@ -9,7 +9,8 @@ forgotten.
 ## Structure (per role, per PRD.md §6)
 
 ### For Cleaning Staff, Maintenance/Technician, Security, Drivers
-- How to log in (PIN or phone/OTP)
+- How to log in (email + password, with an email verification code at
+  signup)
 - How to find your assigned tasks for the day
 - How to complete a task and upload photo/video proof
 - What to do if the upload fails or your connection drops mid-upload

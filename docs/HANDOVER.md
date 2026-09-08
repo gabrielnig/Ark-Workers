@@ -26,8 +26,10 @@ security, and drivers via a mobile-first PWA and Android app.
    finalized logo (assets in `docs/assets/logo/`)
 5. `ai-context.md` (repo root) — the current state snapshot; read this
    FIRST if you only read one document, then go deeper via the above
-6. `LESSONS.md` (repo root) — mistakes already made and fixed; check
+6. `LESSONS.md` (repo root) - mistakes already made and fixed; check
    before re-solving a problem that's already been hit
+7. `docs/TDD-PROTOCOL.md` - the binding rule for how code gets written
+   and verified before it's pushed or deployed
 
 ## 3. Key People & Roles
 
@@ -58,13 +60,14 @@ only. See `SECURITY.md` §4 and `ARCHITECTURE.md` §4.
 
 ## 6. Current Status
 
-Documentation phase complete. No code written yet. Stack decided
-(Laravel + PostgreSQL backend, React PWA + Capacitor for Android, iOS
-planned as a low-effort future addition). Industry research complete
-(`RESEARCH.md`) — validated the architecture, added a hybrid PM-trigger
-improvement. Backup strategy decided (3-2-1 rule, `SECURITY.md` §11).
-**Next step: Phase 1 — scaffold the Laravel backend data model and
-authorization Policies.**
+Phase 1 and Phase 2 complete. Laravel backend (`arkworkers-api/`) has
+the full core data model, email + password auth with email-OTP signup
+verification, the space-restriction Policy layer, and CRUD/task
+endpoints, all tested (71 tests passing at last count, see
+`ai-context.md` for the current number). Frontend not started yet.
+**Next step: Phase 3, the offline reliability layer** (offline-first
+caching/sync, resumable/chunked upload, conflict resolution), the
+phase the research most strongly says not to rush or skip.
 
 ## 7. What's NOT Decided Yet
 

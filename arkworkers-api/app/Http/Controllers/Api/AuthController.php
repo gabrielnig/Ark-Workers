@@ -119,6 +119,13 @@ class AuthController extends Controller
         ]);
     }
 
+    public function logout(Request $request): JsonResponse
+    {
+        $request->user()->currentAccessToken()->delete();
+
+        return response()->json(['message' => 'Logged out.']);
+    }
+
     private function issueEmailOtp(User $user): void
     {
         $code = (string) random_int(100000, 999999);

@@ -165,4 +165,27 @@ class AuthTest extends TestCase
         $this->postJson('/api/auth/login', ['email' => $user->email, 'password' => 'a-strong-password'])->assertOk();
         $this->postJson('/api/auth/login', ['email' => $user->email, 'password' => 'wrong'])->assertStatus(401);
     }
+
+    public function test_logout_revokes_the_current_token(): void
+    {
+        $user = User::factory()->create();
+        $token = $user->createToken('login')->plainTextToken;
+
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson('/api/auth/logout')
+            ->assertOk();
+
+        $this->assertSame(0, $user->tokens()->count());
+
+        // The Sanctum guard caches its resolved user for the lifetime
+        // of the guard instance, which survives across HTTP calls made
+        // within one test method, forgetGuards forces it to
+        // re-resolve from the (now-deleted) token on the next request,
+        // matching what actually happens on separate real requests.
+        auth()->forgetGuards();
+
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->getJson('/api/user')
+            ->assertUnauthorized();
+    }
 }

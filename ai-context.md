@@ -23,9 +23,9 @@ verification), space-restriction Policy layer. Phase 2 so far: full
 CRUD controllers for Spaces, Assets, Asset Types (genuinely open-ended,
 new asset types need zero code changes), Task list/detail/manual-
 assignment/completion, non-resumable proof upload, Asset soft-delete
-with a 30-day grace period before permanent pruning. 70 tests passing,
-141 assertions. See `arkworkers-api/` directly for the code, this file
-stays high-level.
+with a 30-day grace period before permanent pruning. Auth includes
+logout (token revocation). 71 tests passing, 144 assertions. See
+`arkworkers-api/` directly for the code, this file stays high-level.
 
 **Data-loss policy, decided per entity (see LESSONS.md for the
 reasoning):** Users are never deletable, restrictOnDelete blocks it
@@ -89,12 +89,17 @@ Standing process rules now in force for every future session (see
    step, rate limited. No SMS anywhere, cost decision. SpacePolicy, AssetPolicy,
    RoutinePolicy, TaskPolicy, all delegating through SpacePolicy for
    the space-restriction check. 44 tests passing.
-2. **Phase 2 (next): core task loop.** Task list, detail, completion,
-   basic proof upload (non-resumable first), and Space/Asset CRUD
-   controllers for Admin/Facility Manager.
-3. Phase 3: offline reliability layer (sync, resumable upload, conflict
-   resolution) — flagged by research as the phase most critical not to
-   rush or skip
+2. **Phase 2: complete.** SpaceController, AssetController,
+   AssetTypeController (full CRUD, policy-gated). TaskController (list,
+   detail, manual assignment, completion). Non-resumable proof upload.
+   Asset soft-delete with 30-day grace period + scheduled pruning.
+   Auth logout added. 71 tests passing.
+3. **Phase 3 (next): offline reliability layer.** Offline-first
+   caching/sync, resumable/chunked upload (upgrading Phase 2's
+   non-resumable version), conflict resolution (first-sync-wins,
+   discarded duplicate logged, not silently dropped, per
+   `ARCHITECTURE.md` §5). Flagged by research as the phase most
+   critical not to rush or skip.
 4. Phase 4: scheduling (hybrid PM triggers) and reporting
 5. Phase 5: polish (task messaging, asset history, PM compliance KPI)
 6. Phase 6: Android + iOS packaging via Capacitor

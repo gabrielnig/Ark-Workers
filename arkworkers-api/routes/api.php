@@ -17,6 +17,8 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/auth/logout', [AuthController::class, 'logout']);
+
     Route::apiResource('spaces', SpaceController::class);
     Route::apiResource('assets', AssetController::class);
 
