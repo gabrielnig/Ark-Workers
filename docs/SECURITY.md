@@ -490,10 +490,24 @@ deployment specifically:
   auth only, no password SSH).
 - **Database access** — DB not exposed to the public internet; accessible
   only from the application server (localhost or private network).
-- **Backups** — automated, encrypted backups, stored off the primary VPS
-  (separate storage/provider) so a VPS compromise doesn't also destroy
-  backup integrity. Test restore procedure periodically — an untested
-  backup is not a reliable backup.
+- **Backups** — 3-2-1 backup strategy, not just an automated cloud
+  backup:
+  1. **Live copy** — the production VPS database and media files.
+  2. **Automated encrypted offsite copy** — nightly DB dump + media
+     backup, encrypted before upload, sent to a **different provider**
+     than the VPS host (e.g. Backblaze B2 or similar) — protects
+     against the VPS provider itself having an outage or the VPS
+     account being compromised.
+  3. **Physical/offline copy** — monthly (or after any major milestone),
+     download the latest encrypted backup to a physical external drive
+     kept off the church network entirely (e.g. a locked cabinet in the
+     admin office, never plugged into an always-on machine). This is
+     the true worst-case fallback: if the VPS and the cloud backup
+     provider were both compromised or inaccessible simultaneously, an
+     air-gapped physical copy nobody can reach over the internet is
+     still restorable.
+  Test the restore procedure periodically against all three copies —
+  an untested backup is an assumption, not a safeguard.
 - **Rate limiting & VPS resource protection** — per shared baseline,
   token-bucket rate limiting on all public endpoints; this matters more
   on a single VPS than on auto-scaling managed infrastructure, since
