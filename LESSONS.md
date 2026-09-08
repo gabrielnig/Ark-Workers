@@ -10,6 +10,17 @@ the actual problem was, what to do differently going forward.
 
 ## Pre-Build / Documentation Phase
 
+### Backups need a physical/offline layer, not just cloud redundancy
+**What happened:** initial `SECURITY.md` backup guidance specified
+encrypted offsite backups but didn't address the scenario where both the
+VPS and the cloud backup provider are simultaneously compromised or
+inaccessible.
+**Lesson:** for a self-hosted, single-point-of-failure deployment, the
+3-2-1 rule (live copy + offsite cloud copy + physical/air-gapped copy)
+is the actual standard, not just "backup to a different server." Always
+ask whether a backup strategy has a true offline/air-gapped layer, not
+just geographic/provider redundancy.
+
 ### Cross-reference renumbering breaks silently
 **What happened:** while expanding `SECURITY.md` with new sections, three
 internal cross-references ("see Section 9") went stale after later
