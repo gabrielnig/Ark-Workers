@@ -17,9 +17,11 @@ role-based + space-level-restricted authorization system (the Prophet's
 Quarters is the concrete case driving this design).
 
 **Current state: documentation-complete, zero code written.** PRD,
-Security/Compliance spec, Design System, and Architecture are all
-finalized and in the repo. Logo is finalized. Next step is scaffolding
-the Laravel backend and React frontend.
+Security/Compliance spec, Design System, Architecture, and industry
+Research are all finalized and in the repo. Logo is finalized. Backup
+strategy (3-2-1 with a physical offsite copy) is decided. Next step is
+scaffolding the Laravel backend — Phase 1 per the build plan in
+`RESEARCH.md` §7.
 
 ---
 
@@ -37,6 +39,14 @@ the Laravel backend and React frontend.
 - **Logo** — finalized, full asset set in `docs/assets/logo/`
 - **Legal compliance baseline** — NDPA 2023 obligations mapped in
   `SECURITY.md` §2
+- **Industry research** — CMMS, fleet management, church-specific
+  software, and mobile field-service apps researched and documented in
+  `RESEARCH.md`. Validated the existing architecture rather than
+  requiring major changes; one concrete improvement (hybrid PM
+  triggers) folded into `ARCHITECTURE.md` §3
+- **Backup strategy** — 3-2-1 rule (live + offsite cloud + physical
+  offline copy), documented in `SECURITY.md` §11 and `DEPLOYMENT.md`
+  §2.5
 - **Stack** — Laravel/PostgreSQL backend, React/Capacitor frontend,
   decided and documented in `ARCHITECTURE.md` §1
 - **iOS is a confirmed future target, not launch scope** — Capacitor was
@@ -47,19 +57,22 @@ the Laravel backend and React frontend.
 
 ## 3. Known Unknowns (Immediate Roadmap)
 
-1. Scaffold Laravel backend (migrations for the core data model, auth
-   setup, Policy classes)
-2. Scaffold React PWA (component structure matching `DESIGN-SYSTEM.md`,
-   Capacitor config for Android wrapping)
-3. Resolve the open decisions listed in `SECURITY.md` §12 and
-   `ARCHITECTURE.md` §9 before they block a specific build step (e.g.
+1. **Phase 1 (starting now):** scaffold Laravel backend — migrations for
+   the core data model, auth setup, Policy classes. Build and test
+   authorization first, before any other feature, per `RESEARCH.md` §7.
+2. Phase 2: core task loop (list, detail, completion, basic proof
+   upload)
+3. Phase 3: offline reliability layer (sync, resumable upload, conflict
+   resolution) — flagged by research as the phase most critical not to
+   rush or skip
+4. Phase 4: scheduling (hybrid PM triggers) and reporting
+5. Phase 5: polish (task messaging, asset history, PM compliance KPI)
+6. Phase 6: Android + iOS packaging via Capacitor
+7. Resolve the open decisions listed in `SECURITY.md`, `ARCHITECTURE.md`,
+   and `DEPLOYMENT.md` before they block a specific build step (e.g.
    session model needs deciding before auth is built)
-4. Build the resumable upload flow (Section 6 of `ARCHITECTURE.md`) —
-   flagged as one of the highest-risk/highest-effort pieces
-5. Set up CI/CD and the security-scanning-harness cadence once there's
-   code to scan
-6. iOS build — deferred, not urgent, but revisit target timing once
-   Android is stable (see `ARCHITECTURE.md` §9)
+8. Assign a real person to the monthly physical-backup responsibility
+   (`SECURITY.md` §11) — not yet assigned to anyone
 
 ## 4. Unknown Knowns (Implicit Design Patterns)
 
