@@ -59,8 +59,12 @@ only. See `SECURITY.md` §4 and `ARCHITECTURE.md` §4.
 ## 6. Current Status
 
 Documentation phase complete. No code written yet. Stack decided
-(Laravel + PostgreSQL backend, React PWA + Capacitor for Android). Next
-step: scaffold the backend data model and authorization Policies.
+(Laravel + PostgreSQL backend, React PWA + Capacitor for Android, iOS
+planned as a low-effort future addition). Industry research complete
+(`RESEARCH.md`) — validated the architecture, added a hybrid PM-trigger
+improvement. Backup strategy decided (3-2-1 rule, `SECURITY.md` §11).
+**Next step: Phase 1 — scaffold the Laravel backend data model and
+authorization Policies.**
 
 ## 7. What's NOT Decided Yet
 
