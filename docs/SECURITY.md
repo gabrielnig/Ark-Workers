@@ -134,15 +134,15 @@ clients) gets a Bearer token, decided automatically server-side.
   XSRF-TOKEN/X-XSRF-TOKEN pair), the Android app gets a Bearer token.
   Sanctum tokens currently have no expiration set
   (`config/sanctum.php` → `'expiration' => null`), meaning "still
-  authorized" currently means "not revoked," not "not stale" — flagged
+  authorized" currently means "not revoked," not "not stale", flagged
   in `ai-context.md` as needing an explicit decision before the
   offline-reconnect re-validation logic (Section 6.4) is built.
 - Sessions tied to a device identifier where practical, since staff
   devices are often shared or fixed per role/shift rather than 1:1
-  personal devices — this needs an explicit product decision (see
+  personal devices, this needs an explicit product decision (see
   Section 12, Open Decision #1).
 - Auto-logout after a defined inactivity period for Admin and anyone
-  with a management-granting department role — shorter timeout than
+  with a management-granting department role, shorter timeout than
   for ordinary department members doing routine task logging.
 
 ### 3.3 Multi-Factor Considerations
@@ -157,7 +157,7 @@ clients) gets a Bearer token, decided automatically server-side.
 ## 4. Authorization & the Row/Zone-Level Security Model
 
 This is the most architecturally important section for ArkWorkers,
-because the data model is not simple per-user ownership — it's
+because the data model is not simple per-user ownership, it's
 **role-based access layered with zone-level (Space-level) restriction**.
 
 ### 4.1 Departments, Roles, and Admin (updated from the original fixed
@@ -175,8 +175,8 @@ does not bypass anything. Every permission check is still enforced
 server-side; client-side checks (hiding a button) are UX only and must
 never be the actual security boundary.
 
-### 4.2 The Prophet's Quarters Restriction — Concrete Implementation
-The PRD flags the Quarters as needing "different rules — more
+### 4.2 The Prophet's Quarters Restriction, Concrete Implementation
+The PRD flags the Quarters as needing "different rules, more
 private/limited tracking." This must be implemented as an explicit
 **space-level visibility flag**, not folded into the general
 department/role system:
@@ -184,7 +184,7 @@ department/role system:
 ```sql
 -- Every query against Spaces, Assets, Routines, and Tasks must filter
 -- through both the user's Admin status AND the space's restriction
--- flag — never Admin status alone, and management permission does
+-- flag, never Admin status alone, and management permission does
 -- NOT bypass this, only Admin does.
 
 SELECT * FROM assets
@@ -201,23 +201,23 @@ WHERE space_id = $requested_space_id
 
 - Add a `space_access_grants` table so specific individuals (e.g. the one
   cleaning staff member who services the Quarters kitchen) can be granted
-  access to a restricted space **without** being promoted to Admin — this
+  access to a restricted space **without** being promoted to Admin, this
   matches the PRD's note that the Quarters kitchen is cleaned daily by
   dedicated staff, distinct from the general Saturday crew.
 - This same pattern (space-level restriction + explicit access grants)
   should be the template for any future restricted zone, not a one-off
-  special case hardcoded for the Quarters alone — keeps the system
+  special case hardcoded for the Quarters alone. This keeps the system
   modular per the PRD's core requirement.
 - Restricted-space data must also be excluded from generic dashboard
   aggregates, daily summary reports, and search results for any user
-  without Admin status or a grant — a restriction that only hides the
+  without Admin status or a grant. A restriction that only hides the
   detail view but still surfaces the space's name/existence in an
   overview list is not actually restricted.
 
 ### 4.3 General IDOR Prevention
 Every asset, task, vehicle, and routine record must be scoped by
 authenticated user + Admin status/management permission + space grant
-on every read/write — never by a client-supplied ID alone. Apply the
+on every read/write, never by a client-supplied ID alone. Apply the
 pattern from `shared-protocols/SECURITY-BASELINE.md` Section 4
 uniformly across every API route.
 
@@ -225,10 +225,10 @@ uniformly across every API route.
 - Vehicle documents (insurance, roadworthiness, registration/particulars)
   and fuel/mileage logs: visible to Admin, a manager (any department
   role flagged to grant management permission), and the vehicle's
-  assigned driver only — not the full staff list.
+  assigned driver only, not the full staff list.
 - Document expiry alerts (Section 7) should notify Admin/a manager by
   default; the assigned driver optionally, depending on your
-  preference — flagging as an open decision (Section 12).
+  preference, flagging as an open decision (Section 12).
 
 ---
 

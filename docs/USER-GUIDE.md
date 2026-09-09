@@ -1,6 +1,6 @@
-# ArkWorkers.app — User Guide
+# ArkWorkers.app, User Guide
 
-**Status:** stub — full guide written once the real screens are built
+**Status:** stub, full guide written once the real screens are built
 and can be screenshotted (mockups are approved, the actual React
 screens aren't built yet, see `ai-context.md`). Structure and content
 outline locked now, and kept in sync with the actual auth/org-structure
@@ -27,7 +27,7 @@ Driver, and similar)
 - How to find your assigned tasks for the day
 - How to complete a task and upload photo/video proof
 - What to do if the upload fails or your connection drops mid-upload
-  (should be genuinely simple — this is the resumable-upload flow from
+  (should be genuinely simple, this is the resumable-upload flow from
   `DESIGN-SYSTEM.md` §6.1, but the guide needs to explain it in plain
   language for non-technical users, not yet built, Phase 3)
 - What a "restricted zone" badge means and what to do if you need
@@ -59,7 +59,7 @@ per-department and admin-configurable, see `ai-context.md` §2)
 
 ## Format
 
-Once built: short, task-oriented sections with screenshots — "How do I
+Once built: short, task-oriented sections with screenshots, "How do I
 ...?" headings, not a feature-by-feature dump. Written at the reading
 level and technical comfort of the actual staff base (per the "warm,
 non-technical" direction in `DESIGN-SYSTEM.md` §1).

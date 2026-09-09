@@ -1,12 +1,57 @@
-# ArkWorkers.app — Lessons Learned
+# ArkWorkers.app, Lessons Learned
 
-Running log of mistakes, surprises, and corrections during this build —
+Running log of mistakes, surprises, and corrections during this build ,
 so the same mistake doesn't get made twice, by a human or an AI session.
 
 **Format:** newest entries at the top. Each entry: what happened, what
 the actual problem was, what to do differently going forward.
 
 ---
+
+## First VPS Deploy
+
+### A dash-detection command that silently didn't work
+**What happened:** the shell pattern used all session to check for
+banned em/en dashes (`grep -rln $'\xe2\x80\x94\|\xe2\x80\x93'`) was
+quietly failing to match in some contexts. A direct-character grep
+(`grep -rl` for the literal em/en dash characters directly) found 358
+real occurrences across documentation
+files that the byte-escape version had been reporting as clean. Every
+prior "dash sweep, clean" claim this session needs to be read as
+"clean by a check that turned out to be unreliable," not as a
+guarantee.
+**Lesson:** verify a detection tool actually detects the thing it
+claims to, on a known-bad sample, before trusting a long run of clean
+results from it. A check that always passes is indistinguishable from
+a broken check until something forces a second method.
+
+### Registrar UI fields aren't self-explanatory, verify what actually got saved
+**What happened:** Namecheap's "Host" field for an A record needs just
+the subdomain (`@` for root, `api` for a subdomain), not the full
+domain name. Typing `arkworkers.app` into that field doesn't error,
+doesn't warn, and looks correct in the UI, it silently creates
+`arkworkers.app.arkworkers.app` instead. Caught by testing DNS
+resolution directly against the authoritative nameserver rather than
+trusting the registrar's dashboard rendering.
+**Lesson:** after any DNS change, verify what actually resolves, not
+just what the control panel displays. A dashboard showing the value
+you typed is not confirmation the record does what you meant.
+
+### A framework default can quietly assume infrastructure that doesn't exist
+**What happened:** Laravel's default guest-authentication handling
+tries to redirect to a route named `login` when a request doesn't
+explicitly ask for JSON. This API-only app has no such route, so an
+unauthenticated request without an `Accept: application/json` header
+(which the real frontend always sends, but not every possible client
+would) crashed with a 500 instead of a clean 401, only surfaced once
+tested against the real domain with a plain curl request.
+**Lesson:** framework defaults tuned for a full-stack app (with web
+routes, named routes, views) can fail silently or crash in an API-only
+app that never needed them. Explicitly configure the behavior
+(`redirectGuestsTo(fn () => null)`) rather than assume the default is
+neutral just because nothing in normal testing exercised the gap.
+
+
 
 ## Chunked Upload (Phase 3)
 
@@ -228,7 +273,7 @@ before considering the edit done. Don't rely on catching this by eye.
 ### Design tool color/font drift
 **What happened:** Google Stitch, when given an exact 6-color hex
 palette, generated a full derived Material Design 3 tonal palette instead
-of using the values directly — and on the following correction round,
+of using the values directly, and on the following correction round,
 applied the fix to *new* screens/assets but not to the four *existing*
 screens, because Stitch treated each addition as an isolated generation
 context.
@@ -238,7 +283,7 @@ than assuming a correction request will propagate everywhere it should.
 Verify by grepping the returned code for the exact expected values, not
 by eyeballing screenshots.
 
-### Recoloring a provided logo — background detection needs flood-fill,
+### Recoloring a provided logo, background detection needs flood-fill,
 not per-pixel distance
 **What happened:** first attempt at cutting out a logo's background using
 per-pixel color-distance thresholding left visible artifacts (a residual
@@ -247,12 +292,12 @@ interior pixels happened to be near the background color threshold.
 **Lesson:** for background removal/alpha cutout tasks, use connected-
 component flood-fill from the image border to identify the *true*
 contiguous background region, not a global per-pixel color distance
-check — the latter misclassifies interior pixels that happen to be
+check, the latter misclassifies interior pixels that happen to be
 color-similar to the background.
 
 ### Voice dictation naming errors
 **What happened:** a dictated message named the app "Aquacast" instead of
-"ArkWorkers" — almost led to building an entire design prompt around the
+"ArkWorkers", almost led to building an entire design prompt around the
 wrong name before catching it with a clarifying question first.
 **Lesson:** when a dictated/voice message introduces a new proper noun
 that doesn't match anything in prior context, confirm before proceeding

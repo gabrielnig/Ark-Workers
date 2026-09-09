@@ -1,11 +1,42 @@
-# ArkWorkers.app — Changelog
+# ArkWorkers.app, Changelog
 
 All notable changes to the project. Format loosely follows Keep a
-Changelog (keepachangelog.com) — newest at top.
+Changelog (keepachangelog.com), newest at top.
 
 ---
 
 ## [Unreleased]
+
+### First live deploy: arkworkers.app and api.arkworkers.app, real SSL, real users already
+- Deployed to a shared Contabo VPS alongside an unrelated existing
+  project (ARC Music), added PHP 8.3, Composer, and two new Nginx
+  server blocks without touching ARC Music's sites, database, or
+  certificates, all confirmed still working throughout
+- PostgreSQL reused (was already running), new isolated database and
+  user created for ArkWorkers, fully separate credentials
+- Deploy via git-pull and a dedicated read-only GitHub Deploy Key, not
+  a personal access token
+- SSL live on arkworkers.app, www.arkworkers.app, and
+  api.arkworkers.app via Let's Encrypt, auto-renewing
+- Full cookie-based dual-mode auth verified over real production
+  HTTPS, not just locally: login, and a follow-up request
+  authenticated by the session cookie alone
+- A real person already submitted a sign-up request on the live site
+  before this changelog entry was written, unprompted
+- Real gotchas hit and fixed, full writeups in LESSONS.md: a
+  misconfigured Namecheap DNS Host field (typed the full domain
+  instead of just the subdomain), a leftover DatabaseSeeder line that
+  broke the first `--no-dev` install (called `fake()`, a dev-only
+  dependency), a CSP `connect-src` that would have silently blocked
+  every API call once frontend and backend were split across
+  subdomains, and Laravel's default guest-redirect crashing with a
+  500 instead of a 401 on this API-only app
+- Also discovered and fixed: the dash-detection command used all
+  session for the no-em-dash standing rule was silently broken, found
+  and fixed 358 real occurrences across the docs this had been
+  missing, see LESSONS.md
+- 112 tests passing, 229 assertions, unchanged by this deploy, this
+  was infrastructure work, not application code
 
 ### Real My Work worker screens built, offline sync and chunked upload now have a UI
 - `MyWorkScreen` (task list) and `TaskDetailScreen` (completion + proof
@@ -94,7 +125,7 @@ Changelog (keepachangelog.com) — newest at top.
 - Deliberately did not build: the mockup's Forgot-password link (no
   backend), the Approved/Rejected-this-month stat cards (no backend
   data source), or the non-"Pending requests" sidebar nav items
-  (those screens don't exist yet) — all left out rather than shipped
+  (those screens don't exist yet), all left out rather than shipped
   as dead UI
 - 102 tests passing, 197 assertions
 
@@ -201,16 +232,16 @@ Changelog (keepachangelog.com) — newest at top.
   see LESSONS.md
 
 ### Documentation Phase (pre-code) - COMPLETE
-- Added `PRD.md` — full requirements brainstorm
-- Added `SECURITY.md` — security & NDPA compliance specification
+- Added `PRD.md`, full requirements brainstorm
+- Added `SECURITY.md`, security & NDPA compliance specification
   (later expanded with API/network hardening, incident response,
   field-level encryption, and 3-2-1 backup strategy)
-- Added `DESIGN-SYSTEM.md` — visual identity and component standard
-- Added logo assets (`docs/assets/logo/`) — final recolored mark, all
+- Added `DESIGN-SYSTEM.md`, visual identity and component standard
+- Added logo assets (`docs/assets/logo/`), final recolored mark, all
   variants (light/dark, monochrome, favicons)
-- Added `ARCHITECTURE.md` — technical stack and data model (later
+- Added `ARCHITECTURE.md`, technical stack and data model (later
   updated with hybrid PM-trigger design and iOS/cross-platform notes)
-- Added `RESEARCH.md` — industry research across CMMS, fleet
+- Added `RESEARCH.md`, industry research across CMMS, fleet
   management, church software, and mobile field-service apps
 - Added `ai-context.md`, `LESSONS.md`, `HANDOVER.md`, `API.md`,
   `USER-GUIDE.md`, `DEPLOYMENT.md`, `DEV-SETUP.md`, `GLOSSARY.md`,
@@ -220,4 +251,4 @@ Changelog (keepachangelog.com) — newest at top.
 - Backup strategy decided: 3-2-1 rule with a physical offsite copy
 
 **No code written yet.** Phase 1 (backend scaffold + auth) begins next
-session — see `ai-context.md` for full current state.
+session, see `ai-context.md` for full current state.

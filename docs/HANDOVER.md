@@ -60,22 +60,26 @@ only. See `SECURITY.md` §4 and `ARCHITECTURE.md` §4.
 
 ## 6. Current Status
 
-Phase 1 and Phase 2 complete. An auth/org-structure rework (admin-
-approval sign-ups replacing self-service, department/role-based
-authorization replacing the old fixed role enum) came up as a
-prerequisite while starting Phase 3 and is also now complete, see
-`ai-context.md` §1 for the full detail. Laravel backend
-(`arkworkers-api/`) has the full core data model, dual-mode auth
-(session cookie for the PWA, Bearer token for mobile/API clients), the
-account-request/invite-link pipeline, the space-restriction Policy
-layer, and CRUD/task endpoints, all tested (99 tests passing at last
-count, see `ai-context.md` for the current number). Frontend
-(`arkworkers-web/`) scaffolded (Vite/React/Capacitor) but no real
-screens built yet, three mockups approved as HTML files pending the
-real build. **Next step: the actual Phase 3 offline reliability layer**
-(offline-first caching/sync, resumable/chunked upload, conflict
-resolution), the phase the research most strongly says not to rush or
-skip, plus building the real screens against the now-real backend.
+**Live at https://arkworkers.app (frontend) and https://api.arkworkers.app
+(backend), deployed this session.** Phase 1, Phase 2, the auth/org-
+structure rework, and Phase 3 (offline sync foundation, resumable
+chunked upload) are all complete and deployed. Real Login, Sign-up,
+Admin-requests, and My Work screens are built, tested against the
+real backend, and verified over real HTTPS in production, not just
+locally. Laravel backend (`arkworkers-api/`) has the full core data
+model, dual-mode auth (session cookie for the PWA, Bearer token for
+mobile/API clients), the account-request/invite-link pipeline, the
+department/role authorization model, task-completion conflict
+handling, resumable chunked upload, and CRUD/task endpoints, all
+tested (112 tests passing at last count, see `ai-context.md` for the
+current number). Frontend (`arkworkers-web/`) has real screens for
+sign-in, sign-up, admin approval, and worker task management with
+offline queueing and resumable proof upload. See `docs/DEPLOYMENT.md`
+for the live infrastructure and the real gotchas hit getting it
+deployed. **Next step: real device verification** (actually using the
+live site on a phone, offline and online) and a database backup
+schedule, which does not exist yet on the now-public deployment,
+flagged as a real gap in `DEPLOYMENT.md` §2.5.
 
 ## 7. What's NOT Decided Yet
 

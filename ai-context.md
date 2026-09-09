@@ -1,7 +1,6 @@
-# AI Context Matrix — ArkWorkers.app
+# AI Context Matrix, ArkWorkers.app
 
-**Last updated:** End of auth/org-structure rework session (Phase 3
-started, then paused for a prerequisite rebuild)
+**Last updated:** End of first live VPS deployment session
 **Update this file at the end of every significant work session**, this
 is the first thing any future session (Claude or human) should read.
 
@@ -17,10 +16,16 @@ Spaces → Assets (of configurable Asset Types) → Routines → Tasks, with a
 department/role-based + space-level-restricted authorization system (the
 Prophet's Quarters is the concrete case driving space restriction design).
 
-**Current state: Phase 1 and 2 complete, the auth/org-structure prerequisite
-complete, real Login/Sign-up/Admin-requests/My-Work screens all built and
-verified, offline sync and resumable chunked upload both have a real UI
-now, not just backend plumbing.** Laravel 13 app lives in `arkworkers-api/`,
+**Current state: live.** https://arkworkers.app (frontend) and
+https://api.arkworkers.app (backend) are deployed and working, real
+SSL, real cookie-based auth verified over production HTTPS, and a
+real unprompted sign-up request already came in from an actual person
+before this file was last updated. Phase 1 and 2, the auth/org-structure
+prerequisite, and Phase 3 (offline sync foundation, resumable chunked
+upload) are all complete and deployed. Real Login/Sign-up/Admin-requests/
+My-Work screens are built and verified. See `docs/DEPLOYMENT.md` for the
+live infrastructure and the real gotchas hit getting it deployed.
+Laravel 13 app lives in `arkworkers-api/`,
 React/Vite/Capacitor frontend lives in `arkworkers-web/`. 112 tests
 passing, 229 assertions on the backend; no frontend test framework
 decided or set up yet (flagged, not silently resolved, see §3).
@@ -55,7 +60,7 @@ changes, not additions:**
   in each (`department_user` pivot, one row per department
   membership, enforced by a unique constraint).
 - `User::hasManagementPermission()` is Admin OR any department
-  membership whose role has `grants_management = true` — this flag is
+  membership whose role has `grants_management = true`, this flag is
   admin-toggled per role, policies never hardcode a role or department
   name.
 - `User::bypassesSpaceRestrictions()` is Admin-only now.
@@ -63,8 +68,8 @@ changes, not additions:**
   a role or department.
 - Seeded starting data (`DepartmentRoleSeeder`): 8 departments
   (Cleaning, Maintenance, Security, Driver, Facility Management,
-  Choir, Sound, Ushering), 3 roles (Member — no management, Supervisor
-  and Coordinator — both grant management), all three roles enabled on
+  Choir, Sound, Ushering), 3 roles (Member, no management, Supervisor
+  and Coordinator, both grant management), all three roles enabled on
   every seeded department. All admin-editable afterward.
 
 **Frontend scaffold started, no real screens yet.** Vite + React +
@@ -111,9 +116,9 @@ Standing process rules now in force for every future session (see
 
 ## 2. Known Knowns (Finalized Core)
 
-- **Data model** — Spaces, Asset Types, Assets, Routines, Tasks structure
+- **Data model**, Spaces, Asset Types, Assets, Routines, Tasks structure
   is locked (`PRD.md` §2, `ARCHITECTURE.md` §3)
-- **Authorization model, v2** — department/role-based (both admin-
+- **Authorization model, v2**, department/role-based (both admin-
   manageable, not fixed enums) + explicit space-access-grants for
   restricted zones, implemented via Laravel Policies plus
   `User::hasManagementPermission()`. Admin-only bypasses space
@@ -121,29 +126,29 @@ Standing process rules now in force for every future session (see
   replaced the original single-role-enum model this session and must
   not be redesigned again without a real reason, it's now the second
   time this specific piece has been reworked
-- **Account creation model** — admin-approval only, no self-service.
+- **Account creation model**, admin-approval only, no self-service.
   Request → Admin approve/reject → single-use invite link → worker
   sets password → active. Locked this session, see §1 above for the
   concrete endpoints
-- **Color/type/component design system** — finalized in
+- **Color/type/component design system**, finalized in
   `DESIGN-SYSTEM.md`. Typography updated this session to Plus Jakarta
   Sans + Work Sans (was Nunito), touch target minimum stays 44px
   (Stitch's export used 48px, deliberately not adopted, see
   DESIGN-SYSTEM.md §3 for the reasoning)
-- **Logo** — finalized, full asset set in `docs/assets/logo/`
-- **Legal compliance baseline** — NDPA 2023 obligations mapped in
+- **Logo**, finalized, full asset set in `docs/assets/logo/`
+- **Legal compliance baseline**, NDPA 2023 obligations mapped in
   `SECURITY.md` §2
-- **Industry research** — CMMS, fleet management, church-specific
+- **Industry research**, CMMS, fleet management, church-specific
   software, and mobile field-service apps researched and documented in
   `RESEARCH.md`. Validated the existing architecture rather than
   requiring major changes; one concrete improvement (hybrid PM
   triggers) folded into `ARCHITECTURE.md` §3
-- **Backup strategy** — 3-2-1 rule (live + offsite cloud + physical
+- **Backup strategy**, 3-2-1 rule (live + offsite cloud + physical
   offline copy), documented in `SECURITY.md` §11 and `DEPLOYMENT.md`
   §2.5
-- **Stack** — Laravel/PostgreSQL backend, React/Capacitor frontend,
+- **Stack**, Laravel/PostgreSQL backend, React/Capacitor frontend,
   decided and documented in `ARCHITECTURE.md` §1
-- **iOS is a confirmed future target, not launch scope** — Capacitor was
+- **iOS is a confirmed future target, not launch scope**, Capacitor was
   specifically chosen to make this a low-effort addition later rather
   than a rewrite. Practical implication for every frontend decision from
   here on: no Android-only native plugins or assumptions, build against
@@ -161,35 +166,38 @@ Standing process rules now in force for every future session (see
    while starting Phase 3 (the sign-up/login UI needed a real backend
    to build against), not originally planned as its own phase, see
    LESSONS.md for how it grew.
-4. **Phase 3: functionally complete pending real-device verification.**
+4. **Phase 3: deployed, pending real-device verification.**
    Real Login, Sign-up, Admin-requests, and My Work screens are all
-   built and verified against the real backend. Offline sync
-   (conflict handling + queued/persisted mutations + reconnect replay)
-   and resumable chunked upload both have working UI now
-   (`MyWorkScreen`, `TaskDetailScreen`, `useResumableUpload`), not just
-   backend endpoints nothing calls. What's genuinely left: real
-   verification on an actual device/browser (offline toggle, a real
-   interrupted upload, real reconnect replay) — everything so far is
-   verified at the API-contract and backend-test level, no browser
-   available in this environment, and RESEARCH.md flags this exact
-   phase as the one most critical not to rush past that step. A
-   frontend test framework is also still undecided
-   (`docs/TDD-PROTOCOL.md` is PHPUnit-only).
+   built, verified against the real backend, and now live in
+   production. Offline sync (conflict handling plus queued/persisted
+   mutations plus reconnect replay) and resumable chunked upload both
+   have working UI (`MyWorkScreen`, `TaskDetailScreen`,
+   `useResumableUpload`), deployed and reachable, not just backend
+   endpoints nothing calls. What's genuinely left: actually using the
+   live site on a real phone (offline toggle, a real interrupted
+   upload, real reconnect replay). Everything so far is verified at
+   the API-contract and backend-test level plus one successful cookie
+   login over real production HTTPS, not yet exercised as a real
+   worker would use it. RESEARCH.md flags this exact phase as the one
+   most critical not to rush past that step. A frontend test framework
+   is also still undecided (`docs/TDD-PROTOCOL.md` is PHPUnit-only).
 5. Phase 4: scheduling (hybrid PM triggers) and reporting
 6. Phase 5: polish (task messaging, asset history, PM compliance KPI,
    bottom mobile nav's raised "My Work" center button opening a
    worker's private task view, per standing note)
 7. Phase 6: Android + iOS packaging via Capacitor (Android platform
    already added and syncing, iOS not started)
-8. **VPS + SSL: deliberately still not done.** Decision this session:
-   wait until Phase 3 is fully built and tested, since that's the
-   first phase where the offline/network layer actually needs real
-   TLS behavior to test against, deploying earlier just means
-   maintaining a live target nothing is exercising yet.
+8. **VPS + SSL: done.** Live at https://arkworkers.app and
+   https://api.arkworkers.app, deployed alongside an existing
+   unrelated project on the same VPS without disturbing it. See
+   `docs/DEPLOYMENT.md` §7 for the real gotchas hit getting there.
+   **No backup schedule exists yet on this now-public deployment**,
+   flagged as a real live gap in `DEPLOYMENT.md` §2.5, worth doing
+   before relying on this for anything beyond testing.
 9. Resolve remaining open decisions in `SECURITY.md`, `ARCHITECTURE.md`,
    `DEPLOYMENT.md` before they block a specific build step
 10. Assign a real person to the monthly physical-backup responsibility
-    (`SECURITY.md` §11) — not yet assigned to anyone
+    (`SECURITY.md` §11), not yet assigned to anyone
 11. **Cleanup flagged, not yet done:** `verifyEmailOtp` endpoint and
     `OtpCode` model are now orphaned (nothing produces a valid code
     since self-service registration was removed). Decide whether to
@@ -208,28 +216,45 @@ Standing process rules now in force for every future session (see
     manual, not an automated frontend test suite. Decide Vitest vs
     something else before the frontend grows much further, don't let
     this stay silently unresolved
+14. **Fixed this session, worth knowing about:** the dash-detection
+    command used all prior sessions for the no-em-dash standing rule
+    was silently broken (a byte-escape grep pattern that didn't
+    reliably match). A direct-character check found 358 real
+    occurrences across the docs it had been missing. Fixed everywhere
+    this session's work touched, see LESSONS.md. Use a direct
+    character check going forward, not the byte-escape pattern.
+15. **Next planned session: a UI overhaul using Brevo's design system
+    as a reference.** Plan discussed but not yet started: use Claude
+    for Chrome to analyze the Brevo platform's actual UI (not just a
+    written description of it), then adapt relevant patterns into
+    ArkWorkers' existing plain-CSS, Plus Jakarta Sans/Work Sans,
+    moss/sand/bark/clay design system, same as the Stitch-comparison
+    approach used for the My Work screen: adopt genuinely good
+    structural ideas, strip anything that doesn't match what's
+    actually built. Not a wholesale swap to Brevo's own visual
+    identity, still ArkWorkers' brand and stack.
 
 ## 4. Unknown Knowns (Implicit Design Patterns)
 
-- Unique works in **checkpointed batches** — prefers completing and
+- Unique works in **checkpointed batches**, prefers completing and
   verifying one deliverable fully before moving to the next, rather than
   parallel half-finished work
 - Strong preference for **catching my own mistakes before presenting
-  work** — a deliberate audit pass at the end of every major batch has
+  work**, a deliberate audit pass at the end of every major batch has
   caught real issues every single time it's been done, never a wasted
   step
-- Prefers **concrete numbers/values over vague guidance** — e.g. asked
+- Prefers **concrete numbers/values over vague guidance**, e.g. asked
   for exact rate-limit numbers rather than "implement rate limiting,"
   exact hex codes rather than "use warm colors"
 - Building a **reusable protocol library** (`shared-protocols` repo)
-  alongside project-specific work — general patterns should be
+  alongside project-specific work, general patterns should be
   extracted there, not just solved once for ArkWorkers
 - **Product decisions arrive mid-build, via dictation, often stated
   loosely at first** ("departments and roles are separate," described
-  over several messages before the full shape was clear) — worth
+  over several messages before the full shape was clear), worth
   reflecting the concrete proposed schema/design back before writing
   code, rather than building on the first pass of a verbal description
-- **Real scope can hide inside what looks like a small UI request** —
+- **Real scope can hide inside what looks like a small UI request** ,
   "admin-approve sign-ups instead of self-service" turned into a full
   authorization-model rework (departments, roles, management
   permissions) because the UI decision and the existing single-role
@@ -282,5 +307,5 @@ simultaneous access-grant revocation). Now more concretely relevant
 since Sanctum tokens have no expiration set
 (`config/sanctum.php` → `'expiration' => null`), meaning "session
 still authorized" currently means "token not revoked," not "token not
-stale" — worth an explicit decision when Phase 3's reconnect logic is
+stale", worth an explicit decision when Phase 3's reconnect logic is
 actually built, not an assumption.

@@ -151,9 +151,9 @@ outdoor-glare use:
 | Display | 28px | 700 (Bold) | Plus Jakarta Sans | Screen titles only |
 | H1 | 22px | 700 (Bold) | Plus Jakarta Sans | Section headers |
 | H2 | 18px | 600 (SemiBold) | Plus Jakarta Sans | Card/subsection headers |
-| Body | 16px | 400 (Regular) | Work Sans | Default UI text — never smaller for primary content |
+| Body | 16px | 400 (Regular) | Work Sans | Default UI text, never smaller for primary content |
 | Body Small | 14px | 400 (Regular) | Work Sans | Secondary/meta text |
-| Label | 13px | 600 (SemiBold) | Work Sans | Form labels, status badges — sentence case, never all-caps (all-caps labels read as generated-template chrome and hurt legibility at a glance outdoors) |
+| Label | 13px | 600 (SemiBold) | Work Sans | Form labels, status badges, sentence case, never all-caps (all-caps labels read as generated-template chrome and hurt legibility at a glance outdoors) |
 
 - Line length: keep body text under 80 characters even on tablet-width
   screens — most screens here are narrow phone viewports anyway, so this
