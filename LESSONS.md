@@ -10,6 +10,23 @@ the actual problem was, what to do differently going forward.
 
 ## Auth / Org-Structure Rework (Phase 3 prerequisite)
 
+### A production build succeeding proves almost nothing about correctness
+**What happened:** `npm run build` succeeded cleanly for the real
+Login/Sign-up/Admin screens, which proved nothing about whether the
+frontend and backend actually agreed on anything. Curling the exact
+request shapes the compiled code sends (right headers, right sequence:
+prime CSRF, then submit) against a live backend surfaced two real bugs
+a clean build gave zero signal about: account-request submission would
+have 419'd for every real user, and unauthenticated requests without
+an explicit Accept header 500'd instead of cleanly 401ing.
+**Lesson:** for any frontend/backend integration point, verify the
+actual request/response contract over real HTTP with the exact headers
+the real client sends, not just that the frontend compiles and the
+backend's own test suite is green in isolation. A backend test suite
+using `getJson()` can mask a bug that a plain `fetch()` call would hit,
+since the test helper adds headers a real minimal client might not
+send.
+
 ### A UI decision ("admin-approve sign-ups") turned into a full authorization rework
 **What happened:** what started as "remove self-service registration,
 add admin approval" surfaced that the existing single `role` enum

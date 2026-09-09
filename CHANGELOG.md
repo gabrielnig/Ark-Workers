@@ -7,6 +7,34 @@ Changelog (keepachangelog.com) — newest at top.
 
 ## [Unreleased]
 
+### Real Login, Sign-up, and Admin requests screens built
+- Replaced the placeholder App.jsx with real React screens matching
+  the three approved mockups, wired to the real backend, single
+  responsive component per screen (CSS breakpoints, not separate
+  mobile/desktop builds)
+- Added `GET /departments` (public, rate limited), the sign-up
+  screen's checklist needs real data, not a hardcoded list
+- Self-hosted Plus Jakarta Sans + Work Sans as woff2, resolving
+  DESIGN-SYSTEM.md's open self-hosting decision
+- Fixed a real 500: an unauthenticated request without an explicit
+  `Accept: application/json` header crashed instead of returning a
+  clean 401, this API has no login route to redirect a guest to.
+  Caught by curling the exact request shape a plain `fetch()` sends,
+  not by the test suite (`getJson()` always sets that header). Added
+  a regression test using the raw `get()` helper
+- Fixed a real frontend bug before it shipped: account-request
+  submission would have 419'd for every real user, only login primed
+  the CSRF cookie. Now primed once at app bootstrap
+- Verified the full sign-up -> admin login -> list -> approve/reject
+  flow end to end over real HTTP, not just a production build
+  succeeding
+- Deliberately did not build: the mockup's Forgot-password link (no
+  backend), the Approved/Rejected-this-month stat cards (no backend
+  data source), or the non-"Pending requests" sidebar nav items
+  (those screens don't exist yet) — all left out rather than shipped
+  as dead UI
+- 102 tests passing, 197 assertions
+
 ### Phase 3 started, paused for an auth/org-structure rework, rework now complete
 - Auth reworked to dual-mode: browser/PWA requests from the stateful
   frontend domain get a Sanctum session cookie (CSRF-protected), no

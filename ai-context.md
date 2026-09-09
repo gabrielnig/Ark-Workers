@@ -17,12 +17,13 @@ Spaces → Assets (of configurable Asset Types) → Routines → Tasks, with a
 department/role-based + space-level-restricted authorization system (the
 Prophet's Quarters is the concrete case driving space restriction design).
 
-**Current state: Phase 1 and 2 complete, Phase 3 started then paused
-for a prerequisite auth/org-structure rebuild, which is now also
-complete.** Laravel 13 app lives in `arkworkers-api/`, React/Vite/
-Capacitor frontend scaffold lives in `arkworkers-web/` (structural
-scaffold only, no real screens built yet). 99 tests passing, 190
-assertions.
+**Current state: Phase 1 and 2 complete, the auth/org-structure prerequisite
+complete, and the real Login/Sign-up/Admin-requests screens are now built
+and verified against the real backend over HTTP.** Laravel 13 app lives
+in `arkworkers-api/`, React/Vite/Capacitor frontend lives in
+`arkworkers-web/`. 102 tests passing, 197 assertions on the backend; no
+frontend test framework decided or set up yet (flagged, not silently
+resolved, see §3).
 
 **Auth model reworked this session, twice, both real architecture
 changes, not additions:**
@@ -160,18 +161,18 @@ Standing process rules now in force for every future session (see
    while starting Phase 3 (the sign-up/login UI needed a real backend
    to build against), not originally planned as its own phase, see
    LESSONS.md for how it grew.
-4. **Phase 3 (next, actually next now): offline reliability layer.**
-   Still not started at the code level. Offline-first caching/sync
-   (React Query + IndexedDB persister already scaffolded in
-   `arkworkers-web/src/main.jsx`, no sync logic built yet),
+4. **Phase 3 (next): offline reliability layer.** Real Login, Sign-up,
+   and Admin-requests screens are now built and verified against the
+   real backend (`arkworkers-web/src/screens/`), matching the three
+   approved mockups. Offline-first caching/sync (React Query +
+   IndexedDB persister already scaffolded, no sync logic built yet),
    resumable/chunked upload (upgrading the existing non-resumable
    proof upload endpoint, decided: temp chunks assembled at the end,
    not direct offset writes), conflict resolution (first-sync-wins,
    discarded duplicate logged, not silently dropped, per
-   `ARCHITECTURE.md` §5). Flagged by research as the phase most
-   critical not to rush or skip. Real screens (login, sign-up, admin
-   dashboard) also need building against the now-real backend, using
-   the three approved mockups as the spec.
+   `ARCHITECTURE.md` §5) are the remaining pieces. An ordinary
+   worker's home/task screen ("My Work") also isn't built yet, only
+   Login/Sign-up/Admin exist so far.
 5. Phase 4: scheduling (hybrid PM triggers) and reporting
 6. Phase 5: polish (task messaging, asset history, PM compliance KPI,
    bottom mobile nav's raised "My Work" center button opening a
@@ -196,6 +197,15 @@ Standing process rules now in force for every future session (see
     mockup showed no rejection-reason field, and no search/filter is
     built server-side yet (the seeded 8 departments are small enough
     it doesn't matter yet, will matter once departments grow)
+13. **No frontend test framework decided or set up.**
+    `docs/TDD-PROTOCOL.md` is explicitly PHPUnit-scoped ("This
+    resolves the open decision flagged in TESTING.md 4"), nothing
+    equivalent exists for `arkworkers-web/`. The real screens built
+    this session were verified by curling the actual backend with the
+    exact request shapes the compiled frontend code sends, real but
+    manual, not an automated frontend test suite. Decide Vitest vs
+    something else before the frontend grows much further, don't let
+    this stay silently unresolved
 
 ## 4. Unknown Knowns (Implicit Design Patterns)
 
