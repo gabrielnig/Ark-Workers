@@ -21,6 +21,19 @@ function categorize(task, pendingSyncTaskIds) {
   return 'normal';
 }
 
+function emptyStateCopy(filter) {
+  switch (filter) {
+    case 'Overdue':
+      return { title: 'Nothing overdue', body: 'You are caught up, nothing has slipped past its due time.' };
+    case 'Completed':
+      return { title: 'Nothing completed yet', body: 'Tasks you finish today will show up here.' };
+    case 'Upcoming':
+      return { title: 'Nothing upcoming', body: 'No tasks scheduled ahead of today yet.' };
+    default:
+      return { title: 'Nothing due today', body: 'You are all caught up for today.' };
+  }
+}
+
 export default function MyWorkScreen() {
   const { data: tasks, isLoading } = useTasks();
   const isOnline = useOnlineStatus();
@@ -82,8 +95,29 @@ export default function MyWorkScreen() {
       </div>
 
       <div className="mywork-task-list">
-        {isLoading && <p className="mywork-empty">Loading...</p>}
-        {!isLoading && filtered.length === 0 && <p className="mywork-empty">Nothing here.</p>}
+        {isLoading && (
+          <div aria-hidden="true">
+            {[0, 1, 2].map((row) => (
+              <div key={row} className="mywork-task-card skeleton-row">
+                <div className="mywork-skeleton-block" style={{ width: '55%', height: 14 }} />
+                <div className="mywork-skeleton-block" style={{ width: '35%', height: 11, marginTop: 6 }} />
+                <div className="mywork-skeleton-block" style={{ width: '30%', height: 11, marginTop: 14 }} />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!isLoading && filtered.length === 0 && (
+          <div className="mywork-empty-state">
+            <p className="mywork-empty-title">{emptyStateCopy(activeFilter).title}</p>
+            <p className="mywork-empty-body">{emptyStateCopy(activeFilter).body}</p>
+            {activeFilter !== 'Today' && (
+              <button className="mywork-empty-action" onClick={() => setActiveFilter('Today')}>
+                View today's tasks
+              </button>
+            )}
+          </div>
+        )}
 
         {filtered.map(({ task, category }) => (
           <TaskCard key={task.id} task={task} category={category} />
