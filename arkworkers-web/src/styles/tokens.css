@@ -8,6 +8,11 @@
   --color-rust-600: #B33A3A;
   --color-plum-500: #6B5B95;
 
+  /* Data visualization only (Reports/Analytics) — never used for UI chrome */
+  --color-harbor-500: #3E6B96;
+  --color-ochre-500: #D9A441;
+  --color-teal-600: #2F7A73;
+
   --color-bg: var(--color-sand-100);
   --color-surface: #FFFFFF;
   --color-text-primary: var(--color-bark-800);
