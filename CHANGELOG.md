@@ -7,6 +7,31 @@ Changelog (keepachangelog.com) — newest at top.
 
 ## [Unreleased]
 
+### Offline-first sync foundation: conflict handling + queued mutations
+- Fixed a real gap: task completion had no protection against the
+  exact conflict SECURITY.md 6.4 requires handling, completing an
+  already-completed task silently overwrote the original completion
+  with no log. Added `completed_by` to tasks (a manager can complete
+  someone else's assigned task, attribution needed tracking) and
+  `task_completion_conflicts`, logging every discarded duplicate.
+  `complete()` is now first-sync-wins: original never overwritten,
+  second attempt gets 409, discard is logged, not dropped
+- Built the frontend offline-queue mechanics: `useTasks`/
+  `useCompleteTask`, mutation defaults registered via
+  `setMutationDefaults` (required since a resumed mutation can't carry
+  a closure across a reload), `networkMode: offlineFirst`, paused
+  mutations now persisted to IndexedDB too (not just queries),
+  `resumePausedMutations()` wired to replay the queue on reconnect
+  through the real endpoint, so every replay re-validates auth/grants/
+  conflict state fresh, nothing trusts the local queue as final
+- Verified the real API contract over HTTP (task list shape, complete
+  success and 409 shapes) and the actual React Query APIs used against
+  the installed v5.102.8 type definitions, not memory
+- Deliberately not wired into any screen yet (no worker task view
+  mocked up or approved), and not verified in a real browser
+  offline/reconnect scenario, no browser available here
+- 105 tests passing, 208 assertions
+
 ### Real Login, Sign-up, and Admin requests screens built
 - Replaced the placeholder App.jsx with real React screens matching
   the three approved mockups, wired to the real backend, single

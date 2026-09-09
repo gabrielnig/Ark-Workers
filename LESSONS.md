@@ -8,6 +8,37 @@ the actual problem was, what to do differently going forward.
 
 ---
 
+## Offline Sync Foundation (Phase 3)
+
+### A feature's data model can be missing a field the policy layer already implied
+**What happened:** `TaskPolicy::update()` has allowed either the
+assigned user OR a manager to complete a task since Phase 1, but the
+`tasks` table only ever recorded `assigned_user_id`, never who
+actually completed it. This went unnoticed until building conflict
+logging required knowing exactly who to attribute a completion to,
+which could legitimately be someone other than the assignee.
+**Lesson:** when a policy already permits multiple actors for an
+action, check whether the data model actually distinguishes "who
+could do this" from "who did this" before assuming the existing
+foreign key covers it, the gap can sit invisible for a long time if
+nothing yet needs the distinction.
+
+### Verify installed library APIs against their actual type definitions, not memory
+**What happened:** before wiring React Query's offline-mutation
+pattern (`onlineManager`, `resumePausedMutations`,
+`dehydrateOptions.shouldDehydrateMutation`, `setMutationDefaults`),
+each was checked against the actually-installed v5.102.8 package's
+`.d.ts` files rather than assumed from general familiarity with the
+library. This caught the real, non-obvious detail that
+`onlineManager` is only re-exported from `@tanstack/react-query` via
+a wildcard re-export of `@tanstack/query-core`, not documented
+directly on the top-level package.
+**Lesson:** for any less-common API surface of a fast-moving library
+(offline/persistence features change more than basic hooks do), grep
+the installed package's own type definitions before writing the
+import, especially when nothing in this codebase has used that API
+before, since there's no existing usage to confirm it against.
+
 ## Auth / Org-Structure Rework (Phase 3 prerequisite)
 
 ### A production build succeeding proves almost nothing about correctness

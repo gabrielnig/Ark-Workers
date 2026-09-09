@@ -18,12 +18,12 @@ department/role-based + space-level-restricted authorization system (the
 Prophet's Quarters is the concrete case driving space restriction design).
 
 **Current state: Phase 1 and 2 complete, the auth/org-structure prerequisite
-complete, and the real Login/Sign-up/Admin-requests screens are now built
-and verified against the real backend over HTTP.** Laravel 13 app lives
-in `arkworkers-api/`, React/Vite/Capacitor frontend lives in
-`arkworkers-web/`. 102 tests passing, 197 assertions on the backend; no
-frontend test framework decided or set up yet (flagged, not silently
-resolved, see §3).
+complete, the real Login/Sign-up/Admin-requests screens built and verified,
+and the offline-first sync foundation (conflict handling + queued
+mutations) is now built.** Laravel 13 app lives in `arkworkers-api/`,
+React/Vite/Capacitor frontend lives in `arkworkers-web/`. 105 tests
+passing, 208 assertions on the backend; no frontend test framework
+decided or set up yet (flagged, not silently resolved, see §3).
 
 **Auth model reworked this session, twice, both real architecture
 changes, not additions:**
@@ -162,17 +162,21 @@ Standing process rules now in force for every future session (see
    to build against), not originally planned as its own phase, see
    LESSONS.md for how it grew.
 4. **Phase 3 (next): offline reliability layer.** Real Login, Sign-up,
-   and Admin-requests screens are now built and verified against the
-   real backend (`arkworkers-web/src/screens/`), matching the three
-   approved mockups. Offline-first caching/sync (React Query +
-   IndexedDB persister already scaffolded, no sync logic built yet),
-   resumable/chunked upload (upgrading the existing non-resumable
-   proof upload endpoint, decided: temp chunks assembled at the end,
-   not direct offset writes), conflict resolution (first-sync-wins,
-   discarded duplicate logged, not silently dropped, per
-   `ARCHITECTURE.md` §5) are the remaining pieces. An ordinary
-   worker's home/task screen ("My Work") also isn't built yet, only
-   Login/Sign-up/Admin exist so far.
+   and Admin-requests screens are built and verified against the real
+   backend (`arkworkers-web/src/screens/`), matching the three
+   approved mockups. Offline-first sync foundation now built: task
+   completion conflict handling (first-sync-wins, logged, see
+   `task_completion_conflicts`), and the frontend offline-queue
+   mechanics (`useTasks`/`useCompleteTask`, `queryClient.js`,
+   mutations persist and replay on reconnect). Still needed: a worker
+   "My Work" task screen to actually exercise this (none built or
+   mocked up yet, only Login/Sign-up/Admin exist), resumable/chunked
+   upload (upgrading the existing non-resumable proof upload endpoint,
+   decided: temp chunks assembled at the end, not direct offset
+   writes), and a real browser-based verification of the offline/
+   reconnect behavior (only verified at the API-contract and
+   installed-library level so far, no browser available in this
+   environment).
 5. Phase 4: scheduling (hybrid PM triggers) and reporting
 6. Phase 5: polish (task messaging, asset history, PM compliance KPI,
    bottom mobile nav's raised "My Work" center button opening a
