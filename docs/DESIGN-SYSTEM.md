@@ -103,17 +103,20 @@ deliberate reversal, not drift.
 
 | Token | Hex | Role |
 |---|---|---|
-| `--color-interactive` | `#6358DE` | Links, focus rings, active tab underlines, checked checkbox/radio fill, active admin sidebar item. Layered on top of moss rather than replacing it as the primary brand color. |
+| `--color-interactive` | `#6358DE` | Links, focus rings, active tab underlines, checked checkbox/radio fill. Layered on top of moss rather than replacing it as the primary brand color. |
 | `--color-interactive-hover` | `#4535A5` | Hover state for the above |
 | `--color-gold` | `#FDD235` | Highlight/premium-style accent |
 | `--color-gold-border` | `#DEAF02` | Border pairing for gold-accented elements |
 
 **What did not change:** primary CTAs (buttons, the raised "My Work" nav
-button) stay on a moss gradient, not purple — moss remains the brand
-anchor color, purple is the secondary interactive layer, the same way
-Brevo itself uses it (their primary buttons are near-black, purple is
-links/focus/active-state only). Status colors (2.2) are semantic and
-untouched by this change.
+button, the active state on the admin sidebar's current section) stay on
+the moss gradient, not purple — moss remains the brand anchor color for
+any element signaling "where you are" or "the primary action," while
+purple is the secondary interactive layer, the same way Brevo itself uses
+it (their primary buttons are near-black, purple is links/focus/
+active-tab-underline only, not their active sidebar item, which uses a
+light green pill). Status colors (2.2) are semantic and untouched by this
+change.
 
 Restricted-zone content should use the plum flag as a small badge/border
 treatment, not restyle the whole screen — the goal is a clear "you're in a
