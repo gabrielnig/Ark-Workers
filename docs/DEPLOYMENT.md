@@ -111,11 +111,39 @@ becomes a real problem in practice.
 
 ## 4. Rollback Procedure
 
+**Decided (2026-09):** git-based rollback for code, backup-restore for
+data — two different mechanisms for two different failure modes, don't
+conflate them.
+
+**Code-only bad deploy** (bug in the new code, data is fine):
+```bash
+cd /var/www/arkworkers
+git log --oneline -5          # find the last known-good commit
+git checkout <good-commit-sha>
+
+cd arkworkers-api
+composer install --no-dev --optimize-autoloader
+# Only run migrate if the bad deploy's migrations need reverting too,
+# check `php artisan migrate:status` first — don't blindly re-migrate
+sudo chown -R www-data:www-data storage bootstrap/cache
+
+cd ../arkworkers-web
+npm install
+npm run build
+
+sudo systemctl reload nginx
 ```
-[ ] Define: how to revert a bad deploy (git revert + re-migrate down,
-    or restore from the pre-deploy backup)? Not yet decided, matters
-    more once §2.5's backups actually exist.
-```
+Afterward, fix forward on a branch rather than staying on a detached
+HEAD — `git checkout main` once the fix is ready, don't leave the server
+pinned to an old commit indefinitely.
+
+**Data-loss or corruption** (bad migration, bad data write): stop the
+application first (`sudo systemctl stop php8.3-fpm` — prevents further
+writes while diagnosing), restore the database from the most recent
+verified backup per §2.5, then redeploy known-good code as above.
+**This entire path is currently untestable** — §2.5 has no backups yet,
+this section documents the mechanism, not a proven-working recovery,
+until §2.5 is actually implemented and restore-tested.
 
 ## 5. Monitoring
 
