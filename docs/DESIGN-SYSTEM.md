@@ -135,20 +135,25 @@ outdoor-glare use:
 
 ## 3. Typography
 
-- **Family:** Nunito (primary, all UI text) — a rounded, friendly
-  sans-serif that supports the warm direction without sacrificing
-  legibility at small sizes. Single family throughout; weight does the
-  work of hierarchy rather than mixing typefaces.
+- **Families:** Plus Jakarta Sans (display/headlines) and Work Sans
+  (body/labels), per the Stitch design system export approved 2026-09-08.
+  Plus Jakarta Sans handles Display through H2, Work Sans handles Body
+  through Label. This replaces the earlier single-family Nunito
+  decision below, kept here for history:
+
+  ~~Family: Nunito (primary, all UI text), single family throughout,
+  weight does the work of hierarchy rather than mixing typefaces.~~
+
 - **Scale** (mobile-first, following a ~1.25 ratio):
 
-| Level | Size | Weight | Use |
-|---|---|---|---|
-| Display | 28px | 800 (ExtraBold) | Screen titles only |
-| H1 | 22px | 700 (Bold) | Section headers |
-| H2 | 18px | 700 (Bold) | Card/subsection headers |
-| Body | 16px | 500 (Medium) | Default UI text — never smaller for primary content |
-| Body Small | 14px | 500 (Medium) | Secondary/meta text |
-| Label | 13px | 700 (Bold) | Form labels, status badges — sentence case, never all-caps (all-caps labels read as generated-template chrome and hurt legibility at a glance outdoors) |
+| Level | Size | Weight | Family | Use |
+|---|---|---|---|---|
+| Display | 28px | 700 (Bold) | Plus Jakarta Sans | Screen titles only |
+| H1 | 22px | 700 (Bold) | Plus Jakarta Sans | Section headers |
+| H2 | 18px | 600 (SemiBold) | Plus Jakarta Sans | Card/subsection headers |
+| Body | 16px | 400 (Regular) | Work Sans | Default UI text — never smaller for primary content |
+| Body Small | 14px | 400 (Regular) | Work Sans | Secondary/meta text |
+| Label | 13px | 600 (SemiBold) | Work Sans | Form labels, status badges — sentence case, never all-caps (all-caps labels read as generated-template chrome and hurt legibility at a glance outdoors) |
 
 - Line length: keep body text under 80 characters even on tablet-width
   screens — most screens here are narrow phone viewports anyway, so this
@@ -247,8 +252,9 @@ ArkWorkers as-is — not duplicated in this document:
 [x] Logo: finalized — see Section 1.5. Full asset set in docs/assets/logo/
 [ ] Icon set: commission/select a specific icon library (e.g. Phosphor,
     Lucide) consistent with the rounded, warm direction — not yet chosen
-[ ] Confirm Nunito licensing/self-hosting approach for the PWA (avoid a
-    render-blocking Google Fonts request on slow mobile connections)
+[ ] Confirm Plus Jakarta Sans / Work Sans licensing/self-hosting
+    approach for the PWA (avoid a render-blocking Google Fonts request
+    on slow mobile connections)
 [ ] Empty-state illustrations: worth a small custom illustration set for
     "no tasks today" / "space fully clean" moments, or keep text-only?
 [ ] Logo wordmark uses a serif display face, distinct from Nunito used

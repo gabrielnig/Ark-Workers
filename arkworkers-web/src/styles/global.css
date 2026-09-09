@@ -1,0 +1,40 @@
+@import './tokens.css';
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-body);
+  -webkit-tap-highlight-color: transparent;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-family-display);
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+button {
+  min-height: var(--touch-target-min);
+  min-width: var(--touch-target-min);
+}
+
+a {
+  color: var(--color-moss-600);
+}

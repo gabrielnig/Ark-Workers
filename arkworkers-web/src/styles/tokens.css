@@ -1,0 +1,29 @@
+:root {
+  --color-moss-900: #1F3D2B;
+  --color-moss-600: #3F7D4F;
+  --color-moss-300: #9CC9A6;
+  --color-clay-500: #C97B4A;
+  --color-sand-100: #F7F3EC;
+  --color-bark-800: #332B24;
+  --color-rust-600: #B33A3A;
+  --color-plum-500: #6B5B95;
+
+  --color-bg: var(--color-sand-100);
+  --color-surface: #FFFFFF;
+  --color-text-primary: var(--color-bark-800);
+  --color-text-secondary: #6B6259;
+  --color-border: #E4DDD0;
+
+  --font-family-display: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-family-body: 'Work Sans', system-ui, -apple-system, sans-serif;
+
+  --touch-target-min: 44px;
+}
+
+[data-theme='dark'] {
+  --color-bg: var(--color-bark-800);
+  --color-surface: #3F362D;
+  --color-text-primary: var(--color-sand-100);
+  --color-text-secondary: #C4BAAC;
+  --color-border: #524739;
+}
