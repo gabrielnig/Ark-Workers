@@ -30,8 +30,15 @@ matters if this data is unrecoverable.
 - [ ] **Manual device verification.** `DEPLOYMENT.md` §6 — task list +
       photo upload never confirmed on a real phone, the actual point of
       the first deploy.
-- [ ] **`npm audit` review.** 3 moderate-severity vulnerabilities flagged
-      during the last two builds, never looked at.
+- [x] **`npm audit` review — reviewed 2026-09-09, accepted as-is.** All 3
+      moderate findings trace to one chain: `uuid` → `xcode` →
+      `@capacitor/cli`. `@capacitor/cli` is dev-only build tooling, never
+      shipped in the production bundle, and `xcode` specifically is
+      iOS project-generation tooling — unused, since iOS is deferred
+      (Phase 6). The suggested `npm audit fix --force` would force a
+      breaking `@capacitor/cli` bump, risking the working Android setup
+      for a vulnerability in an inactive code path. Deferred to when
+      iOS actually gets prioritized, not left as unreviewed noise.
 
 ---
 
