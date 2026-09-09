@@ -96,6 +96,53 @@
   color: var(--color-text-secondary);
 }
 
+.mywork-empty-state {
+  padding: 20px 16px;
+  text-align: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+}
+
+.mywork-empty-title {
+  font-family: var(--font-family-display);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0 0 4px;
+}
+
+.mywork-empty-body {
+  font-family: var(--font-family-body);
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin: 0 0 14px;
+}
+
+.mywork-empty-action {
+  font-family: var(--font-family-body);
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--color-moss-600);
+  border: none;
+  border-radius: 7px;
+  padding: 9px 16px;
+  cursor: pointer;
+}
+
+.mywork-skeleton-block {
+  border-radius: 5px;
+  background: linear-gradient(90deg, #EFEAE0 25%, #F7F3EC 37%, #EFEAE0 63%);
+  background-size: 400% 100%;
+  animation: mywork-skeleton-shimmer 1.4s ease infinite;
+}
+
+@keyframes mywork-skeleton-shimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
 .mywork-task-card {
   display: block;
   background: var(--color-surface);
