@@ -20,9 +20,11 @@ what's most interesting to build.
 These are live-site risks, not missing features. Nothing in Phase 1+
 matters if this data is unrecoverable.
 
-- [ ] **Backups.** `DEPLOYMENT.md` §2.5 — no automated backup exists at
-      all. Real account-request data is already live. This is the
-      single highest-risk open item in the whole project.
+- [ ] **Backups — explicitly deferred (2026-09-09), not skipped.** `DEPLOYMENT.md`
+      §2.5 — no automated backup exists yet. Deliberately pushed later
+      rather than blocking on it now; still the single highest-risk open
+      item once picked back up, since real account-request data is
+      already live.
 - [ ] **Rollback procedure.** `DEPLOYMENT.md` §4 — undecided. Depends on
       backups existing first.
 - [ ] **Manual device verification.** `DEPLOYMENT.md` §6 — task list +
