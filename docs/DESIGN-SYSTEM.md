@@ -91,6 +91,30 @@ the dominant brand color throughout.
 | Overdue | `#B33A3A` (new: `--color-rust-600`) | Past due, needs attention |
 | Restricted (Prophet's Quarters zones) | `#6B5B95` (new: `--color-plum-500`) | Visual flag on any restricted-space UI, distinct from the operational palette entirely so it never gets confused with a normal state |
 
+### 2.2.5 Interactive & Highlight Colors (added 2026-09, full skin decision)
+
+**Supersedes the "not a rebrand, Brevo is structure-only" position stated
+elsewhere in this document.** After seeing the structural mockup, the
+explicit decision was made to bring Brevo's actual hues into the app as
+real UI colors, not just as an analytics-only accent set (2.6). Kept here
+rather than deleted, per this doc's own convention (see the struck-through
+Nunito decision in Section 3) — a future session should know this was a
+deliberate reversal, not drift.
+
+| Token | Hex | Role |
+|---|---|---|
+| `--color-interactive` | `#6358DE` | Links, focus rings, active tab underlines, checked checkbox/radio fill, active admin sidebar item. Layered on top of moss rather than replacing it as the primary brand color. |
+| `--color-interactive-hover` | `#4535A5` | Hover state for the above |
+| `--color-gold` | `#FDD235` | Highlight/premium-style accent |
+| `--color-gold-border` | `#DEAF02` | Border pairing for gold-accented elements |
+
+**What did not change:** primary CTAs (buttons, the raised "My Work" nav
+button) stay on a moss gradient, not purple — moss remains the brand
+anchor color, purple is the secondary interactive layer, the same way
+Brevo itself uses it (their primary buttons are near-black, purple is
+links/focus/active-state only). Status colors (2.2) are semantic and
+untouched by this change.
+
 Restricted-zone content should use the plum flag as a small badge/border
 treatment, not restyle the whole screen — the goal is a clear "you're in a
 restricted area" signal, not a jarring theme change.
@@ -190,9 +214,16 @@ app bolted onto ArkWorkers.
 
 ## 4. Shape & Elevation
 
-- **Corner radius:** 12px on cards and containers, 8px on buttons and
-  inputs, 999px (full pill) on status badges and the navigation pills
-  inherited from the shared UI-UX standard.
+- **Corner radius:** 16px on cards, containers, buttons, and inputs
+  (bumped from the original 12px/8px split, 2026-09, matching Brevo's
+  single-dominant-radius convention), 999px (full pill) on status badges
+  and the navigation pills inherited from the shared UI-UX standard. Small
+  fixed-size elements (file-thumb icon tiles, skeleton shimmer blocks)
+  keep their own proportionally smaller radius rather than inheriting 16px.
+- **Primary buttons use a gradient fill, not flat color:**
+  `linear-gradient(0deg, moss-900 0%, moss-600 100%)` (bottom stop
+  lighter), a Brevo detail adopted for depth without changing the brand
+  color itself.
 - **Shadows:** soft, warm-toned (not pure black) — `rgba(51, 43, 36, 0.08)`
   for resting cards, `rgba(51, 43, 36, 0.14)` on elevated/active elements.
   Avoid the generic flat grey `rgba(0,0,0,.1)` shadow used identically on
