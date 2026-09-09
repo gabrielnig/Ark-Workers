@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\AssetTypeController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DepartmentController;
 use App\Http\Controllers\Api\InviteController;
+use App\Http\Controllers\Api\RoutineController;
 use App\Http\Controllers\Api\SpaceController;
 use App\Http\Controllers\Api\ChunkedUploadController;
 use App\Http\Controllers\Api\TaskController;
@@ -37,6 +38,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/asset-types', [AssetTypeController::class, 'index']);
     Route::post('/asset-types', [AssetTypeController::class, 'store']);
     Route::patch('/asset-types/{assetType}', [AssetTypeController::class, 'update']);
+
+    Route::apiResource('routines', RoutineController::class);
 
     Route::get('/tasks', [TaskController::class, 'index']);
     Route::get('/tasks/{task}', [TaskController::class, 'show']);
