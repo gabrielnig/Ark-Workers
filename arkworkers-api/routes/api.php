@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DepartmentController;
 use App\Http\Controllers\Api\InviteController;
 use App\Http\Controllers\Api\SpaceController;
+use App\Http\Controllers\Api\ChunkedUploadController;
 use App\Http\Controllers\Api\TaskController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -41,7 +42,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/tasks/{task}', [TaskController::class, 'show']);
     Route::post('/tasks', [TaskController::class, 'store']);
     Route::post('/tasks/{task}/complete', [TaskController::class, 'complete']);
-    Route::post('/tasks/{task}/proofs', [TaskController::class, 'uploadProof']);
+    Route::post('/tasks/{task}/proofs/chunked/start', [ChunkedUploadController::class, 'start']);
+    Route::get('/tasks/{task}/proofs/chunked/{session}/status', [ChunkedUploadController::class, 'status']);
+    Route::post('/tasks/{task}/proofs/chunked/{session}/chunks/{index}', [ChunkedUploadController::class, 'uploadChunk']);
+    Route::post('/tasks/{task}/proofs/chunked/{session}/complete', [ChunkedUploadController::class, 'complete']);
 
     Route::get('/account-requests', [AccountRequestController::class, 'index']);
     Route::post('/account-requests/{accountRequest}/approve', [AccountRequestController::class, 'approve']);

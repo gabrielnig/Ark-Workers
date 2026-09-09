@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Routine;
 use App\Models\Task;
 use App\Models\TaskCompletionConflict;
-use App\Models\TaskProof;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -101,31 +100,5 @@ class TaskController extends Controller
         ]);
 
         return response()->json(['data' => $task]);
-    }
-
-    /**
-     * Non-resumable proof upload, happy path first per RESEARCH.md's
-     * Phase 2 guidance, resumable/chunked upload is Phase 3 scope.
-     * Validated by actual file content (mimes rules read the file
-     * signature, not just the extension), stored on the private disk
-     * outside the web root, per ARCHITECTURE.md §6.
-     */
-    public function uploadProof(Request $request, Task $task): JsonResponse
-    {
-        $this->authorize('update', $task);
-
-        Validator::make($request->all(), [
-            'file' => ['required', 'file', 'mimes:jpg,jpeg,png,mp4,mov', 'max:20480'],
-        ])->validate();
-
-        $path = $request->file('file')->store('task-proofs', 'local');
-
-        $proof = TaskProof::create([
-            'task_id' => $task->id,
-            'file_path' => $path,
-            'file_type' => $request->file('file')->getMimeType(),
-        ]);
-
-        return response()->json(['data' => $proof], 201);
     }
 }
