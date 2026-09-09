@@ -35,20 +35,12 @@ class AssetPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasRole([
-            User::ROLE_ADMIN,
-            User::ROLE_PASTOR,
-            User::ROLE_FACILITY_MANAGER,
-        ]);
+        return $user->hasManagementPermission();
     }
 
     public function update(User $user, Asset $asset): bool
     {
-        return $this->view($user, $asset) && $user->hasRole([
-            User::ROLE_ADMIN,
-            User::ROLE_PASTOR,
-            User::ROLE_FACILITY_MANAGER,
-        ]);
+        return $this->view($user, $asset) && $user->hasManagementPermission();
     }
 
     public function delete(User $user, Asset $asset): bool

@@ -40,7 +40,7 @@ class TaskPolicyTest extends TestCase
     {
         $space = Space::factory()->create(['is_restricted' => true]);
         $task = $this->taskInSpace($space);
-        $cleaner = User::factory()->role(User::ROLE_CLEANING_STAFF)->create();
+        $cleaner = $this->staffUser();
 
         $this->assertFalse($this->policy->view($cleaner, $task));
     }
@@ -48,8 +48,8 @@ class TaskPolicyTest extends TestCase
     public function test_task_in_restricted_space_is_viewable_with_a_grant(): void
     {
         $space = Space::factory()->create(['is_restricted' => true]);
-        $admin = User::factory()->role(User::ROLE_ADMIN)->create();
-        $cleaner = User::factory()->role(User::ROLE_CLEANING_STAFF)->create();
+        $admin = $this->adminUser();
+        $cleaner = $this->staffUser();
         $task = $this->taskInSpace($space, $cleaner);
 
         SpaceAccessGrant::factory()->create([
@@ -65,7 +65,7 @@ class TaskPolicyTest extends TestCase
     {
         $routine = Routine::factory()->typeLevelTemplate()->create();
         $task = Task::factory()->create(['routine_id' => $routine->id]);
-        $admin = User::factory()->role(User::ROLE_ADMIN)->create();
+        $admin = $this->adminUser();
 
         // Even an admin cannot view a task with no resolvable space,
         // since that indicates a data problem, not legitimate access.
@@ -75,11 +75,11 @@ class TaskPolicyTest extends TestCase
     public function test_only_the_assigned_user_or_a_privileged_role_can_update_a_task(): void
     {
         $space = Space::factory()->create(['is_restricted' => false]);
-        $assignee = User::factory()->role(User::ROLE_CLEANING_STAFF)->create();
+        $assignee = $this->staffUser();
         $task = $this->taskInSpace($space, $assignee);
 
-        $someoneElse = User::factory()->role(User::ROLE_CLEANING_STAFF)->create();
-        $admin = User::factory()->role(User::ROLE_ADMIN)->create();
+        $someoneElse = $this->staffUser();
+        $admin = $this->adminUser();
 
         $this->assertTrue($this->policy->update($assignee, $task));
         $this->assertFalse($this->policy->update($someoneElse, $task));
@@ -91,7 +91,7 @@ class TaskPolicyTest extends TestCase
         // Assignment alone does not substitute for a space grant, per
         // SECURITY.md §4.2: access is role bypass or explicit grant only.
         $space = Space::factory()->create(['is_restricted' => true]);
-        $assignee = User::factory()->role(User::ROLE_CLEANING_STAFF)->create();
+        $assignee = $this->staffUser();
         $task = $this->taskInSpace($space, $assignee);
 
         $this->assertFalse($this->policy->update($assignee, $task));

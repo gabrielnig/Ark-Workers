@@ -31,16 +31,12 @@ class RoutinePolicy
 
     public function create(User $user): bool
     {
-        return $user->hasRole([User::ROLE_ADMIN, User::ROLE_PASTOR, User::ROLE_FACILITY_MANAGER]);
+        return $user->hasManagementPermission();
     }
 
     public function update(User $user, Routine $routine): bool
     {
-        return $this->view($user, $routine) && $user->hasRole([
-            User::ROLE_ADMIN,
-            User::ROLE_PASTOR,
-            User::ROLE_FACILITY_MANAGER,
-        ]);
+        return $this->view($user, $routine) && $user->hasManagementPermission();
     }
 
     public function delete(User $user, Routine $routine): bool

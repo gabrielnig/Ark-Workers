@@ -4,7 +4,6 @@ namespace Tests\Unit;
 
 use App\Models\Space;
 use App\Models\SpaceAccessGrant;
-use App\Models\User;
 use App\Policies\SpacePolicy;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -33,7 +32,7 @@ class SpacePolicyTest extends TestCase
     public function test_unrestricted_space_is_viewable_by_ordinary_staff(): void
     {
         $space = Space::factory()->create(['is_restricted' => false]);
-        $user = User::factory()->role(User::ROLE_CLEANING_STAFF)->create();
+        $user = $this->staffUser();
 
         $this->assertTrue($this->policy->view($user, $space));
     }
@@ -41,27 +40,30 @@ class SpacePolicyTest extends TestCase
     public function test_unrestricted_space_is_viewable_even_without_any_grant(): void
     {
         $space = Space::factory()->create(['is_restricted' => false]);
-        $user = User::factory()->role(User::ROLE_SECURITY)->create();
+        $user = $this->staffUser();
 
         $this->assertTrue($this->policy->view($user, $space));
     }
 
-    // --- Restricted spaces: role bypass ---
+    // --- Restricted spaces: bypass is Admin-only ---
 
     public function test_restricted_space_is_viewable_by_admin_without_a_grant(): void
     {
         $space = Space::factory()->create(['is_restricted' => true]);
-        $admin = User::factory()->role(User::ROLE_ADMIN)->create();
+        $admin = $this->adminUser();
 
         $this->assertTrue($this->policy->view($admin, $space));
     }
 
-    public function test_restricted_space_is_viewable_by_pastor_without_a_grant(): void
+    public function test_restricted_space_is_not_viewable_by_pastor_without_a_grant(): void
     {
+        // Pastor is a title only, per this session's decision it
+        // carries zero permission weight, this is the case most
+        // likely to regress back toward the old admin/pastor bypass.
         $space = Space::factory()->create(['is_restricted' => true]);
-        $pastor = User::factory()->role(User::ROLE_PASTOR)->create();
+        $pastor = $this->pastorUser();
 
-        $this->assertTrue($this->policy->view($pastor, $space));
+        $this->assertFalse($this->policy->view($pastor, $space));
     }
 
     // --- Restricted spaces: explicit grant ---
@@ -72,8 +74,8 @@ class SpacePolicyTest extends TestCase
         // staff member who services the Quarters kitchen, without being
         // promoted to Admin.
         $space = Space::factory()->create(['is_restricted' => true]);
-        $admin = User::factory()->role(User::ROLE_ADMIN)->create();
-        $cleaner = User::factory()->role(User::ROLE_CLEANING_STAFF)->create();
+        $admin = $this->adminUser();
+        $cleaner = $this->staffUser();
 
         SpaceAccessGrant::factory()->create([
             'user_id' => $cleaner->id,
@@ -86,47 +88,23 @@ class SpacePolicyTest extends TestCase
 
     // --- Restricted spaces: the critical negative cases ---
 
-    public function test_restricted_space_is_not_viewable_by_facility_manager_without_a_grant(): void
+    public function test_restricted_space_is_not_viewable_by_a_manager_without_a_grant(): void
     {
-        // Facility Manager is a privileged role but NOT in the role
-        // bypass list, this is the case most likely to be gotten
-        // wrong by accidentally treating "privileged" as "unrestricted".
+        // A department role with grants_management is privileged for
+        // management actions but NOT a view bypass, this is the case
+        // most likely to be gotten wrong by conflating the two.
         $space = Space::factory()->create(['is_restricted' => true]);
-        $manager = User::factory()->role(User::ROLE_FACILITY_MANAGER)->create();
+        $manager = $this->managerUser();
 
         $this->assertFalse($this->policy->view($manager, $space));
     }
 
-    public function test_restricted_space_is_not_viewable_by_cleaning_staff_without_a_grant(): void
+    public function test_restricted_space_is_not_viewable_by_ordinary_staff_without_a_grant(): void
     {
         $space = Space::factory()->create(['is_restricted' => true]);
-        $cleaner = User::factory()->role(User::ROLE_CLEANING_STAFF)->create();
+        $cleaner = $this->staffUser();
 
         $this->assertFalse($this->policy->view($cleaner, $space));
-    }
-
-    public function test_restricted_space_is_not_viewable_by_maintenance_without_a_grant(): void
-    {
-        $space = Space::factory()->create(['is_restricted' => true]);
-        $tech = User::factory()->role(User::ROLE_MAINTENANCE)->create();
-
-        $this->assertFalse($this->policy->view($tech, $space));
-    }
-
-    public function test_restricted_space_is_not_viewable_by_security_without_a_grant(): void
-    {
-        $space = Space::factory()->create(['is_restricted' => true]);
-        $security = User::factory()->role(User::ROLE_SECURITY)->create();
-
-        $this->assertFalse($this->policy->view($security, $space));
-    }
-
-    public function test_restricted_space_is_not_viewable_by_driver_without_a_grant(): void
-    {
-        $space = Space::factory()->create(['is_restricted' => true]);
-        $driver = User::factory()->role(User::ROLE_DRIVER)->create();
-
-        $this->assertFalse($this->policy->view($driver, $space));
     }
 
     // --- Grant scoping: a grant for one space must not leak to another ---
@@ -135,8 +113,8 @@ class SpacePolicyTest extends TestCase
     {
         $quarters = Space::factory()->create(['is_restricted' => true]);
         $otherRestrictedSpace = Space::factory()->create(['is_restricted' => true]);
-        $admin = User::factory()->role(User::ROLE_ADMIN)->create();
-        $cleaner = User::factory()->role(User::ROLE_CLEANING_STAFF)->create();
+        $admin = $this->adminUser();
+        $cleaner = $this->staffUser();
 
         SpaceAccessGrant::factory()->create([
             'user_id' => $cleaner->id,
@@ -151,9 +129,9 @@ class SpacePolicyTest extends TestCase
     public function test_a_grant_for_a_different_user_does_not_grant_access(): void
     {
         $space = Space::factory()->create(['is_restricted' => true]);
-        $admin = User::factory()->role(User::ROLE_ADMIN)->create();
-        $granted = User::factory()->role(User::ROLE_CLEANING_STAFF)->create();
-        $notGranted = User::factory()->role(User::ROLE_CLEANING_STAFF)->create();
+        $admin = $this->adminUser();
+        $granted = $this->staffUser();
+        $notGranted = $this->staffUser();
 
         SpaceAccessGrant::factory()->create([
             'user_id' => $granted->id,
@@ -174,7 +152,7 @@ class SpacePolicyTest extends TestCase
         // inherits down the tree, so the Policy must not assume it does.
         $parent = Space::factory()->create(['is_restricted' => true]);
         $child = Space::factory()->create(['is_restricted' => false, 'parent_space_id' => $parent->id]);
-        $cleaner = User::factory()->role(User::ROLE_CLEANING_STAFF)->create();
+        $cleaner = $this->staffUser();
 
         $this->assertFalse($this->policy->view($cleaner, $parent));
         $this->assertTrue($this->policy->view($cleaner, $child));
@@ -182,53 +160,55 @@ class SpacePolicyTest extends TestCase
 
     // --- viewAny: listing is permitted at the policy layer (scoping happens in the query) ---
 
-    public function test_view_any_is_true_for_every_role(): void
+    public function test_view_any_is_true_regardless_of_permission_level(): void
     {
-        foreach (User::ROLES as $role) {
-            $user = User::factory()->role($role)->create();
-            $this->assertTrue($this->policy->viewAny($user), "viewAny failed for role: {$role}");
-        }
+        $this->assertTrue($this->policy->viewAny($this->staffUser()));
+        $this->assertTrue($this->policy->viewAny($this->adminUser()));
+        $this->assertTrue($this->policy->viewAny($this->managerUser()));
+        $this->assertTrue($this->policy->viewAny($this->pastorUser()));
     }
 
-    // --- create/update/delete: role gating independent of restriction flag ---
+    // --- create/update/delete: management permission gating, independent of restriction flag ---
 
-    public function test_only_admin_pastor_and_facility_manager_can_create_spaces(): void
+    public function test_admin_can_create_spaces(): void
     {
-        $allowed = [User::ROLE_ADMIN, User::ROLE_PASTOR, User::ROLE_FACILITY_MANAGER];
-
-        foreach (User::ROLES as $role) {
-            $user = User::factory()->role($role)->create();
-            $this->assertSame(
-                in_array($role, $allowed, true),
-                $this->policy->create($user),
-                "create() gave wrong result for role: {$role}"
-            );
-        }
+        $this->assertTrue($this->policy->create($this->adminUser()));
     }
 
-    public function test_facility_manager_can_update_a_restricted_space_configuration_without_an_explicit_grant(): void
+    public function test_a_manager_can_create_spaces(): void
+    {
+        $this->assertTrue($this->policy->create($this->managerUser()));
+    }
+
+    public function test_pastor_cannot_create_spaces(): void
+    {
+        $this->assertFalse($this->policy->create($this->pastorUser()));
+    }
+
+    public function test_ordinary_staff_cannot_create_spaces(): void
+    {
+        $this->assertFalse($this->policy->create($this->staffUser()));
+    }
+
+    public function test_a_manager_can_update_a_restricted_space_configuration_without_an_explicit_grant(): void
     {
         // Updating the space record itself (e.g. its name) is a
-        // configuration action distinct from viewing its contents,
-        // Facility Manager can do this even though view() would deny
-        // them access to the restricted space's contents.
+        // configuration action distinct from viewing its contents, a
+        // manager can do this even though view() would deny them
+        // access to the restricted space's contents.
         $space = Space::factory()->create(['is_restricted' => true]);
-        $manager = User::factory()->role(User::ROLE_FACILITY_MANAGER)->create();
+        $manager = $this->managerUser();
 
         $this->assertTrue($this->policy->update($manager, $space));
     }
 
-    public function test_only_admin_and_pastor_can_delete_a_space(): void
+    public function test_only_admin_can_delete_a_space(): void
     {
-        foreach (User::ROLES as $role) {
-            $user = User::factory()->role($role)->create();
-            $space = Space::factory()->create();
+        $space = Space::factory()->create();
 
-            $this->assertSame(
-                in_array($role, User::UNRESTRICTED_ROLES, true),
-                $this->policy->delete($user, $space),
-                "delete() gave wrong result for role: {$role}"
-            );
-        }
+        $this->assertTrue($this->policy->delete($this->adminUser(), $space));
+        $this->assertFalse($this->policy->delete($this->managerUser(), $space));
+        $this->assertFalse($this->policy->delete($this->pastorUser(), $space));
+        $this->assertFalse($this->policy->delete($this->staffUser(), $space));
     }
 }

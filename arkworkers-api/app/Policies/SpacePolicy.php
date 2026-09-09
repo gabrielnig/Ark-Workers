@@ -37,7 +37,7 @@ class SpacePolicy
 
     public function create(User $user): bool
     {
-        return $user->hasRole([User::ROLE_ADMIN, User::ROLE_PASTOR, User::ROLE_FACILITY_MANAGER]);
+        return $user->hasManagementPermission();
     }
 
     /**
@@ -46,7 +46,7 @@ class SpacePolicy
      */
     public function update(User $user, Space $space): bool
     {
-        return $user->hasRole([User::ROLE_ADMIN, User::ROLE_PASTOR, User::ROLE_FACILITY_MANAGER]);
+        return $user->hasManagementPermission();
     }
 
     /**

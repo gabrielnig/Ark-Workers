@@ -7,7 +7,6 @@ use App\Models\Routine;
 use App\Models\Space;
 use App\Models\SpaceAccessGrant;
 use App\Models\Task;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -30,7 +29,7 @@ class TaskControllerTest extends TestCase
         $hiddenSpace = Space::factory()->create(['is_restricted' => true]);
         $visibleTask = Task::factory()->create(['routine_id' => $this->routineIn($visibleSpace)->id]);
         Task::factory()->create(['routine_id' => $this->routineIn($hiddenSpace)->id]);
-        $user = User::factory()->role(User::ROLE_CLEANING_STAFF)->create();
+        $user = $this->staffUser();
 
         $response = $this->actingAs($user, 'sanctum')->getJson('/api/tasks');
 
@@ -38,12 +37,12 @@ class TaskControllerTest extends TestCase
         $this->assertEquals([$visibleTask->id], $ids->all());
     }
 
-    public function test_facility_manager_can_manually_assign_a_task_in_an_unrestricted_space(): void
+    public function test_a_manager_can_manually_assign_a_task_in_an_unrestricted_space(): void
     {
         $space = Space::factory()->create(['is_restricted' => false]);
         $routine = $this->routineIn($space);
-        $staff = User::factory()->role(User::ROLE_CLEANING_STAFF)->create();
-        $manager = User::factory()->role(User::ROLE_FACILITY_MANAGER)->create();
+        $staff = $this->staffUser();
+        $manager = $this->managerUser();
 
         $response = $this->actingAs($manager, 'sanctum')->postJson('/api/tasks', [
             'routine_id' => $routine->id,
@@ -59,8 +58,8 @@ class TaskControllerTest extends TestCase
     {
         $space = Space::factory()->create(['is_restricted' => true]);
         $routine = $this->routineIn($space);
-        $staff = User::factory()->role(User::ROLE_CLEANING_STAFF)->create();
-        $manager = User::factory()->role(User::ROLE_FACILITY_MANAGER)->create();
+        $staff = $this->staffUser();
+        $manager = $this->managerUser();
 
         $this->actingAs($manager, 'sanctum')->postJson('/api/tasks', [
             'routine_id' => $routine->id,
@@ -73,7 +72,7 @@ class TaskControllerTest extends TestCase
     {
         $space = Space::factory()->create(['is_restricted' => false]);
         $routine = $this->routineIn($space);
-        $cleaner = User::factory()->role(User::ROLE_CLEANING_STAFF)->create();
+        $cleaner = $this->staffUser();
 
         $this->actingAs($cleaner, 'sanctum')->postJson('/api/tasks', [
             'routine_id' => $routine->id,
@@ -86,7 +85,7 @@ class TaskControllerTest extends TestCase
     {
         $space = Space::factory()->create(['is_restricted' => false]);
         $routine = $this->routineIn($space);
-        $staff = User::factory()->role(User::ROLE_CLEANING_STAFF)->create();
+        $staff = $this->staffUser();
         $task = Task::factory()->create(['routine_id' => $routine->id, 'assigned_user_id' => $staff->id]);
 
         $response = $this->actingAs($staff, 'sanctum')->postJson("/api/tasks/{$task->id}/complete");
@@ -100,8 +99,8 @@ class TaskControllerTest extends TestCase
     {
         $space = Space::factory()->create(['is_restricted' => false]);
         $routine = $this->routineIn($space);
-        $staff = User::factory()->role(User::ROLE_CLEANING_STAFF)->create();
-        $someoneElse = User::factory()->role(User::ROLE_CLEANING_STAFF)->create();
+        $staff = $this->staffUser();
+        $someoneElse = $this->staffUser();
         $task = Task::factory()->create(['routine_id' => $routine->id, 'assigned_user_id' => $staff->id]);
 
         $this->actingAs($someoneElse, 'sanctum')
@@ -113,14 +112,14 @@ class TaskControllerTest extends TestCase
     {
         $space = Space::factory()->create(['is_restricted' => true]);
         $routine = $this->routineIn($space);
-        $staff = User::factory()->role(User::ROLE_CLEANING_STAFF)->create();
+        $staff = $this->staffUser();
         $task = Task::factory()->create(['routine_id' => $routine->id, 'assigned_user_id' => $staff->id]);
 
         $this->actingAs($staff, 'sanctum')
             ->postJson("/api/tasks/{$task->id}/complete")
             ->assertForbidden();
 
-        $admin = User::factory()->role(User::ROLE_ADMIN)->create();
+        $admin = $this->adminUser();
         SpaceAccessGrant::factory()->create([
             'user_id' => $staff->id,
             'space_id' => $space->id,
@@ -137,7 +136,7 @@ class TaskControllerTest extends TestCase
         Storage::fake('local');
         $space = Space::factory()->create(['is_restricted' => false]);
         $routine = $this->routineIn($space);
-        $staff = User::factory()->role(User::ROLE_CLEANING_STAFF)->create();
+        $staff = $this->staffUser();
         $task = Task::factory()->create(['routine_id' => $routine->id, 'assigned_user_id' => $staff->id]);
 
         $file = UploadedFile::fake()->image('proof.jpg');
@@ -154,7 +153,7 @@ class TaskControllerTest extends TestCase
         Storage::fake('local');
         $space = Space::factory()->create(['is_restricted' => false]);
         $routine = $this->routineIn($space);
-        $staff = User::factory()->role(User::ROLE_CLEANING_STAFF)->create();
+        $staff = $this->staffUser();
         $task = Task::factory()->create(['routine_id' => $routine->id, 'assigned_user_id' => $staff->id]);
 
         $file = UploadedFile::fake()->create('malware.exe', 100);
@@ -169,8 +168,8 @@ class TaskControllerTest extends TestCase
         Storage::fake('local');
         $space = Space::factory()->create(['is_restricted' => false]);
         $routine = $this->routineIn($space);
-        $staff = User::factory()->role(User::ROLE_CLEANING_STAFF)->create();
-        $someoneElse = User::factory()->role(User::ROLE_CLEANING_STAFF)->create();
+        $staff = $this->staffUser();
+        $someoneElse = $this->staffUser();
         $task = Task::factory()->create(['routine_id' => $routine->id, 'assigned_user_id' => $staff->id]);
 
         $file = UploadedFile::fake()->image('proof.jpg');

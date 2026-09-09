@@ -36,7 +36,7 @@ class TaskPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasRole([User::ROLE_ADMIN, User::ROLE_PASTOR, User::ROLE_FACILITY_MANAGER]);
+        return $user->hasManagementPermission();
     }
 
     /**
@@ -50,7 +50,7 @@ class TaskPolicy
         }
 
         return $task->assigned_user_id === $user->id
-            || $user->hasRole([User::ROLE_ADMIN, User::ROLE_PASTOR, User::ROLE_FACILITY_MANAGER]);
+            || $user->hasManagementPermission();
     }
 
     public function delete(User $user, Task $task): bool

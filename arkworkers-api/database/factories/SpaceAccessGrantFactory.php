@@ -22,7 +22,7 @@ class SpaceAccessGrantFactory extends Factory
         return [
             'user_id' => User::factory(),
             'space_id' => Space::factory(),
-            'granted_by' => User::factory()->role(User::ROLE_ADMIN),
+            'granted_by' => User::factory()->admin(),
             'granted_at' => now(),
         ];
     }

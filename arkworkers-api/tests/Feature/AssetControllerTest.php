@@ -6,7 +6,6 @@ use App\Models\Asset;
 use App\Models\AssetType;
 use App\Models\Routine;
 use App\Models\Space;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -20,7 +19,7 @@ class AssetControllerTest extends TestCase
         $hiddenSpace = Space::factory()->create(['is_restricted' => true]);
         $visibleAsset = Asset::factory()->create(['space_id' => $visibleSpace->id]);
         Asset::factory()->create(['space_id' => $hiddenSpace->id]);
-        $user = User::factory()->role(User::ROLE_CLEANING_STAFF)->create();
+        $user = $this->staffUser();
 
         $response = $this->actingAs($user, 'sanctum')->getJson('/api/assets');
 
@@ -32,7 +31,7 @@ class AssetControllerTest extends TestCase
     {
         $space = Space::factory()->create(['is_restricted' => true]);
         $assetType = AssetType::factory()->create();
-        $manager = User::factory()->role(User::ROLE_FACILITY_MANAGER)->create();
+        $manager = $this->managerUser();
 
         $this->actingAs($manager, 'sanctum')->postJson('/api/assets', [
             'asset_type_id' => $assetType->id,
@@ -47,7 +46,7 @@ class AssetControllerTest extends TestCase
         // (created on the fly) works exactly like any built-in one.
         $space = Space::factory()->create(['is_restricted' => false]);
         $assetType = AssetType::factory()->create(['name' => 'Swimming Pool']);
-        $admin = User::factory()->role(User::ROLE_ADMIN)->create();
+        $admin = $this->adminUser();
 
         $response = $this->actingAs($admin, 'sanctum')->postJson('/api/assets', [
             'asset_type_id' => $assetType->id,
@@ -63,8 +62,8 @@ class AssetControllerTest extends TestCase
     public function test_only_privileged_roles_can_delete_an_asset(): void
     {
         $asset = Asset::factory()->create();
-        $cleaner = User::factory()->role(User::ROLE_CLEANING_STAFF)->create();
-        $admin = User::factory()->role(User::ROLE_ADMIN)->create();
+        $cleaner = $this->staffUser();
+        $admin = $this->adminUser();
 
         $this->actingAs($cleaner, 'sanctum')
             ->deleteJson("/api/assets/{$asset->id}")
@@ -79,7 +78,7 @@ class AssetControllerTest extends TestCase
     {
         $asset = Asset::factory()->create();
         $routine = Routine::factory()->create(['asset_id' => $asset->id]);
-        $admin = User::factory()->role(User::ROLE_ADMIN)->create();
+        $admin = $this->adminUser();
 
         $this->actingAs($admin, 'sanctum')->deleteJson("/api/assets/{$asset->id}")->assertNoContent();
 

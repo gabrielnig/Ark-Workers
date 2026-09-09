@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\Asset;
 use App\Models\Space;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -16,7 +15,7 @@ class SpaceControllerTest extends TestCase
     {
         $visible = Space::factory()->create(['is_restricted' => false]);
         $hidden = Space::factory()->create(['is_restricted' => true]);
-        $user = User::factory()->role(User::ROLE_CLEANING_STAFF)->create();
+        $user = $this->staffUser();
 
         $response = $this->actingAs($user, 'sanctum')->getJson('/api/spaces');
 
@@ -29,7 +28,7 @@ class SpaceControllerTest extends TestCase
     public function test_show_denies_a_restricted_space_without_a_grant(): void
     {
         $space = Space::factory()->create(['is_restricted' => true]);
-        $user = User::factory()->role(User::ROLE_CLEANING_STAFF)->create();
+        $user = $this->staffUser();
 
         $this->actingAs($user, 'sanctum')
             ->getJson("/api/spaces/{$space->id}")
@@ -38,8 +37,8 @@ class SpaceControllerTest extends TestCase
 
     public function test_only_privileged_roles_can_create_a_space(): void
     {
-        $cleaner = User::factory()->role(User::ROLE_CLEANING_STAFF)->create();
-        $admin = User::factory()->role(User::ROLE_ADMIN)->create();
+        $cleaner = $this->staffUser();
+        $admin = $this->adminUser();
 
         $this->actingAs($cleaner, 'sanctum')
             ->postJson('/api/spaces', ['name' => 'New Wing'])
@@ -50,11 +49,11 @@ class SpaceControllerTest extends TestCase
             ->assertCreated();
     }
 
-    public function test_only_admin_or_pastor_can_delete_a_space(): void
+    public function test_only_admin_can_delete_a_space(): void
     {
         $space = Space::factory()->create();
-        $manager = User::factory()->role(User::ROLE_FACILITY_MANAGER)->create();
-        $admin = User::factory()->role(User::ROLE_ADMIN)->create();
+        $manager = $this->managerUser();
+        $admin = $this->adminUser();
 
         $this->actingAs($manager, 'sanctum')
             ->deleteJson("/api/spaces/{$space->id}")
@@ -74,7 +73,7 @@ class SpaceControllerTest extends TestCase
     {
         $space = Space::factory()->create();
         Asset::factory()->create(['space_id' => $space->id]);
-        $admin = User::factory()->role(User::ROLE_ADMIN)->create();
+        $admin = $this->adminUser();
 
         $this->actingAs($admin, 'sanctum')
             ->deleteJson("/api/spaces/{$space->id}")

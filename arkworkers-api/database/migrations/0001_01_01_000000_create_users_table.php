@@ -21,9 +21,15 @@ return new class extends Migration
             $table->string('password');
             // Optional profile field, not used for auth.
             $table->string('phone')->nullable();
-            // One of: admin, pastor, facility_manager, cleaning_staff,
-            // maintenance, security, driver, per SECURITY.md §4.1.
-            $table->string('role');
+            // A plain label with zero permission weight, e.g. "Pastor".
+            // Never checked by any policy.
+            $table->string('title')->nullable();
+            // The only global permission flag left after the
+            // department/role rework. Everything else (including the
+            // old facility_manager-style management permission) now
+            // comes from a department_user row whose role has
+            // grants_management = true.
+            $table->boolean('is_admin')->default(false);
             $table->rememberToken();
             $table->timestamps();
         });

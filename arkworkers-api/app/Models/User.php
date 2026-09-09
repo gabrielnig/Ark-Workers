@@ -6,55 +6,18 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'phone', 'role', 'password'])]
+#[Fillable(['name', 'email', 'phone', 'title', 'password'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
-
-    /**
-     * Canonical role identifiers, per SECURITY.md §4.1.
-     * These are the ONLY valid values for the `role` column, enforced
-     * in tests, not just documented here.
-     */
-    public const ROLE_ADMIN = 'admin';
-
-    public const ROLE_PASTOR = 'pastor';
-
-    public const ROLE_FACILITY_MANAGER = 'facility_manager';
-
-    public const ROLE_CLEANING_STAFF = 'cleaning_staff';
-
-    public const ROLE_MAINTENANCE = 'maintenance';
-
-    public const ROLE_SECURITY = 'security';
-
-    public const ROLE_DRIVER = 'driver';
-
-    public const ROLES = [
-        self::ROLE_ADMIN,
-        self::ROLE_PASTOR,
-        self::ROLE_FACILITY_MANAGER,
-        self::ROLE_CLEANING_STAFF,
-        self::ROLE_MAINTENANCE,
-        self::ROLE_SECURITY,
-        self::ROLE_DRIVER,
-    ];
-
-    /**
-     * Roles that bypass space-level restriction checks entirely
-     * (SECURITY.md §4.2 / ARCHITECTURE.md §4).
-     */
-    public const UNRESTRICTED_ROLES = [
-        self::ROLE_ADMIN,
-        self::ROLE_PASTOR,
-    ];
 
     /**
      * Get the attributes that should be cast.
@@ -66,30 +29,63 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_admin' => 'boolean',
         ];
     }
 
     /**
-     * True if the user's role is one of the given roles.
-     * Server-side authorization must always go through this (or a
-     * Policy built on it), never a client-side role check.
+     * Departments this worker belongs to, one row per department with
+     * that department's specific role available via ->pivot->role.
      *
-     * @param  string|array<int, string>  $roles
+     * @return BelongsToMany<Department, $this>
      */
-    public function hasRole(string|array $roles): bool
+    public function departments(): BelongsToMany
     {
-        $roles = is_array($roles) ? $roles : [$roles];
-
-        return in_array($this->role, $roles, true);
+        return $this->belongsToMany(Department::class)
+            ->using(DepartmentUser::class)
+            ->withPivot('role_id')
+            ->withTimestamps();
     }
 
     /**
-     * True if this user's role is exempt from space-level restriction
-     * checks (Admin/Pastor), per SECURITY.md §4.2.
+     * Add or change this worker's standing in a department. A worker
+     * has exactly one role per department, so joining again with a
+     * different role replaces the previous one rather than adding a
+     * second row.
+     */
+    public function joinDepartment(Department $department, Role $role): void
+    {
+        $this->departments()->syncWithoutDetaching([
+            $department->id => ['role_id' => $role->id],
+        ]);
+    }
+
+    /**
+     * True if Admin, or if any department membership carries a role
+     * flagged grants_management. This is the only place that
+     * permission logic lives, policies must call this rather than
+     * re-deriving it from department/role names.
+     */
+    public function hasManagementPermission(): bool
+    {
+        if ($this->is_admin) {
+            return true;
+        }
+
+        return $this->departments()
+            ->get()
+            ->contains(fn (Department $department) => $department->pivot->role?->grants_management === true);
+    }
+
+    /**
+     * True if this user's account is exempt from space-level
+     * restriction checks (SECURITY.md §4.2). Admin-only, Pastor is a
+     * title with no permission weight and no department role bypasses
+     * restricted-space visibility, only grants management actions.
      */
     public function bypassesSpaceRestrictions(): bool
     {
-        return $this->hasRole(self::UNRESTRICTED_ROLES);
+        return $this->is_admin;
     }
 
     /**

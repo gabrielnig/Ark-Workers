@@ -5,7 +5,6 @@ namespace Tests\Unit;
 use App\Models\Asset;
 use App\Models\Space;
 use App\Models\SpaceAccessGrant;
-use App\Models\User;
 use App\Policies\AssetPolicy;
 use App\Policies\SpacePolicy;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -34,7 +33,7 @@ class AssetPolicyTest extends TestCase
     {
         $space = Space::factory()->create(['is_restricted' => false]);
         $asset = Asset::factory()->create(['space_id' => $space->id]);
-        $cleaner = User::factory()->role(User::ROLE_CLEANING_STAFF)->create();
+        $cleaner = $this->staffUser();
 
         $this->assertTrue($this->policy->view($cleaner, $asset));
     }
@@ -43,7 +42,7 @@ class AssetPolicyTest extends TestCase
     {
         $space = Space::factory()->create(['is_restricted' => true]);
         $asset = Asset::factory()->create(['space_id' => $space->id]);
-        $cleaner = User::factory()->role(User::ROLE_CLEANING_STAFF)->create();
+        $cleaner = $this->staffUser();
 
         $this->assertFalse($this->policy->view($cleaner, $asset));
     }
@@ -52,8 +51,8 @@ class AssetPolicyTest extends TestCase
     {
         $space = Space::factory()->create(['is_restricted' => true]);
         $asset = Asset::factory()->create(['space_id' => $space->id]);
-        $admin = User::factory()->role(User::ROLE_ADMIN)->create();
-        $cleaner = User::factory()->role(User::ROLE_CLEANING_STAFF)->create();
+        $admin = $this->adminUser();
+        $cleaner = $this->staffUser();
 
         SpaceAccessGrant::factory()->create([
             'user_id' => $cleaner->id,
@@ -68,7 +67,7 @@ class AssetPolicyTest extends TestCase
     {
         $space = Space::factory()->create(['is_restricted' => true]);
         $asset = Asset::factory()->create(['space_id' => $space->id]);
-        $admin = User::factory()->role(User::ROLE_ADMIN)->create();
+        $admin = $this->adminUser();
 
         $this->assertTrue($this->policy->view($admin, $asset));
     }
@@ -80,8 +79,8 @@ class AssetPolicyTest extends TestCase
         $grantedSpace = Space::factory()->create(['is_restricted' => true]);
         $otherSpace = Space::factory()->create(['is_restricted' => true]);
         $otherAsset = Asset::factory()->create(['space_id' => $otherSpace->id]);
-        $admin = User::factory()->role(User::ROLE_ADMIN)->create();
-        $cleaner = User::factory()->role(User::ROLE_CLEANING_STAFF)->create();
+        $admin = $this->adminUser();
+        $cleaner = $this->staffUser();
 
         SpaceAccessGrant::factory()->create([
             'user_id' => $cleaner->id,
@@ -92,33 +91,29 @@ class AssetPolicyTest extends TestCase
         $this->assertFalse($this->policy->view($cleaner, $otherAsset));
     }
 
-    public function test_update_requires_both_space_access_and_a_privileged_role(): void
+    public function test_update_requires_both_space_access_and_management_permission(): void
     {
         $space = Space::factory()->create(['is_restricted' => true]);
         $asset = Asset::factory()->create(['space_id' => $space->id]);
-        $admin = User::factory()->role(User::ROLE_ADMIN)->create();
+        $admin = $this->adminUser();
 
-        // Facility Manager: privileged role, but no grant to this
+        // Manager: has management permission, but no grant to this
         // restricted space -> update must still be denied.
-        $manager = User::factory()->role(User::ROLE_FACILITY_MANAGER)->create();
+        $manager = $this->managerUser();
         $this->assertFalse($this->policy->update($manager, $asset));
 
-        // Admin: bypasses the space restriction and has the role.
+        // Admin: bypasses the space restriction and has the permission.
         $this->assertTrue($this->policy->update($admin, $asset));
     }
 
-    public function test_only_privileged_roles_can_delete_an_asset(): void
+    public function test_only_admin_can_delete_an_asset(): void
     {
         $space = Space::factory()->create(['is_restricted' => false]);
         $asset = Asset::factory()->create(['space_id' => $space->id]);
 
-        foreach (User::ROLES as $role) {
-            $user = User::factory()->role($role)->create();
-            $this->assertSame(
-                in_array($role, User::UNRESTRICTED_ROLES, true),
-                $this->policy->delete($user, $asset),
-                "delete() gave wrong result for role: {$role}"
-            );
-        }
+        $this->assertTrue($this->policy->delete($this->adminUser(), $asset));
+        $this->assertFalse($this->policy->delete($this->managerUser(), $asset));
+        $this->assertFalse($this->policy->delete($this->pastorUser(), $asset));
+        $this->assertFalse($this->policy->delete($this->staffUser(), $asset));
     }
 }

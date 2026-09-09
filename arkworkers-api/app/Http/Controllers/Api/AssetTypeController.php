@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\AssetType;
-use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -56,7 +55,7 @@ class AssetTypeController extends Controller
     private function authorizeManages(Request $request): void
     {
         abort_unless(
-            $request->user()->hasRole([User::ROLE_ADMIN, User::ROLE_PASTOR, User::ROLE_FACILITY_MANAGER]),
+            $request->user()->hasManagementPermission(),
             403
         );
     }

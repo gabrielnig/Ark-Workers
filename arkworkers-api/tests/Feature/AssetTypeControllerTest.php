@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\AssetType;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -14,7 +13,7 @@ class AssetTypeControllerTest extends TestCase
     public function test_anyone_authenticated_can_list_asset_types(): void
     {
         AssetType::factory()->count(2)->create();
-        $cleaner = User::factory()->role(User::ROLE_CLEANING_STAFF)->create();
+        $cleaner = $this->staffUser();
 
         $this->actingAs($cleaner, 'sanctum')
             ->getJson('/api/asset-types')
@@ -24,7 +23,7 @@ class AssetTypeControllerTest extends TestCase
 
     public function test_admin_can_create_a_brand_new_asset_type_with_no_prior_code_changes(): void
     {
-        $admin = User::factory()->role(User::ROLE_ADMIN)->create();
+        $admin = $this->adminUser();
 
         $response = $this->actingAs($admin, 'sanctum')->postJson('/api/asset-types', [
             'name' => 'Swimming Pool',
@@ -37,7 +36,7 @@ class AssetTypeControllerTest extends TestCase
 
     public function test_ordinary_staff_cannot_create_an_asset_type(): void
     {
-        $cleaner = User::factory()->role(User::ROLE_CLEANING_STAFF)->create();
+        $cleaner = $this->staffUser();
 
         $this->actingAs($cleaner, 'sanctum')
             ->postJson('/api/asset-types', ['name' => 'Generator'])

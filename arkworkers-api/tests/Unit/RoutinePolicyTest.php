@@ -5,7 +5,6 @@ namespace Tests\Unit;
 use App\Models\Asset;
 use App\Models\Routine;
 use App\Models\Space;
-use App\Models\User;
 use App\Policies\RoutinePolicy;
 use App\Policies\SpacePolicy;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -26,7 +25,7 @@ class RoutinePolicyTest extends TestCase
     public function test_type_level_template_is_viewable_by_any_role(): void
     {
         $routine = Routine::factory()->typeLevelTemplate()->create();
-        $cleaner = User::factory()->role(User::ROLE_CLEANING_STAFF)->create();
+        $cleaner = $this->staffUser();
 
         $this->assertTrue($this->policy->view($cleaner, $routine));
     }
@@ -37,24 +36,18 @@ class RoutinePolicyTest extends TestCase
         $routine = Routine::factory()->create([
             'asset_id' => Asset::factory()->create(['space_id' => $space->id])->id,
         ]);
-        $cleaner = User::factory()->role(User::ROLE_CLEANING_STAFF)->create();
-        $admin = User::factory()->role(User::ROLE_ADMIN)->create();
+        $cleaner = $this->staffUser();
+        $admin = $this->adminUser();
 
         $this->assertFalse($this->policy->view($cleaner, $routine));
         $this->assertTrue($this->policy->view($admin, $routine));
     }
 
-    public function test_only_privileged_roles_can_create_routines(): void
+    public function test_only_admin_or_a_manager_can_create_routines(): void
     {
-        $allowed = [User::ROLE_ADMIN, User::ROLE_PASTOR, User::ROLE_FACILITY_MANAGER];
-
-        foreach (User::ROLES as $role) {
-            $user = User::factory()->role($role)->create();
-            $this->assertSame(
-                in_array($role, $allowed, true),
-                $this->policy->create($user),
-                "create() gave wrong result for role: {$role}"
-            );
-        }
+        $this->assertTrue($this->policy->create($this->adminUser()));
+        $this->assertTrue($this->policy->create($this->managerUser()));
+        $this->assertFalse($this->policy->create($this->pastorUser()));
+        $this->assertFalse($this->policy->create($this->staffUser()));
     }
 }
