@@ -121,7 +121,7 @@
   }
 
   .side-nav-item.active {
-    background: var(--color-interactive);
+    background: var(--color-moss-600);
     color: #fff;
     opacity: 1;
   }
