@@ -1,21 +1,12 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { QueryClient } from '@tanstack/react-query';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
 import { get, set, del } from 'idb-keyval';
 import './styles/global.css';
 import App from './App.jsx';
 import { primeCsrfCookie } from './api/client.js';
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5,
-      gcTime: 1000 * 60 * 60 * 24,
-    },
-  },
-});
+import { queryClient, resumeQueuedMutationsOnReconnect } from './queryClient.js';
 
 const persister = createAsyncStoragePersister({
   storage: {
@@ -31,9 +22,27 @@ const persister = createAsyncStoragePersister({
 // Capacitor build, which never matches the stateful domain anyway.
 primeCsrfCookie();
 
+// Replays mutations queued while offline, including ones restored
+// from a previous session, the moment connectivity returns. Also
+// runs once now, in case the app is reopening already online with
+// leftover queued work from the last offline session.
+resumeQueuedMutationsOnReconnect();
+queryClient.resumePausedMutations();
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <PersistQueryClientProvider client={queryClient} persistOptions={{ persister }}>
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={{
+        persister,
+        // Paused (offline) mutations get written to IndexedDB too, not
+        // just queries, so a queued task completion survives the app
+        // being closed and reopened while still offline.
+        dehydrateOptions: {
+          shouldDehydrateMutation: () => true,
+        },
+      }}
+    >
       <App />
     </PersistQueryClientProvider>
   </StrictMode>,
