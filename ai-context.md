@@ -19,11 +19,11 @@ Prophet's Quarters is the concrete case driving space restriction design).
 
 **Current state: Phase 1 and 2 complete, the auth/org-structure prerequisite
 complete, the real Login/Sign-up/Admin-requests screens built and verified,
-and the offline-first sync foundation (conflict handling + queued
-mutations) is now built.** Laravel 13 app lives in `arkworkers-api/`,
-React/Vite/Capacitor frontend lives in `arkworkers-web/`. 105 tests
-passing, 208 assertions on the backend; no frontend test framework
-decided or set up yet (flagged, not silently resolved, see §3).
+the offline-first sync foundation built, and resumable chunked upload now
+replaces the old non-resumable proof endpoint.** Laravel 13 app lives in
+`arkworkers-api/`, React/Vite/Capacitor frontend lives in `arkworkers-web/`.
+112 tests passing, 229 assertions on the backend; no frontend test
+framework decided or set up yet (flagged, not silently resolved, see §3).
 
 **Auth model reworked this session, twice, both real architecture
 changes, not additions:**
@@ -163,20 +163,20 @@ Standing process rules now in force for every future session (see
    LESSONS.md for how it grew.
 4. **Phase 3 (next): offline reliability layer.** Real Login, Sign-up,
    and Admin-requests screens are built and verified against the real
-   backend (`arkworkers-web/src/screens/`), matching the three
-   approved mockups. Offline-first sync foundation now built: task
-   completion conflict handling (first-sync-wins, logged, see
-   `task_completion_conflicts`), and the frontend offline-queue
-   mechanics (`useTasks`/`useCompleteTask`, `queryClient.js`,
-   mutations persist and replay on reconnect). Still needed: a worker
-   "My Work" task screen to actually exercise this (none built or
-   mocked up yet, only Login/Sign-up/Admin exist), resumable/chunked
-   upload (upgrading the existing non-resumable proof upload endpoint,
-   decided: temp chunks assembled at the end, not direct offset
-   writes), and a real browser-based verification of the offline/
-   reconnect behavior (only verified at the API-contract and
-   installed-library level so far, no browser available in this
-   environment).
+   backend, matching the three approved mockups. Offline-first sync
+   foundation built: task completion conflict handling and the
+   frontend offline-queue mechanics. Resumable chunked upload now
+   replaces the old non-resumable proof endpoint entirely (50MB cap,
+   filesystem-tracked chunk presence, real signature validation on
+   the assembled file, daily pruning of abandoned sessions). What's
+   left: a worker "My Work" task screen to actually exercise the
+   sync engine and the new chunked-upload endpoints (none built or
+   mocked up yet, only Login/Sign-up/Admin exist), a frontend
+   chunked-upload client (the backend exists and is tested, nothing
+   on the frontend calls it yet), and real browser-based verification
+   of both the offline/reconnect behavior and the chunked upload flow
+   (only verified at the API-contract and backend-test level so far,
+   no browser available in this environment).
 5. Phase 4: scheduling (hybrid PM triggers) and reporting
 6. Phase 5: polish (task messaging, asset history, PM compliance KPI,
    bottom mobile nav's raised "My Work" center button opening a

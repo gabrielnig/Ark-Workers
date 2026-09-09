@@ -7,6 +7,23 @@ Changelog (keepachangelog.com) — newest at top.
 
 ## [Unreleased]
 
+### Resumable chunked upload replaces the non-resumable proof endpoint
+- New `/tasks/{id}/proofs/chunked/{start,status,chunks/{index},complete}`
+  endpoints, replacing the old single-shot upload entirely (a small
+  file is just a 1-chunk upload, one code path, not two)
+- Chunk presence tracked by the filesystem, no redundant per-chunk DB
+  table. Assembled file's real signature and size validated on
+  completion, never individual chunk headers or client-declared MIME
+- Max size decided at 50MB per SECURITY.md's suggested range, an
+  explicit product decision, not assumed
+- Audit pass caught two real gaps: `expires_at` was set but never
+  enforced, and abandoned sessions had no cleanup at all. Both fixed:
+  expiry checked on every use, daily prune job (same `Prunable`
+  pattern as Asset) removes expired sessions and their orphaned chunk
+  files, verified with a test that checks the files are actually gone
+  from disk, not just the DB row
+- 112 tests passing, 229 assertions
+
 ### Offline-first sync foundation: conflict handling + queued mutations
 - Fixed a real gap: task completion had no protection against the
   exact conflict SECURITY.md 6.4 requires handling, completing an

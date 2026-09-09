@@ -98,9 +98,20 @@ tested. Base URL and envelope conventions below are followed as-built.
   calendar/meter trigger is Phase 4 scope
 - `POST /tasks/{id}/complete` - assigned user or Admin/manager, and
   space access is still required even for the assigned user
-- `POST /tasks/{id}/proofs` - non-resumable file upload, validated by
-  actual file content, stored outside the web root. Resumable/chunked
-  upload is Phase 3 scope, not yet built
+- `POST /tasks/{id}/proofs/chunked/start` - begins a resumable upload
+  session (filename, declared_mime_type, total_size, chunk_size).
+  Max 50MB total. Returns a session_id
+- `GET /tasks/{id}/proofs/chunked/{session}/status` - which chunk
+  indexes the server already has, what a resuming client checks
+  before re-sending anything
+- `POST /tasks/{id}/proofs/chunked/{session}/chunks/{index}` - one
+  chunk
+- `POST /tasks/{id}/proofs/chunked/{session}/complete` - assembles
+  every chunk in order, validates the assembled file's real
+  signature and size (never individual chunk headers or the
+  client-declared MIME type), creates the TaskProof, deletes the
+  session and its chunk files. A small file is simply a 1-chunk
+  upload, same code path, not a separate simple-upload endpoint
 
 ### Not yet built
 - Vehicles endpoints (documents, fuel/mileage log) - data model exists,

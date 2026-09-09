@@ -8,6 +8,23 @@ the actual problem was, what to do differently going forward.
 
 ---
 
+## Chunked Upload (Phase 3)
+
+### An unenforced expiry column is worse than no expiry column
+**What happened:** `ChunkUploadSession` got an `expires_at` set at
+creation and a scheduled prune job planned from the start, but the
+first working version never actually checked it anywhere, any
+endpoint would happily keep writing chunks into or completing a
+session that was, on paper, already expired. The column existed and
+looked like a real safeguard without being one.
+**Lesson:** a timestamp column meant to bound something's validity
+needs an explicit check at every point that thing is used, not just
+a scheduled job that eventually cleans it up, the gap between "set"
+and "enforced" is exactly where a real bug hides. When adding an
+expiry/TTL field, grep for every endpoint that touches the resource
+and confirm each one actually reads the field before trusting it's
+covered.
+
 ## Offline Sync Foundation (Phase 3)
 
 ### A feature's data model can be missing a field the policy layer already implied
