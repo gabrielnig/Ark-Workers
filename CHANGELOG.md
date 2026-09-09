@@ -7,6 +7,27 @@ Changelog (keepachangelog.com) — newest at top.
 
 ## [Unreleased]
 
+### Real My Work worker screens built, offline sync and chunked upload now have a UI
+- `MyWorkScreen` (task list) and `TaskDetailScreen` (completion + proof
+  upload), matching the approved v2 mockup after comparing against a
+  Stitch export and stripping what it invented (checklists, proof
+  counts, restriction levels, HEIC/25MB, fictional org details)
+- Pending-sync detection is real: `useMutationState` reads the actual
+  paused-mutation queue, not a guess from connectivity status alone
+- Force Sync button genuinely wired to `resumePausedMutations()`
+- Working resumable upload client wired to the chunked upload
+  endpoints: 1MB chunks, independent per-file lanes, retry resumes
+  from the server's actual chunk status, not from 0% and not from
+  blind local state
+- Verified the full start/chunk/complete flow over real HTTP with a
+  real JPEG against a live backend
+- Root route now defaults to My Work for any authenticated user, admin
+  dashboard moved to `/admin/requests`, a real behavior change flagged
+  rather than shipped silently
+- Backend unchanged, still 112 tests passing, 229 assertions. Frontend
+  test framework gap still open and still flagged, not silently
+  resolved
+
 ### Resumable chunked upload replaces the non-resumable proof endpoint
 - New `/tasks/{id}/proofs/chunked/{start,status,chunks/{index},complete}`
   endpoints, replacing the old single-shot upload entirely (a small

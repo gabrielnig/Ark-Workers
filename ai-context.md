@@ -18,12 +18,12 @@ department/role-based + space-level-restricted authorization system (the
 Prophet's Quarters is the concrete case driving space restriction design).
 
 **Current state: Phase 1 and 2 complete, the auth/org-structure prerequisite
-complete, the real Login/Sign-up/Admin-requests screens built and verified,
-the offline-first sync foundation built, and resumable chunked upload now
-replaces the old non-resumable proof endpoint.** Laravel 13 app lives in
-`arkworkers-api/`, React/Vite/Capacitor frontend lives in `arkworkers-web/`.
-112 tests passing, 229 assertions on the backend; no frontend test
-framework decided or set up yet (flagged, not silently resolved, see §3).
+complete, real Login/Sign-up/Admin-requests/My-Work screens all built and
+verified, offline sync and resumable chunked upload both have a real UI
+now, not just backend plumbing.** Laravel 13 app lives in `arkworkers-api/`,
+React/Vite/Capacitor frontend lives in `arkworkers-web/`. 112 tests
+passing, 229 assertions on the backend; no frontend test framework
+decided or set up yet (flagged, not silently resolved, see §3).
 
 **Auth model reworked this session, twice, both real architecture
 changes, not additions:**
@@ -161,22 +161,20 @@ Standing process rules now in force for every future session (see
    while starting Phase 3 (the sign-up/login UI needed a real backend
    to build against), not originally planned as its own phase, see
    LESSONS.md for how it grew.
-4. **Phase 3 (next): offline reliability layer.** Real Login, Sign-up,
-   and Admin-requests screens are built and verified against the real
-   backend, matching the three approved mockups. Offline-first sync
-   foundation built: task completion conflict handling and the
-   frontend offline-queue mechanics. Resumable chunked upload now
-   replaces the old non-resumable proof endpoint entirely (50MB cap,
-   filesystem-tracked chunk presence, real signature validation on
-   the assembled file, daily pruning of abandoned sessions). What's
-   left: a worker "My Work" task screen to actually exercise the
-   sync engine and the new chunked-upload endpoints (none built or
-   mocked up yet, only Login/Sign-up/Admin exist), a frontend
-   chunked-upload client (the backend exists and is tested, nothing
-   on the frontend calls it yet), and real browser-based verification
-   of both the offline/reconnect behavior and the chunked upload flow
-   (only verified at the API-contract and backend-test level so far,
-   no browser available in this environment).
+4. **Phase 3: functionally complete pending real-device verification.**
+   Real Login, Sign-up, Admin-requests, and My Work screens are all
+   built and verified against the real backend. Offline sync
+   (conflict handling + queued/persisted mutations + reconnect replay)
+   and resumable chunked upload both have working UI now
+   (`MyWorkScreen`, `TaskDetailScreen`, `useResumableUpload`), not just
+   backend endpoints nothing calls. What's genuinely left: real
+   verification on an actual device/browser (offline toggle, a real
+   interrupted upload, real reconnect replay) — everything so far is
+   verified at the API-contract and backend-test level, no browser
+   available in this environment, and RESEARCH.md flags this exact
+   phase as the one most critical not to rush past that step. A
+   frontend test framework is also still undecided
+   (`docs/TDD-PROTOCOL.md` is PHPUnit-only).
 5. Phase 4: scheduling (hybrid PM triggers) and reporting
 6. Phase 5: polish (task messaging, asset history, PM compliance KPI,
    bottom mobile nav's raised "My Work" center button opening a
