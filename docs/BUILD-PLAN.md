@@ -47,6 +47,28 @@ matters if this data is unrecoverable.
 Backend and frontend are out of sync in both directions here. Fix that
 before starting anything new.
 
+- [x] **Routines backend — done 2026-09-09.** `RoutineController` (full
+      CRUD) + `/routines` routes added, 14 new feature tests, full suite
+      green (126 passed, 250 assertions). Validates exactly one of
+      asset_id/asset_type_id, at least one of calendar_interval_days/
+      meter_threshold. `RoutinePolicy` and the model itself already
+      existed from an earlier session, just had no controller wired up.
+  - [ ] **Real decision needed: `destroy()` hard-deletes task/proof
+        history.** `routines.id` cascades onto `tasks.id` in the schema
+        (see the tasks table migration), so deleting a routine
+        permanently wipes every task and proof photo/video tied to it —
+        inconsistent with how Assets handle the same situation
+        (soft-delete, 30-day grace period, specifically to avoid this).
+        Flagged in the controller code, not silently resolved. Needs an
+        actual decision — soft-delete routines like assets, or restrict
+        deletion once a routine has task history — before this endpoint
+        is exposed to a real admin with real data to lose.
+  - [ ] **Frontend still not built.** Tasks are still created directly
+        (`POST /tasks`), bypassing the routine-schedule model
+        entirely — there's no UI yet for an Admin to actually define a
+        recurring schedule through the app. This is still required
+        before Routines is genuinely usable, the backend existing
+        doesn't mean the PRD requirement is met yet.
 - [ ] **Spaces screen (frontend).** `SpaceController` is a full
       `apiResource` already (`GET/POST/PATCH/DELETE /spaces`) — the
       backend is done. Frontend has zero UI; "Spaces" is a disabled
@@ -60,15 +82,6 @@ before starting anything new.
       new Asset Types (PRD's "fully modular, no code changes" requirement)
       — right now that requirement is unmet in practice even though the
       API supports it.
-- [ ] **Routines — backend is incomplete, not just frontend.** The
-      `routines` table migration exists
-      (`2026_09_08_003740_create_routines_table.php`) but there is no
-      `RoutineController` and no `/routines` route at all. Tasks
-      currently get created directly (`POST /tasks`), bypassing the
-      routine-schedule model entirely. This is a real backend gap, not
-      a UI gap — routines are how recurring schedules and the
-      calendar/meter hybrid-trigger logic (`ARCHITECTURE.md` §3) are
-      supposed to work, and none of that exists yet.
 - [ ] **Restricted-space access grant admin UI.** `space_access_grants`
       table exists, `SpacePolicy` checks it (`ARCHITECTURE.md` §4), but
       there's no screen for an Admin to actually grant/revoke access to
