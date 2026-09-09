@@ -208,8 +208,41 @@ export default function AdminRequestsScreen() {
             </div>
           </div>
 
-          {isLoading && <p className="admin-empty">Loading...</p>}
-          {!isLoading && filtered.length === 0 && <p className="admin-empty">No pending requests.</p>}
+          {isLoading && (
+            <table className="admin-req-table" aria-hidden="true">
+              <tbody>
+                {[0, 1, 2].map((row) => (
+                  <tr key={row} className="admin-skeleton-row">
+                    <td style={{ width: 24 }}><div className="admin-skeleton-block" style={{ width: 16 }} /></td>
+                    <td><div className="admin-skeleton-block" style={{ width: 160 }} /></td>
+                    <td><div className="admin-skeleton-block" style={{ width: 90 }} /></td>
+                    <td><div className="admin-skeleton-block" style={{ width: 120 }} /></td>
+                    <td><div className="admin-skeleton-block" style={{ width: 70 }} /></td>
+                    <td><div className="admin-skeleton-block" style={{ width: 50 }} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+
+          {!isLoading && filtered.length === 0 && requests?.length > 0 && (
+            <div className="admin-empty">
+              <p>No requests match your current search or department filter.</p>
+              <button
+                className="admin-empty-action"
+                onClick={() => {
+                  setSearch('');
+                  setActiveDepartment('All departments');
+                }}
+              >
+                Clear filters
+              </button>
+            </div>
+          )}
+
+          {!isLoading && filtered.length === 0 && !requests?.length && (
+            <p className="admin-empty">No pending requests right now, everything caught up.</p>
+          )}
 
           {!isLoading && filtered.length > 0 && (
             <>
