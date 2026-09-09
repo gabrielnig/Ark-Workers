@@ -6,6 +6,7 @@ import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persi
 import { get, set, del } from 'idb-keyval';
 import './styles/global.css';
 import App from './App.jsx';
+import { primeCsrfCookie } from './api/client.js';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -23,6 +24,12 @@ const persister = createAsyncStoragePersister({
     removeItem: del,
   },
 });
+
+// Fires once at load, so any subsequent write from any screen
+// (account requests, invite activation, login) already has the
+// XSRF-TOKEN cookie/header pair available. Harmless no-op on the
+// Capacitor build, which never matches the stateful domain anyway.
+primeCsrfCookie();
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

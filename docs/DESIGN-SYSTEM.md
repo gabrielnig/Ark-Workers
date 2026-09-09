@@ -252,9 +252,10 @@ ArkWorkers as-is — not duplicated in this document:
 [x] Logo: finalized — see Section 1.5. Full asset set in docs/assets/logo/
 [ ] Icon set: commission/select a specific icon library (e.g. Phosphor,
     Lucide) consistent with the rounded, warm direction — not yet chosen
-[ ] Confirm Plus Jakarta Sans / Work Sans licensing/self-hosting
-    approach for the PWA (avoid a render-blocking Google Fonts request
-    on slow mobile connections)
+[x] Plus Jakarta Sans / Work Sans self-hosted as woff2 in
+    arkworkers-web/public/fonts, no Google Fonts request at runtime.
+    Both are Google-licensed open source fonts (SIL Open Font
+    License), self-hosting is permitted
 [ ] Empty-state illustrations: worth a small custom illustration set for
     "no tasks today" / "space fully clean" moments, or keep text-only?
 [ ] Logo wordmark uses a serif display face, distinct from Nunito used
