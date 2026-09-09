@@ -8,6 +8,73 @@ the actual problem was, what to do differently going forward.
 
 ---
 
+## Auth / Org-Structure Rework (Phase 3 prerequisite)
+
+### A UI decision ("admin-approve sign-ups") turned into a full authorization rework
+**What happened:** what started as "remove self-service registration,
+add admin approval" surfaced that the existing single `role` enum
+column couldn't represent the actual org structure once discussed in
+detail (a worker in multiple departments, each with its own role,
+department/role both admin-manageable). The fix touched the User
+model, all four resource Policies, every factory, and 8 test files.
+**Lesson:** before building a UI-driven change, check whether it's
+compatible with the data model it sits on top of, not just whether the
+screen looks right. "Just add an approval step" and "the underlying
+permission model can represent this" are different questions, ask both.
+
+### Laravel auto-bypasses CSRF whenever app.env is "testing", silently defeating the exact test meant to catch its absence
+**What happened:** two new tests asserted a stateful login without a
+valid CSRF token gets rejected with 419. Both passed immediately,
+which should have been suspicious, not reassuring: `app()->runningUnitTests()`
+returns true whenever `app.env === 'testing'`, which is always true
+under PHPUnit, and Laravel's CSRF middleware skips validation entirely
+in that case. The test could never have failed for the right reason.
+**Lesson:** for any test asserting that framework-level protection
+(CSRF, signed URLs, etc.) actually rejects something, check whether
+the framework has a test-mode auto-bypass for that exact protection
+before trusting a passing assertion. Force `app()->detectEnvironment`
+or the relevant config to a non-testing value for just that assertion
+if needed, and verify the test can genuinely fail (temporarily break
+the code, confirm red, then fix).
+
+### Mass-assignment protection silently drops fields instead of erroring
+**What happened:** `User::create(['email_verified_at' => now(), ...])`
+during invite activation silently produced a user with
+`email_verified_at` still null, because that field isn't in `$fillable`.
+Laravel drops non-fillable attributes from a mass-assignment array
+without any error or warning by default.
+**Lesson:** don't trust that a field passed to `::create()` actually
+landed, especially for security-relevant fields deliberately kept off
+`$fillable`. Assert the actual persisted value in a test, or set such
+fields explicitly via `forceFill()` after creation, not through the
+mass-assignment array.
+
+### New public endpoints need an explicit rate-limiting check against SECURITY.md, every time
+**What happened:** three new public endpoints (account request submit,
+invite show, invite activate) shipped with zero rate limiting, missed
+during initial implementation and only caught by rereading
+SECURITY.md's public-endpoint requirement during the end-of-batch
+audit, not proactively while writing the routes.
+**Lesson:** add "check new public routes against SECURITY.md's rate-
+limiting requirement" as a fixed item in the audit checklist, don't
+rely on remembering it unprompted while writing the route. Same
+applies to any other blanket security requirement stated once in the
+docs but easy to forget applies to code written much later.
+
+### Corrupted dictation input should stop work, not get guessed at
+**What happened:** a few messages this session arrived as garbled/
+binary-looking data instead of readable text, likely a dictation-app
+glitch on Unique's end. The right response was to say plainly that the
+message didn't come through and ask for it again, rather than attempt
+to extract meaning from noise or silently proceed on the last clear
+instruction without flagging the gap.
+**Lesson:** when input is genuinely unparseable, say so directly and
+ask for a resend, don't guess. Separately, some later self-reported
+"I fixed that" claims (e.g. removing a UI element) turned out false on
+verification, a `grep` after the edit would have caught it
+immediately, so verify edits landed rather than trusting the edit
+command succeeded just because no error was thrown.
+
 ## Phase 2 / Core Task Loop
 
 ### Data-loss policy needs deciding per entity, not assumed uniform

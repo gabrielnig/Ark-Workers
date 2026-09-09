@@ -7,6 +7,47 @@ Changelog (keepachangelog.com) — newest at top.
 
 ## [Unreleased]
 
+### Phase 3 started, paused for an auth/org-structure rework, rework now complete
+- Auth reworked to dual-mode: browser/PWA requests from the stateful
+  frontend domain get a Sanctum session cookie (CSRF-protected), no
+  bearer token in the response body; requests with no matching
+  Origin/Referer (Capacitor Android, API clients) still get a token.
+  Detection is automatic via Sanctum's own frontend-origin check
+- Self-service registration removed entirely. Replaced with an
+  admin-approval pipeline: `POST /api/account-requests` (public
+  submit, rate limited), `GET/approve/reject` on account requests
+  (Admin-only), single-use expiring invite links
+  (`GET/POST /api/invites/{token}`, also rate limited) that let the
+  worker set a password and activate
+- Authorization model reworked: `departments` and `roles` are now
+  separate admin-manageable master lists (was a single fixed `role`
+  enum). A worker can belong to multiple departments with a different
+  role in each. `hasManagementPermission()` replaces the old
+  admin/pastor/facility_manager role-list checks everywhere (Space,
+  Asset, Routine, Task policies, AssetTypeController).
+  `bypassesSpaceRestrictions()` is Admin-only now, Pastor is a title
+  with zero permission weight
+- Seeded starting departments (8) and roles (3, two of which grant
+  management permission) via `DepartmentRoleSeeder`, all admin-editable
+  afterward
+- Frontend scaffold started: Vite + React + React Router + React Query
+  (IndexedDB-persisted) + Capacitor (core + Android platform added).
+  Plain CSS, no real screens yet, `App.jsx` is a placeholder pending
+  mockup-approved screens
+- Typography changed to Plus Jakarta Sans + Work Sans (was Nunito),
+  touch target minimum stays 44px, both per this session's design
+  decisions, DESIGN-SYSTEM.md updated
+- Three mockups approved as HTML files: login, sign-up (departments
+  checklist, baptismal-name placeholder), admin pending-requests
+  dashboard (structure adapted from a Stitch export, invented content
+  stripped)
+- Self-audit findings this batch: a dead CORS path, two CSRF tests
+  that could never fail for the right reason (Laravel's test-mode
+  auto-bypass), a silently-dropped `email_verified_at` field on
+  account activation, and missing rate limiting on all three new
+  public endpoints, all fixed, see LESSONS.md
+- 99 tests passing, 190 assertions
+
 ### Phase 2 in progress: Space/Asset/AssetType/Task controllers, proof upload
 - SpaceController, AssetController, AssetTypeController: full CRUD,
   every action policy-gated, restricted spaces/assets excluded from

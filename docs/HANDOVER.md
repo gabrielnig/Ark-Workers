@@ -60,14 +60,22 @@ only. See `SECURITY.md` §4 and `ARCHITECTURE.md` §4.
 
 ## 6. Current Status
 
-Phase 1 and Phase 2 complete. Laravel backend (`arkworkers-api/`) has
-the full core data model, email + password auth with email-OTP signup
-verification, the space-restriction Policy layer, and CRUD/task
-endpoints, all tested (71 tests passing at last count, see
-`ai-context.md` for the current number). Frontend not started yet.
-**Next step: Phase 3, the offline reliability layer** (offline-first
-caching/sync, resumable/chunked upload, conflict resolution), the
-phase the research most strongly says not to rush or skip.
+Phase 1 and Phase 2 complete. An auth/org-structure rework (admin-
+approval sign-ups replacing self-service, department/role-based
+authorization replacing the old fixed role enum) came up as a
+prerequisite while starting Phase 3 and is also now complete, see
+`ai-context.md` §1 for the full detail. Laravel backend
+(`arkworkers-api/`) has the full core data model, dual-mode auth
+(session cookie for the PWA, Bearer token for mobile/API clients), the
+account-request/invite-link pipeline, the space-restriction Policy
+layer, and CRUD/task endpoints, all tested (99 tests passing at last
+count, see `ai-context.md` for the current number). Frontend
+(`arkworkers-web/`) scaffolded (Vite/React/Capacitor) but no real
+screens built yet, three mockups approved as HTML files pending the
+real build. **Next step: the actual Phase 3 offline reliability layer**
+(offline-first caching/sync, resumable/chunked upload, conflict
+resolution), the phase the research most strongly says not to rush or
+skip, plus building the real screens against the now-real backend.
 
 ## 7. What's NOT Decided Yet
 

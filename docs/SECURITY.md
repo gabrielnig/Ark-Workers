@@ -69,7 +69,7 @@ family via the Quarters records).
   (training materials, marketing), separate explicit consent is required.
 - **Data subject rights** — staff must be able to know what's held about
   them and request correction; build this as an admin-mediated process
-  initially (a staff member asks the Facility Manager/Admin), not
+  initially (a staff member asks a department manager or Admin), not
   necessarily a self-service portal at launch.
 - **Security safeguards proportionate to sensitivity** — encryption,
   backups, access control, testing (see Sections 3–6).
@@ -104,38 +104,53 @@ family via the Quarters records).
 
 ### 3.1 Authentication
 **Decision update (Phase 1 build):** SMS was ruled out entirely for
-cost reasons. Login is email + password. Registration requires an
-email-OTP verification step (a 6-digit code sent to the registrant's
-email, expiring in 15 minutes) before the account can log in. Phone
-number is collected as an optional profile field only, never used for
-login, verification, or password reset. The PIN/phone-OTP design
-originally specified below was built, tested, then replaced with this
-before Phase 1 closed, see LESSONS.md for the change.
+cost reasons. Login is email + password.
+
+**Decision update (auth/org-structure rework):** self-service
+registration was removed entirely. Account creation is admin-approval
+only: a worker submits a request (name, email, phone, department(s)),
+an Admin approves or rejects it, and approval sends a single-use,
+7-day-expiring invite link that lets the worker set a password and
+activate the account. The invite link itself is the email-verification
+step, replacing the OTP-at-signup design. The original email-OTP
+signup flow was built, tested, then replaced by this, see LESSONS.md
+for the change. Login itself is also dual-mode depending on the
+caller's origin: browser/PWA requests from the configured stateful
+frontend domain get a Sanctum session cookie (CSRF-protected, no token
+in the response body); any other request (Capacitor Android, API
+clients) gets a Bearer token, decided automatically server-side.
 - Passwords: prioritize length over complexity rules; minimum 12
   characters recommended; never block paste in password fields (per
   `UI-UX-STANDARD.md`); use `autocomplete="new-password"`.
 - Passwords stored via a strong adaptive hash (bcrypt/argon2), never
   reversible encryption, never plaintext.
-- Rate-limit login attempts and email-OTP verification attempts: max 5
-  attempts per 15 minutes per account/IP, per the shared security
-  baseline.
+- Rate-limit login attempts, account-request submission, and invite
+  view/activation: see `API.md`'s Rate Limits section for the current
+  concrete values per endpoint.
 
 ### 3.2 Sessions
-- Session tokens are short-lived, refreshed via secure refresh tokens
-  (httpOnly, Secure, SameSite cookies for the PWA web context; secure
-  device keystore for the Android app).
+- **Implemented as of the auth/org-structure rework:** the PWA gets a
+  Sanctum session cookie (httpOnly, CSRF-protected via the
+  XSRF-TOKEN/X-XSRF-TOKEN pair), the Android app gets a Bearer token.
+  Sanctum tokens currently have no expiration set
+  (`config/sanctum.php` → `'expiration' => null`), meaning "still
+  authorized" currently means "not revoked," not "not stale" — flagged
+  in `ai-context.md` as needing an explicit decision before the
+  offline-reconnect re-validation logic (Section 6.4) is built.
 - Sessions tied to a device identifier where practical, since staff
   devices are often shared or fixed per role/shift rather than 1:1
   personal devices — this needs an explicit product decision (see
   Section 12, Open Decision #1).
-- Auto-logout after a defined inactivity period for roles with access to
-  sensitive zones (Admin, Facility Manager) — shorter timeout than for
-  Cleaning Staff/Security roles doing routine task logging.
+- Auto-logout after a defined inactivity period for Admin and anyone
+  with a management-granting department role — shorter timeout than
+  for ordinary department members doing routine task logging.
 
 ### 3.3 Multi-Factor Considerations
-- Not required at launch for all roles, but strongly recommended for
-  **Admin/Pastor** role given it can see/manage the restricted Prophet's
-  Quarters data and all financial/vehicle documents.
+- Not required at launch for anyone, but strongly recommended for
+  **Admin** given it can see/manage the restricted Prophet's Quarters
+  data and all financial/vehicle documents. Pastor is a title with no
+  permission weight and doesn't need this, per the auth/org-structure
+  rework.
 
 ---
 
@@ -145,27 +160,38 @@ This is the most architecturally important section for ArkWorkers,
 because the data model is not simple per-user ownership — it's
 **role-based access layered with zone-level (Space-level) restriction**.
 
-### 4.1 Roles (from PRD Section 6)
-Admin/Pastor, Facility Manager, Cleaning Staff, Maintenance/Technician,
-Security, Drivers — each needs distinct, enforced-server-side permissions.
-Client-side role checks (hiding a button) are UX only and must never be
-the actual security boundary.
+### 4.1 Departments, Roles, and Admin (updated from the original fixed
+role list, see `ai-context.md` §2 for why)
+Departments (Cleaning, Maintenance, Choir, Sound, etc.) and roles
+within a department (Member, Supervisor, Coordinator, etc.) are both
+admin-manageable lists, not a fixed enum. A worker can belong to
+multiple departments with a different role in each. A role can be
+flagged to grant management permission (create/edit Spaces, Assets,
+Routines, assign Tasks) app-wide, admin-toggled per role, never
+hardcoded to a role or department name in policy code. Admin is a
+separate global flag, unrelated to department membership. Pastor is a
+plain title with zero permission weight, not a role or department, and
+does not bypass anything. Every permission check is still enforced
+server-side; client-side checks (hiding a button) are UX only and must
+never be the actual security boundary.
 
 ### 4.2 The Prophet's Quarters Restriction — Concrete Implementation
 The PRD flags the Quarters as needing "different rules — more
 private/limited tracking." This must be implemented as an explicit
-**space-level visibility flag**, not folded into the general role system:
+**space-level visibility flag**, not folded into the general
+department/role system:
 
 ```sql
 -- Every query against Spaces, Assets, Routines, and Tasks must filter
--- through both the user's role AND the space's restriction flag —
--- never role alone.
+-- through both the user's Admin status AND the space's restriction
+-- flag — never Admin status alone, and management permission does
+-- NOT bypass this, only Admin does.
 
 SELECT * FROM assets
 WHERE space_id = $requested_space_id
   AND (
     (SELECT is_restricted FROM spaces WHERE id = $requested_space_id) = false
-    OR $authenticated_user_role IN ('admin', 'pastor')
+    OR $authenticated_user_is_admin = true
     OR $authenticated_user_id IN (
          SELECT user_id FROM space_access_grants
          WHERE space_id = $requested_space_id
@@ -183,24 +209,25 @@ WHERE space_id = $requested_space_id
   special case hardcoded for the Quarters alone — keeps the system
   modular per the PRD's core requirement.
 - Restricted-space data must also be excluded from generic dashboard
-  aggregates, daily summary reports, and search results for any role
-  without a grant — a restriction that only hides the detail view but
-  still surfaces the space's name/existence in an overview list is not
-  actually restricted.
+  aggregates, daily summary reports, and search results for any user
+  without Admin status or a grant — a restriction that only hides the
+  detail view but still surfaces the space's name/existence in an
+  overview list is not actually restricted.
 
 ### 4.3 General IDOR Prevention
 Every asset, task, vehicle, and routine record must be scoped by
-authenticated user + role + space grant on every read/write — never by a
-client-supplied ID alone. Apply the pattern from
-`shared-protocols/SECURITY-BASELINE.md` Section 4 uniformly across every
-API route.
+authenticated user + Admin status/management permission + space grant
+on every read/write — never by a client-supplied ID alone. Apply the
+pattern from `shared-protocols/SECURITY-BASELINE.md` Section 4
+uniformly across every API route.
 
 ### 4.4 Vehicle & Driver Data Access
 - Vehicle documents (insurance, roadworthiness, registration/particulars)
-  and fuel/mileage logs: visible to Admin, Facility Manager, and the
-  vehicle's assigned driver only — not the full staff list.
-- Document expiry alerts (Section 7) should notify Admin/Facility Manager
-  by default; the assigned driver optionally, depending on your
+  and fuel/mileage logs: visible to Admin, a manager (any department
+  role flagged to grant management permission), and the vehicle's
+  assigned driver only — not the full staff list.
+- Document expiry alerts (Section 7) should notify Admin/a manager by
+  default; the assigned driver optionally, depending on your
   preference — flagging as an open decision (Section 12).
 
 ---

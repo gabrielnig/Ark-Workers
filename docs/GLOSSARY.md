@@ -27,8 +27,10 @@ date and completion status.
 **Task Proof** — the photo/video evidence attached to a completed Task.
 
 **Restricted Space** — a Space with `is_restricted = true` (currently
-only the Prophet's Quarters), visible/manageable only by Admin/Pastor
-roles or users with an explicit Space Access Grant.
+only the Prophet's Quarters), visible/manageable only by Admin or
+users with an explicit Space Access Grant. Pastor is a title with no
+permission weight and does not bypass this, per the auth/org-structure
+rework.
 
 **Space Access Grant** — an explicit record granting a specific user
 access to a specific restricted Space, without promoting them to an
@@ -36,9 +38,38 @@ Admin role. E.g. the one cleaning staff member who services the Quarters
 kitchen daily.
 
 **Zone-Level / Space-Level Security** — the authorization pattern where
-access is checked against both the user's role AND the specific Space's
-restriction status + grants — not role alone. The core architectural
-concept of the whole authorization system (see `SECURITY.md` §4).
+access is checked against both the user's Admin status AND the specific
+Space's restriction status + grants — not Admin status alone. The core
+architectural concept of the whole authorization system (see
+`SECURITY.md` §4).
+
+**Department** — an admin-manageable organizational unit (Cleaning,
+Maintenance, Choir, Sound, etc.). A worker can belong to several.
+
+**Role (department role)** — an admin-manageable standing within a
+department (Member, Supervisor, Coordinator, etc.), not the same
+concept as the retired fixed `role` column. A worker holds one role per
+department they belong to, which can differ across departments. A role
+can be flagged to grant management permission app-wide.
+
+**Management Permission** — the ability to create/edit Spaces, Assets,
+Routines, and assign Tasks. Held by Admin, or by anyone whose role in
+any department is flagged `grants_management`. Never determined by a
+hardcoded role or department name.
+
+**Admin** — a global permission flag, separate from department
+membership, the only status that bypasses restricted-space visibility.
+
+**Title** — a plain label on a worker (e.g. "Pastor") with zero
+permission weight, distinct from both Role and Department.
+
+**Account Request** — a worker's sign-up submission (name, email,
+phone, requested departments), reviewed by an Admin before any
+login-capable account exists. No password is collected at this stage.
+
+**Invite Link** — the single-use, expiring link an approved applicant
+receives by email to set their password and activate their account.
+The link itself is the email-verification step.
 
 **Crypto-Shredding** — the PII deletion pattern where per-user encryption
 keys are destroyed on account deletion rather than editing backup
