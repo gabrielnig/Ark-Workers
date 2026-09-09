@@ -275,4 +275,14 @@ class AuthTest extends TestCase
             ->getJson('/api/user')
             ->assertUnauthorized();
     }
+
+    public function test_an_unauthenticated_request_with_no_accept_header_gets_a_clean_401_not_a_crash(): void
+    {
+        // Deliberately using the raw get() helper, not getJson(),
+        // since getJson() always sets Accept: application/json itself
+        // and would mask this exact bug. A real client that omits
+        // that header must still get a clean 401, this app has no
+        // login route to redirect a guest to.
+        $this->get('/api/user')->assertUnauthorized();
+    }
 }

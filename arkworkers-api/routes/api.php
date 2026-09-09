@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AccountRequestController;
 use App\Http\Controllers\Api\AssetController;
 use App\Http\Controllers\Api\AssetTypeController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\DepartmentController;
 use App\Http\Controllers\Api\InviteController;
 use App\Http\Controllers\Api\SpaceController;
 use App\Http\Controllers\Api\TaskController;
@@ -13,6 +14,8 @@ use Illuminate\Support\Facades\Route;
 Route::post('/auth/verify-email', [AuthController::class, 'verifyEmailOtp']);
 Route::post('/auth/login', [AuthController::class, 'login']);
 
+Route::get('/departments', [DepartmentController::class, 'index'])
+    ->middleware('throttle:30,1');
 Route::post('/account-requests', [AccountRequestController::class, 'store'])
     ->middleware('throttle:5,1');
 Route::get('/invites/{token}', [InviteController::class, 'show'])
