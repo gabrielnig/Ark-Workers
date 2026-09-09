@@ -17,48 +17,20 @@ class AuthTest extends TestCase
     {
         parent::setUp();
         RateLimiter::clear('*');
+        config(['sanctum.stateful' => ['arkworkers.test']]);
     }
 
-    public function test_registering_creates_an_unverified_user_and_an_email_otp(): void
+    /**
+     * Carries the session cookie from a login response into the next
+     * request, the way a real browser would. Test calls don't persist
+     * cookies across requests by themselves.
+     */
+    private function withSessionCookieFrom($response): static
     {
-        $response = $this->postJson('/api/auth/register', [
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-            'password' => 'a-strong-password',
-            'role' => User::ROLE_CLEANING_STAFF,
-        ]);
+        $cookie = collect($response->headers->getCookies())
+            ->first(fn ($c) => $c->getName() === config('session.cookie'));
 
-        $response->assertCreated();
-
-        $user = User::where('email', 'test@example.com')->first();
-        $this->assertNotNull($user);
-        $this->assertNull($user->email_verified_at);
-        $this->assertNotNull(OtpCode::where('user_id', $user->id)->first());
-    }
-
-    public function test_registration_accepts_an_optional_phone_number(): void
-    {
-        $this->postJson('/api/auth/register', [
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-            'password' => 'a-strong-password',
-            'phone' => '+2348012345678',
-            'role' => User::ROLE_DRIVER,
-        ])->assertCreated();
-
-        $this->assertSame('+2348012345678', User::where('email', 'test@example.com')->first()->phone);
-    }
-
-    public function test_registration_fails_with_a_duplicate_email(): void
-    {
-        User::factory()->create(['email' => 'taken@example.com']);
-
-        $this->postJson('/api/auth/register', [
-            'name' => 'Test User',
-            'email' => 'taken@example.com',
-            'password' => 'a-strong-password',
-            'role' => User::ROLE_CLEANING_STAFF,
-        ])->assertStatus(422);
+        return $this->withCookie($cookie->getName(), $cookie->getValue());
     }
 
     public function test_user_can_verify_email_with_the_correct_code(): void
@@ -164,6 +136,121 @@ class AuthTest extends TestCase
         $this->postJson('/api/auth/login', ['email' => $user->email, 'password' => 'wrong']);
         $this->postJson('/api/auth/login', ['email' => $user->email, 'password' => 'a-strong-password'])->assertOk();
         $this->postJson('/api/auth/login', ['email' => $user->email, 'password' => 'wrong'])->assertStatus(401);
+    }
+
+    public function test_a_stateful_login_without_a_valid_csrf_token_is_rejected(): void
+    {
+        // Laravel's CSRF middleware auto-bypasses itself whenever
+        // app.env is "testing", which is always true here, so the
+        // real check has to be forced on for this one assertion or
+        // this test could never fail for the right reason.
+        $this->app['env'] = 'production';
+
+        $user = User::factory()->create(['password' => Hash::make('a-strong-password')]);
+
+        $csrf = $this->withHeader('Origin', 'https://arkworkers.test')->getJson('/sanctum/csrf-cookie');
+
+        $this->withSessionCookieFrom($csrf)
+            ->withHeader('Origin', 'https://arkworkers.test')
+            ->postJson('/api/auth/login', [
+                'email' => $user->email,
+                'password' => 'a-strong-password',
+            ])
+            ->assertStatus(419);
+    }
+
+    public function test_a_stateful_login_with_the_wrong_csrf_token_is_rejected(): void
+    {
+        $this->app['env'] = 'production';
+
+        $user = User::factory()->create(['password' => Hash::make('a-strong-password')]);
+
+        $csrf = $this->withHeader('Origin', 'https://arkworkers.test')->getJson('/sanctum/csrf-cookie');
+
+        $this->withSessionCookieFrom($csrf)
+            ->withHeader('Origin', 'https://arkworkers.test')
+            ->withHeader('X-XSRF-TOKEN', 'not-the-real-token')
+            ->postJson('/api/auth/login', [
+                'email' => $user->email,
+                'password' => 'a-strong-password',
+            ])
+            ->assertStatus(419);
+    }
+
+    public function test_a_browser_request_from_the_stateful_domain_gets_a_session_not_a_token(): void
+    {
+        $user = User::factory()->create(['password' => Hash::make('a-strong-password')]);
+
+        $csrf = $this->withHeader('Origin', 'https://arkworkers.test')
+            ->getJson('/sanctum/csrf-cookie');
+
+        $xsrfToken = urldecode(
+            collect($csrf->headers->getCookies())
+                ->first(fn ($c) => $c->getName() === 'XSRF-TOKEN')
+                ->getValue()
+        );
+
+        $response = $this->withSessionCookieFrom($csrf)
+            ->withHeader('Origin', 'https://arkworkers.test')
+            ->withHeader('X-XSRF-TOKEN', $xsrfToken)
+            ->postJson('/api/auth/login', [
+                'email' => $user->email,
+                'password' => 'a-strong-password',
+            ]);
+
+        $response->assertOk()
+            ->assertJsonStructure(['user'])
+            ->assertJsonMissing(['token' => null])
+            ->assertJsonMissingPath('token');
+
+        $this->withSessionCookieFrom($response)
+            ->withHeader('Origin', 'https://arkworkers.test')
+            ->getJson('/api/user')
+            ->assertOk()
+            ->assertJsonFragment(['email' => $user->email]);
+    }
+
+    public function test_a_request_with_no_matching_frontend_origin_still_gets_a_bearer_token(): void
+    {
+        $user = User::factory()->create(['password' => Hash::make('a-strong-password')]);
+
+        // No Origin/Referer header at all, the Android/Capacitor case
+        // and any plain API client.
+        $this->postJson('/api/auth/login', [
+            'email' => $user->email,
+            'password' => 'a-strong-password',
+        ])->assertOk()->assertJsonStructure(['token', 'user']);
+    }
+
+    public function test_logout_ends_the_session_for_a_cookie_authenticated_user(): void
+    {
+        $user = User::factory()->create(['password' => Hash::make('a-strong-password')]);
+
+        $csrf = $this->withHeader('Origin', 'https://arkworkers.test')->getJson('/sanctum/csrf-cookie');
+        $xsrfToken = urldecode(
+            collect($csrf->headers->getCookies())->first(fn ($c) => $c->getName() === 'XSRF-TOKEN')->getValue()
+        );
+
+        $login = $this->withSessionCookieFrom($csrf)
+            ->withHeader('Origin', 'https://arkworkers.test')
+            ->withHeader('X-XSRF-TOKEN', $xsrfToken)
+            ->postJson('/api/auth/login', ['email' => $user->email, 'password' => 'a-strong-password']);
+
+        $this->withSessionCookieFrom($login)
+            ->withHeader('Origin', 'https://arkworkers.test')
+            ->withHeader('X-XSRF-TOKEN', $xsrfToken)
+            ->postJson('/api/auth/logout')
+            ->assertOk();
+
+        // Same guard-instance caching quirk as the token logout test
+        // below, forces the session guard to re-resolve against the
+        // now-destroyed session on the next call.
+        auth()->forgetGuards();
+
+        $this->withSessionCookieFrom($login)
+            ->withHeader('Origin', 'https://arkworkers.test')
+            ->getJson('/api/user')
+            ->assertUnauthorized();
     }
 
     public function test_logout_revokes_the_current_token(): void

@@ -3,13 +3,15 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\OtpCode;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Validator;
+use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
+use Laravel\Sanctum\TransientToken;
 
 /**
  * Email + password auth, with an email-OTP step at signup to verify
@@ -29,31 +31,6 @@ class AuthController extends Controller
      * Lockout window in seconds (15 minutes), per SECURITY.md §3.1.
      */
     private const DECAY_SECONDS = 900;
-
-    public function register(Request $request): JsonResponse
-    {
-        $data = Validator::make($request->all(), [
-            'name' => ['required', 'string'],
-            'email' => ['required', 'email', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:12'],
-            'phone' => ['nullable', 'string'],
-            'role' => ['required', 'string', 'in:'.implode(',', User::ROLES)],
-        ])->validate();
-
-        $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => $data['password'],
-            'phone' => $data['phone'] ?? null,
-            'role' => $data['role'],
-        ]);
-
-        $this->issueEmailOtp($user);
-
-        return response()->json([
-            'message' => 'Registered. Check your email for a verification code.',
-        ], 201);
-    }
 
     public function verifyEmailOtp(Request $request): JsonResponse
     {
@@ -113,6 +90,22 @@ class AuthController extends Controller
 
         RateLimiter::clear($key);
 
+        /**
+         * The PWA and any other browser-based frontend on a stateful
+         * domain get a session cookie, not a token in the response
+         * body, per SECURITY.md §6.3 (no bearer credential accessible
+         * to JS). Capacitor's Android WebView runs on a different
+         * origin than the stateful domain list, so it never matches
+         * here and falls through to the token path below without
+         * needing an explicit "is this mobile" flag.
+         */
+        if (EnsureFrontendRequestsAreStateful::fromFrontend($request)) {
+            Auth::guard('web')->login($user);
+            $request->session()->regenerate();
+
+            return response()->json(['user' => $user]);
+        }
+
         return response()->json([
             'token' => $user->createToken('login')->plainTextToken,
             'user' => $user,
@@ -121,24 +114,17 @@ class AuthController extends Controller
 
     public function logout(Request $request): JsonResponse
     {
-        $request->user()->currentAccessToken()->delete();
+        $token = $request->user()->currentAccessToken();
+
+        if ($token instanceof TransientToken) {
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        } else {
+            $token->delete();
+        }
 
         return response()->json(['message' => 'Logged out.']);
-    }
-
-    private function issueEmailOtp(User $user): void
-    {
-        $code = (string) random_int(100000, 999999);
-
-        OtpCode::create([
-            'user_id' => $user->id,
-            'code_hash' => Hash::make($code),
-            'expires_at' => now()->addMinutes(15),
-        ]);
-
-        // Sending the actual email is deferred to Phase 2 mail setup,
-        // logged here for local/sandbox testing only.
-        logger()->info("Email verification code for {$user->email}: {$code}");
     }
 
     private function throttleKey(string $prefix, string $identifier, ?string $ip): string
