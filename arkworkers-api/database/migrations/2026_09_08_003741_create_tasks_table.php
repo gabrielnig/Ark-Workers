@@ -18,6 +18,10 @@ return new class extends Migration
             $table->foreignId('assigned_user_id')->constrained('users')->restrictOnDelete();
             $table->dateTime('due_at');
             $table->dateTime('completed_at')->nullable();
+            // Who actually completed it, not necessarily the assignee,
+            // a manager can also complete a task per TaskPolicy. Restrict
+            // for the same audit reason as assigned_user_id above.
+            $table->foreignId('completed_by')->nullable()->constrained('users')->restrictOnDelete();
             $table->string('status')->default('pending');
             $table->timestamps();
 

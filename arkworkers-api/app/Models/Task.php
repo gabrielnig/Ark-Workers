@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['routine_id', 'assigned_user_id', 'due_at', 'completed_at', 'status'])]
+#[Fillable(['routine_id', 'assigned_user_id', 'due_at', 'completed_at', 'completed_by', 'status'])]
 class Task extends Model
 {
     /** @use HasFactory<TaskFactory> */
@@ -42,5 +42,13 @@ class Task extends Model
     public function assignedUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_user_id');
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function completedByUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'completed_by');
     }
 }

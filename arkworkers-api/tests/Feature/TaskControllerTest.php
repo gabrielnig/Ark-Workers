@@ -7,6 +7,7 @@ use App\Models\Routine;
 use App\Models\Space;
 use App\Models\SpaceAccessGrant;
 use App\Models\Task;
+use App\Models\TaskCompletionConflict;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -177,5 +178,63 @@ class TaskControllerTest extends TestCase
         $this->actingAs($someoneElse, 'sanctum')
             ->postJson("/api/tasks/{$task->id}/proofs", ['file' => $file])
             ->assertForbidden();
+    }
+
+    public function test_completing_an_already_completed_task_is_a_conflict_not_a_silent_overwrite(): void
+    {
+        $space = Space::factory()->create(['is_restricted' => false]);
+        $routine = $this->routineIn($space);
+        $staff = $this->staffUser();
+        $task = Task::factory()->create(['routine_id' => $routine->id, 'assigned_user_id' => $staff->id]);
+
+        $this->actingAs($staff, 'sanctum')->postJson("/api/tasks/{$task->id}/complete")->assertOk();
+        $originalCompletedAt = $task->fresh()->completed_at;
+
+        // A manager can also complete this task per TaskPolicy, this
+        // simulates the real conflict scenario: the assigned staff
+        // member and a manager both completed it while offline.
+        $manager = $this->managerUser();
+
+        $response = $this->actingAs($manager, 'sanctum')->postJson("/api/tasks/{$task->id}/complete");
+
+        $response->assertStatus(409);
+
+        $task->refresh();
+        $this->assertSame(Task::STATUS_COMPLETED, $task->status);
+        $this->assertSame($staff->id, $task->completed_by);
+        $this->assertEquals($originalCompletedAt, $task->completed_at, 'The original completion must never be overwritten.');
+    }
+
+    public function test_a_discarded_completion_conflict_is_logged_not_silently_dropped(): void
+    {
+        $space = Space::factory()->create(['is_restricted' => false]);
+        $routine = $this->routineIn($space);
+        $staff = $this->staffUser();
+        $task = Task::factory()->create(['routine_id' => $routine->id, 'assigned_user_id' => $staff->id]);
+
+        $this->actingAs($staff, 'sanctum')->postJson("/api/tasks/{$task->id}/complete")->assertOk();
+
+        $manager = $this->managerUser();
+        $this->actingAs($manager, 'sanctum')->postJson("/api/tasks/{$task->id}/complete");
+
+        $conflict = TaskCompletionConflict::where('task_id', $task->id)->first();
+        $this->assertNotNull($conflict);
+        $this->assertSame($staff->id, $conflict->kept_user_id);
+        $this->assertSame($manager->id, $conflict->discarded_user_id);
+    }
+
+    public function test_completing_a_task_records_who_actually_completed_it(): void
+    {
+        $space = Space::factory()->create(['is_restricted' => false]);
+        $routine = $this->routineIn($space);
+        $staff = $this->staffUser();
+        $manager = $this->managerUser();
+        $task = Task::factory()->create(['routine_id' => $routine->id, 'assigned_user_id' => $staff->id]);
+
+        // A manager completing someone else's assigned task, not the
+        // assignee, must be attributed correctly.
+        $this->actingAs($manager, 'sanctum')->postJson("/api/tasks/{$task->id}/complete")->assertOk();
+
+        $this->assertSame($manager->id, $task->fresh()->completed_by);
     }
 }

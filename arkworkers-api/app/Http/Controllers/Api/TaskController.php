@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Routine;
 use App\Models\Task;
+use App\Models\TaskCompletionConflict;
 use App\Models\TaskProof;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -67,14 +68,36 @@ class TaskController extends Controller
     /**
      * Marks a task complete. Only the assigned user or a privileged
      * role, and only with space access, per TaskPolicy::update().
+     *
+     * If the task is already completed, this is the offline-sync
+     * conflict case in SECURITY.md 6.4: two devices both completed
+     * the same task while offline. First-sync-wins, the original
+     * completion is never overwritten, and the discarded attempt is
+     * logged, not silently dropped.
      */
     public function complete(Request $request, Task $task): JsonResponse
     {
         $this->authorize('update', $task);
 
+        if ($task->status === Task::STATUS_COMPLETED) {
+            TaskCompletionConflict::create([
+                'task_id' => $task->id,
+                'kept_user_id' => $task->completed_by ?? $task->assigned_user_id,
+                'kept_completed_at' => $task->completed_at,
+                'discarded_user_id' => $request->user()->id,
+                'discarded_attempted_at' => now(),
+            ]);
+
+            return response()->json([
+                'message' => 'This task was already completed.',
+                'data' => $task,
+            ], 409);
+        }
+
         $task->update([
             'status' => Task::STATUS_COMPLETED,
             'completed_at' => now(),
+            'completed_by' => $request->user()->id,
         ]);
 
         return response()->json(['data' => $task]);
