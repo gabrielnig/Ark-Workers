@@ -131,6 +131,29 @@ outdoor-glare use:
   UI-UX standard — non-negotiable given gloved/wet hands during cleaning
   tasks.
 
+### 2.6 Data Visualization Palette (Reports/Analytics only)
+
+Scoped strictly to charts and graphs in Reports/Analytics views. Never used
+for buttons, navigation, badges, or any other UI chrome — those stay on the
+core palette (2.1) and status colors (2.2) as locked. Added to give
+multi-series charts enough distinguishable colors without falling back to a
+generic SaaS blue/purple palette that clashes with the warm base.
+
+| Token | Hex | Series role |
+|---|---|---|
+| `--color-moss-600` | `#3F7D4F` | Series 1 (reuse — brand primary) |
+| `--color-clay-500` | `#C97B4A` | Series 2 (reuse — brand accent) |
+| `--color-harbor-500` | `#3E6B96` | Series 3 — muted denim blue |
+| `--color-ochre-500` | `#D9A441` | Series 4 — warm gold/yellow, not bright lemon |
+| `--color-teal-600` | `#2F7A73` | Series 5 |
+| `--color-rust-600` | `#B33A3A` | Series 6 (reuse — overdue status color) |
+| `--color-plum-500` | `#6B5B95` | Series 7 (reuse — restricted-zone status color) |
+
+All new hues (harbor, ochre, teal) are desaturated to the same warmth level
+as the rest of the system rather than saturated/corporate-bright, so a
+chart doesn't visually fight the sand background or read as a different
+app bolted onto ArkWorkers.
+
 ---
 
 ## 3. Typography
@@ -179,6 +202,12 @@ outdoor-glare use:
 - **Borders:** 1px, using the palette's border token — used to separate
   content within a card (e.g. checklist items) rather than shadow alone,
   since shadows can wash out in bright outdoor light.
+- **Hard rule, tightened after the Brevo UX audit (2026-09):** in-flow
+  content (cards, list rows, panels) gets a border and no shadow, or the
+  resting shadow at most. Shadow is reserved for genuinely floating/
+  overlaid elements (modals, drawers, popovers, dropdown menus). Don't add
+  shadow to a card just to make it feel "elevated" if it's actually
+  sitting in the normal page flow.
 
 ---
 
@@ -229,6 +258,26 @@ application:
   not a dense data table — the PRD's daily reporting requirement is meant
   to be scannable in under a minute by a Pastor/Admin, not analyzed like
   a BI dashboard.
+
+### 6.4 Admin Table & Dense-Data Patterns (from Brevo UX audit, 2026-09)
+
+Applies to Admin views only (Pending Requests, Staff, Vehicles, Daily
+Summary) — the worker-facing app stays card-based, not tables.
+
+- **Loading:** skeleton blocks matching the real row/column geometry
+  exactly (same column widths, same row height), not a spinner. Confirmed
+  as the right call in the Pending Requests mockup approved 2026-09-09.
+- **Row hover:** background shifts to `var(--color-bg)` (sand), subtle
+  enough not to compete with the moss/clay status badges in the row.
+- **Header row:** secondary text color (`--color-text-secondary`),
+  semibold, sentence case — never all-caps (same rule as form labels,
+  Section 3).
+- **Input focus (search/filter fields):** border becomes
+  `--color-moss-600` plus a matching 1px inset box-shadow — a doubled
+  ring, not just a border-color swap. Same treatment for any focusable
+  control, not table-specific.
+- **Empty states are action-oriented:** offer the next concrete action
+  (e.g. "Browse Spaces") rather than a passive "nothing here" sentence.
 
 ---
 
