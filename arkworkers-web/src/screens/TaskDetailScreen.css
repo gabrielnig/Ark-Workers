@@ -1,0 +1,240 @@
+.detail-header {
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.detail-back-link {
+  font-family: var(--font-family-body);
+  font-size: 12px;
+  color: var(--color-moss-600);
+  font-weight: 700;
+  text-decoration: none;
+  display: inline-block;
+  margin-bottom: 8px;
+}
+
+.detail-breadcrumb {
+  font-family: var(--font-family-body);
+  font-size: 10.5px;
+  color: var(--color-text-secondary);
+  margin: 0 0 6px;
+}
+
+.detail-breadcrumb b {
+  color: var(--color-text-primary);
+  font-weight: 700;
+}
+
+.detail-title {
+  font-family: var(--font-family-display);
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.detail-meta {
+  font-family: var(--font-family-body);
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin: 4px 0 0;
+}
+
+.detail-body {
+  padding: 16px 18px 100px;
+}
+
+.detail-error {
+  background: #FBEAEA;
+  border: 1px solid #EFC9C9;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-family: var(--font-family-body);
+  font-size: 13px;
+  color: var(--color-rust-600);
+}
+
+.drop-zone {
+  border: 2px dashed var(--color-moss-300);
+  border-radius: 10px;
+  padding: 28px 16px;
+  text-align: center;
+  margin-bottom: 16px;
+  cursor: pointer;
+}
+
+.drop-icon {
+  font-size: 26px;
+  margin-bottom: 8px;
+}
+
+.drop-text {
+  font-family: var(--font-family-body);
+  font-size: 12.5px;
+  color: var(--color-text-primary);
+  font-weight: 600;
+  margin: 0;
+}
+
+.drop-sub {
+  font-family: var(--font-family-body);
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  margin: 4px 0 0;
+}
+
+.upload-row, .uploaded-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+
+.uploaded-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.upload-row-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.file-thumb {
+  width: 38px;
+  height: 38px;
+  border-radius: 7px;
+  background: var(--color-moss-300);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+}
+
+.file-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.file-name {
+  font-family: var(--font-family-body);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-status {
+  font-family: var(--font-family-body);
+  font-size: 10.5px;
+  color: var(--color-text-secondary);
+  margin: 1px 0 0;
+}
+
+.progress-track {
+  height: 5px;
+  background: var(--color-border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--color-moss-600);
+  border-radius: 999px;
+}
+
+.progress-fill.failed {
+  background: var(--color-rust-600);
+}
+
+.retry-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.retry-text {
+  font-family: var(--font-family-body);
+  font-size: 11px;
+  color: var(--color-rust-600);
+  font-weight: 700;
+}
+
+.retry-btn {
+  font-family: var(--font-family-body);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-moss-600);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.uploaded-badge {
+  font-family: var(--font-family-body);
+  font-size: 9.5px;
+  font-weight: 800;
+  color: var(--color-moss-600);
+  background: #E7F2E9;
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+
+.file-actions {
+  font-family: var(--font-family-body);
+  font-size: 10.5px;
+  color: var(--color-text-secondary);
+}
+
+.file-actions span {
+  color: var(--color-moss-600);
+  font-weight: 700;
+  margin-left: 8px;
+  cursor: pointer;
+}
+
+.complete-btn-row {
+  position: fixed;
+  bottom: 68px;
+  left: 0;
+  right: 0;
+  padding: 14px 18px;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+}
+
+.complete-btn {
+  width: 100%;
+  height: 46px;
+  border-radius: 8px;
+  background: var(--color-moss-600);
+  color: #fff;
+  border: none;
+  font-family: var(--font-family-body);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.complete-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (min-width: 900px) {
+  .complete-btn-row {
+    position: static;
+    max-width: 500px;
+  }
+}

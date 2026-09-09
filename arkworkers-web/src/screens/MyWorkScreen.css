@@ -1,0 +1,245 @@
+.mywork-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px 8px;
+}
+
+.mywork-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mywork-topbar-left img {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+}
+
+.mywork-name {
+  font-family: var(--font-family-display);
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.mywork-sub {
+  font-family: var(--font-family-body);
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.mywork-conn-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 18px;
+  font-family: var(--font-family-body);
+  font-size: 10.5px;
+  color: var(--color-moss-600);
+  font-weight: 600;
+}
+
+.mywork-conn-status.offline {
+  color: var(--color-clay-500);
+}
+
+.mywork-conn-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-moss-600);
+}
+
+.mywork-conn-status.offline .mywork-conn-dot {
+  background: var(--color-clay-500);
+}
+
+.mywork-filter-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 6px 18px 12px;
+  overflow-x: auto;
+}
+
+.mywork-filter-tab {
+  font-family: var(--font-family-body);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.mywork-filter-tab.active {
+  background: var(--color-moss-600);
+  border-color: var(--color-moss-600);
+  color: #fff;
+}
+
+.mywork-task-list {
+  padding: 0 18px 24px;
+}
+
+.mywork-empty {
+  padding: 24px 0;
+  text-align: center;
+  font-family: var(--font-family-body);
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.mywork-task-card {
+  display: block;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-border);
+  border-radius: 10px;
+  padding: 13px 14px;
+  margin-bottom: 10px;
+  text-decoration: none;
+}
+
+.mywork-task-card.overdue {
+  border-left-color: var(--color-rust-600);
+  background: #FBF2F2;
+}
+
+.mywork-task-card.pending-sync {
+  border-left-color: var(--color-clay-500);
+}
+
+.mywork-task-card.completed {
+  border-left-color: var(--color-moss-600);
+}
+
+.mywork-task-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.mywork-task-name {
+  font-family: var(--font-family-display);
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.mywork-task-meta {
+  font-family: var(--font-family-body);
+  font-size: 11.5px;
+  color: var(--color-text-secondary);
+  margin: 2px 0 0;
+}
+
+.mywork-task-badges {
+  display: flex;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.mywork-badge {
+  font-family: var(--font-family-body);
+  font-size: 9.5px;
+  font-weight: 800;
+  padding: 3px 6px;
+  border-radius: 5px;
+  white-space: nowrap;
+}
+
+.mywork-badge.restricted {
+  background: #EDE9F3;
+  color: var(--color-plum-500);
+}
+
+.mywork-badge.proof {
+  background: #EFEAE0;
+  color: var(--color-text-secondary);
+}
+
+.mywork-badge.overdue {
+  background: #F3E8E8;
+  color: var(--color-rust-600);
+}
+
+.mywork-task-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.mywork-due {
+  font-family: var(--font-family-body);
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+
+.mywork-due.overdue {
+  color: var(--color-rust-600);
+  font-weight: 700;
+}
+
+.mywork-status-badge {
+  font-family: var(--font-family-body);
+  font-size: 11px;
+  font-weight: 800;
+  padding: 6px 11px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.mywork-status-badge.completed {
+  background: #E7F2E9;
+  color: var(--color-moss-600);
+}
+
+.mywork-status-badge.pending-sync {
+  background: #FBF0E3;
+  color: var(--color-clay-500);
+}
+
+.mywork-dot-sync {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-clay-500);
+}
+
+.mywork-sync-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.mywork-sync-note {
+  font-family: var(--font-family-body);
+  font-size: 10.5px;
+  color: var(--color-text-secondary);
+}
+
+.mywork-force-sync-btn {
+  font-family: var(--font-family-body);
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--color-clay-500);
+  background: none;
+  border: 1px solid var(--color-clay-500);
+  border-radius: 6px;
+  padding: 5px 9px;
+  cursor: pointer;
+}
