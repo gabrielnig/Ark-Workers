@@ -33,7 +33,10 @@ class Task extends Model
      */
     public function routine(): BelongsTo
     {
-        return $this->belongsTo(Routine::class);
+        // withTrashed(): a soft-deleted routine (RoutineController::destroy())
+        // must still resolve here, or a task's history would silently lose
+        // which routine produced it the moment that routine is deleted.
+        return $this->belongsTo(Routine::class)->withTrashed();
     }
 
     /**

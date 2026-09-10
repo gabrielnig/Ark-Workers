@@ -6,6 +6,7 @@ use App\Models\Asset;
 use App\Models\AssetType;
 use App\Models\Routine;
 use App\Models\Space;
+use App\Models\Task;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -204,6 +205,59 @@ class RoutineControllerTest extends TestCase
             ->deleteJson("/api/routines/{$routine->id}")
             ->assertNoContent();
 
-        $this->assertDatabaseMissing('routines', ['id' => $routine->id]);
+        $this->assertSoftDeleted($routine);
+    }
+
+    public function test_deleting_a_routine_does_not_delete_its_task_history(): void
+    {
+        $routine = Routine::factory()->create();
+        $task = Task::factory()->create(['routine_id' => $routine->id]);
+        $admin = $this->adminUser();
+
+        $this->actingAs($admin, 'sanctum')->deleteJson("/api/routines/{$routine->id}")->assertNoContent();
+
+        $this->assertDatabaseHas('tasks', ['id' => $task->id]);
+    }
+
+    public function test_a_task_belonging_to_a_deleted_routine_still_shows_the_routines_name(): void
+    {
+        // The whole point of soft-deleting instead of hard-deleting: a
+        // worker's completed-task history must still show what routine
+        // they did, even after that routine is later removed.
+        $routine = Routine::factory()->create(['name' => 'Vacuum stage carpet']);
+        $task = Task::factory()->create(['routine_id' => $routine->id]);
+        $admin = $this->adminUser();
+
+        $this->actingAs($admin, 'sanctum')->deleteJson("/api/routines/{$routine->id}")->assertNoContent();
+
+        $this->assertEquals('Vacuum stage carpet', $task->fresh()->routine->name);
+    }
+
+    public function test_a_deleted_routine_is_excluded_from_the_index_listing(): void
+    {
+        $active = Routine::factory()->create();
+        $deleted = Routine::factory()->create();
+        $deleted->delete();
+        $admin = $this->adminUser();
+
+        $response = $this->actingAs($admin, 'sanctum')->getJson('/api/routines');
+
+        $ids = collect($response->json('data'))->pluck('id');
+        $this->assertContains($active->id, $ids->all());
+        $this->assertNotContains($deleted->id, $ids->all());
+    }
+
+    public function test_a_deleted_routine_is_never_eligible_for_pruning(): void
+    {
+        // Unlike Asset, Routine is soft-deleted only, never Prunable —
+        // task/proof history must stay reachable permanently, not just
+        // for a grace period. model:prune should simply have nothing to
+        // do for routines, not silently wipe them after some window.
+        $routine = Routine::factory()->create();
+        $routine->delete();
+
+        $this->artisan('model:prune', ['--model' => [Routine::class]]);
+
+        $this->assertSoftDeleted($routine);
     }
 }

@@ -8,12 +8,20 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable(['asset_id', 'asset_type_id', 'name', 'calendar_interval_days', 'meter_threshold', 'requires_proof'])]
 class Routine extends Model
 {
-    /** @use HasFactory<RoutineFactory> */
-    use HasFactory;
+    /**
+     * @use HasFactory<RoutineFactory>
+     *
+     * Soft-delete only, deliberately not Prunable the way Asset is.
+     * A deleted routine's task/proof history must remain permanently
+     * reachable, not just for a 30-day grace period, so this row is
+     * never eligible for `php artisan model:prune`.
+     */
+    use HasFactory, SoftDeletes;
 
     protected function casts(): array
     {

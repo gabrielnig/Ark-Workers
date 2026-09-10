@@ -91,17 +91,13 @@ class RoutineController extends Controller
     {
         $this->authorize('delete', $routine);
 
-        // NOTE: routines.id cascades onto tasks.id (see the tasks table
-        // migration), so this permanently deletes every task and, via
-        // tasks -> task_proofs, every proof photo/video tied to this
-        // routine's history. That's inconsistent with how Assets handle
-        // the same situation (soft-delete with a 30-day grace period,
-        // specifically to avoid this). Left as a real hard delete here,
-        // matching the schema as it currently stands and RoutinePolicy's
-        // existing delete() check, rather than quietly changing the
-        // migration's cascade behavior as a side effect of adding this
-        // endpoint. Worth a real decision before this ships to real users
-        // with real task history.
+        // Soft delete only (Routine uses SoftDeletes, not Prunable — see
+        // the model). This routine stops appearing in active listings
+        // and can no longer generate new tasks, but every task and proof
+        // it already produced stays fully intact and permanently
+        // reachable, not just for a grace period the way a decommissioned
+        // Asset works. Task::routine() explicitly loads withTrashed() so
+        // a task's history still shows which routine it came from.
         $routine->delete();
 
         return response()->json(status: 204);
