@@ -89,13 +89,27 @@ before starting anything new.
         list — clicking into an asset does nothing yet, since there's
         no Asset detail screen (deliberately not linked to a dead
         route). That's the next item below.
-- [ ] **Assets screen (frontend).** Same situation — `AssetController`
-      is a full `apiResource`, no frontend at all.
+- [x] **Assets — done 2026-09-10, as a form inside Spaces, not a
+      separate screen.** `Asset` always requires a real `space_id`
+      (no "unassigned" bucket in the schema), so creation lives inside
+      a space's detail view rather than a standalone Assets screen —
+      same pattern as Space creation. Type is picked from a real
+      `/api/asset-types` list, with an honest message (not a broken
+      empty dropdown) if no asset types exist yet.
+  - [ ] **Blocked in practice until Asset Types exist.** The next item
+        below is a real dependency, not just a nice-to-have — until an
+        admin can create at least one Asset Type, this form has nothing
+        to put in its dropdown.
+  - [ ] **Still no Asset detail screen.** Clicking an asset row still
+        does nothing (deliberately, see the Spaces entry above). Asset
+        editing/decommissioning and the Asset → Routine/Task
+        drill-down both depend on this screen existing.
 - [ ] **Asset Types admin screen (frontend).** Backend has
       `GET/POST/PATCH /asset-types`, no UI. This is what lets Admins add
       new Asset Types (PRD's "fully modular, no code changes" requirement)
       — right now that requirement is unmet in practice even though the
-      API supports it.
+      API supports it. This is now the actual blocker on Asset creation
+      being usable end-to-end, not just a parallel gap.
 - [ ] **Restricted-space access grant admin UI.** `space_access_grants`
       table exists, `SpacePolicy` checks it (`ARCHITECTURE.md` §4), but
       there's no screen for an Admin to actually grant/revoke access to
