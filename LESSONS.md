@@ -303,6 +303,70 @@ wrong name before catching it with a clarifying question first.
 that doesn't match anything in prior context, confirm before proceeding
 rather than assuming the new name is intentional.
 
+### CSP silently blocked hotlinked images, no error, just blank space
+**What happened:** asset/space thumbnails were built pointing at
+hotlinked `commons.wikimedia.org` URLs. They rendered as invisible
+blank boxes in production (no broken-image icon, since `alt=""` was
+used), which looked like a data problem, not an image problem. Root
+cause: the site's own `Content-Security-Policy` is
+`img-src 'self' data: blob:`, a deliberate security control from
+`SECURITY.md`, silently blocking every cross-origin image request.
+**Lesson:** a locked-down CSP is exactly the kind of thing that fails
+silently and looks like an unrelated bug. Before hotlinking any
+external resource (images, fonts, scripts), check the site's actual
+CSP header, don't assume `'self'` only applies to API calls. The fix
+was to bundle the images locally, not to loosen the header, a security
+control set on purpose should not be quietly weakened to work around
+a convenience choice made without checking it first.
+
+### Eloquent relation name colliding with its own foreign key column
+**What happened:** `SpaceAccessGrant::grantedBy()` snake-cases to
+`granted_by` for JSON serialization, identical to the actual
+`granted_by` FK column already on the model. Eager-loading the
+relation and returning the raw model (`response()->json(['data' =>
+$grant])`) silently overwrote the integer column value with the
+nested `User` object in the response, an easy bug to miss since
+`$grant->granted_by` (direct property access) still correctly returns
+the raw id, only `toArray()`/JSON serialization hits the collision.
+Caught before shipping by writing the exact API response out and
+inspecting it, not by assuming Eloquent's default serialization was
+safe.
+**Lesson:** whenever a relation method's name would snake-case to the
+same string as an existing column on that model, don't rely on
+default Eloquent array/JSON serialization, build the response shape
+explicitly. Worth grepping for this pattern (`foo_id` column +
+`foo()`/`fooRelation()` method whose snake-case matches an existing
+attribute) whenever adding a new `belongsTo` relation to a model that
+already has the matching FK column under a different accessor name.
+
+### Deploy commands given from memory instead of reading the documented sequence
+**What happened:** after a session that included a real migration,
+the deploy instructions given were reconstructed from memory (a
+shortened version of an earlier deploy), and omitted
+`php artisan migrate --force`, even though the actual documented
+sequence in `DEPLOYMENT.md` already included it correctly.
+**Lesson:** when giving deploy instructions, read `DEPLOYMENT.md`'s
+actual current section fresh rather than recalling a prior turn's
+version of it, especially after the sequence itself has been edited
+mid-session. A remembered shortcut silently drops whatever changed
+since it was memorized.
+
+### `arkdev`/`www-data` ownership flip caused two separate deploy failures
+**What happened:** the deploy sequence chowned `storage`/
+`bootstrap/cache` (backend) and `dist/` (frontend) to `www-data` at
+the end of each deploy, which meant the next deploy's `composer
+install`/`npm run build`, run as `arkdev`, immediately hit a
+permissions error trying to write during its own build step. Hit
+twice, once on each side of the stack, before the pattern was
+recognized as the same root cause rather than two unrelated bugs.
+**Lesson:** when a deploy step alternates ownership between a build
+user and a runtime user, flip ownership to the build user at the
+*start* of the sequence, not just back to the runtime user at the
+end, or every deploy after the first depends on how the previous one
+happened to leave things. Fixed in `DEPLOYMENT.md` §3, the deeper fix
+(a shared Unix group so ownership never needs to flip at all) is
+flagged there but not done.
+
 ---
 
 ## Template for New Entries

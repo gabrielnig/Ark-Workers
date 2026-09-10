@@ -7,6 +7,54 @@ Changelog (keepachangelog.com), newest at top.
 
 ## [Unreleased]
 
+### Phase 1 build: Routines, Spaces, Assets, Asset Types, restricted-space access grants, full-skin UI overhaul
+- **Routines backend completed.** `routines` table had a model and
+  policy but no controller from an earlier session, added full CRUD
+  with hybrid calendar/meter trigger validation. Deletion decided and
+  fixed to be soft-delete only, never `Prunable`, so a deleted
+  routine's task/proof history stays permanently reachable, not just
+  for a grace period. Later extended: a decommissioned Asset's own
+  pruning (30-day `Prunable` cycle) was silently cascading the same
+  history-loss through a different door, `routines.asset_id` changed
+  from `cascadeOnDelete` to `nullOnDelete` to close it.
+- **Spaces screen built**, real backend, real UI: breadcrumb
+  drill-down (not a modal stack), restricted badge at every level,
+  sub-space/asset counts on cards, create and rename/edit, all gated
+  by the real `can_manage` permission (added a `can_manage` field to
+  `/api/user`, the route previously only exposed `is_admin`).
+- **Asset creation and Asset Types admin screen built.** Type-picker
+  combobox with inline quick-create (no navigating away), asset-name
+  combobox suggesting existing names. Asset Types category maps to a
+  small set of real bundled photos (see the CSP/hotlinking lesson
+  below), with a safe fallback for anything outside the curated set,
+  so a brand-new admin-created type never breaks.
+- **Restricted-space access grant UI built**, closing what had been
+  the single biggest functional gap in the whole restriction feature:
+  a restricted Space was previously unreachable by anyone except an
+  Admin, permanently, since there was no way to create the exception.
+  Admin-only (matches `bypassesSpaceRestrictions()`, not
+  `hasManagementPermission()`, a manager who can't see a restricted
+  space shouldn't be able to grant access to it). Caught a real bug
+  before shipping: `grantedBy()` snake-cases to `granted_by`,
+  identical to the actual FK column, naive serialization silently
+  overwrote the integer id with the nested user object.
+- **Full visual overhaul**, Brevo-audited structural patterns
+  (skeleton loading matching real content geometry, doubled focus
+  rings, action-oriented empty states, card-border-not-shadow rule)
+  applied without importing Brevo's colors, until an explicit later
+  decision to bring in a secondary interactive-purple/gold layer on
+  top of the existing moss/sand/bark/clay palette, plus a
+  Reports/Analytics-only data-viz palette. 16px radius scale, gradient
+  primary buttons.
+- **`docs/BUILD-PLAN.md` and `docs/USER-STORIES.md` added**, the
+  former a real dependency-ordered gap analysis from the actual
+  migrations/routes/screens against `PRD.md` (not a wishlist), the
+  latter a comprehensive per-permission-tier user story set with every
+  story tagged Built/Partial/Not built against real current state.
+- 148 tests passing (up from 112), backend suite. Frontend production
+  build verified clean throughout, no test framework added yet
+  (unchanged, still flagged).
+
 ### First live deploy: arkworkers.app and api.arkworkers.app, real SSL, real users already
 - Deployed to a shared Contabo VPS alongside an unrelated existing
   project (ARC Music), added PHP 8.3, Composer, and two new Nginx

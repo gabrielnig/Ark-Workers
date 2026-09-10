@@ -1,6 +1,8 @@
 # AI Context Matrix, ArkWorkers.app
 
-**Last updated:** End of first live VPS deployment session
+**Last updated:** End of Phase 1 feature build session (Routines,
+Spaces, Assets, Asset Types, restricted-space access grants, full-skin
+UI overhaul), 2026-09-10
 **Update this file at the end of every significant work session**, this
 is the first thing any future session (Claude or human) should read.
 
@@ -26,9 +28,35 @@ upload) are all complete and deployed. Real Login/Sign-up/Admin-requests/
 My-Work screens are built and verified. See `docs/DEPLOYMENT.md` for the
 live infrastructure and the real gotchas hit getting it deployed.
 Laravel 13 app lives in `arkworkers-api/`,
-React/Vite/Capacitor frontend lives in `arkworkers-web/`. 112 tests
-passing, 229 assertions on the backend; no frontend test framework
-decided or set up yet (flagged, not silently resolved, see §3).
+React/Vite/Capacitor frontend lives in `arkworkers-web/`. **148 tests
+passing, 297 assertions** on the backend (was 112/229); no frontend
+test framework decided or set up yet (flagged, not silently resolved,
+see §3).
+
+**Post-launch feature build now tracked in `docs/BUILD-PLAN.md`, not
+this file, read that first for anything beyond onboarding
+context.** That file uses its own Phase 1/2/3 numbering for
+post-launch feature work, unrelated to and don't confuse with this
+file's original Phase 1-6 build phases below, which predate it and
+cover the initial backend/auth/PWA build only. As of this session,
+`BUILD-PLAN.md`'s Phase 1 (finish what was already half-built) is
+fully complete: Routines backend (full CRUD, soft-delete-only
+deletion so task/proof history survives permanently, later extended
+to survive Asset pruning too, a real schema-level foreign-key fix,
+not just an application-code one), Spaces screen (breadcrumb
+drill-down, create/rename), Asset creation, Asset Types admin screen
+with inline quick-create, and the restricted-space access grant UI
+(the single biggest functional gap in the whole restriction feature
+until this session, a restricted Space was previously unreachable by
+anyone except an Admin, permanently). Also done this session: a full
+UI visual overhaul (Brevo-audited structural patterns, a secondary
+interactive-purple/gold color layer on top of the existing palette,
+16px radius scale), and two new standing docs,
+`docs/USER-STORIES.md` (comprehensive, per permission tier, every
+story tagged Built/Partial/Not built against real current state) and
+`docs/BUILD-PLAN.md` itself (a real dependency-ordered gap analysis
+from actual migrations/routes/screens, not a wishlist). Next up per
+`BUILD-PLAN.md`: Phase 2, Reporting.
 
 **Auth model reworked this session, twice, both real architecture
 changes, not additions:**
@@ -181,7 +209,9 @@ Standing process rules now in force for every future session (see
    worker would use it. RESEARCH.md flags this exact phase as the one
    most critical not to rush past that step. A frontend test framework
    is also still undecided (`docs/TDD-PROTOCOL.md` is PHPUnit-only).
-5. Phase 4: scheduling (hybrid PM triggers) and reporting
+5. Phase 4: scheduling (hybrid PM triggers) and reporting. Routines
+   backend (the scheduling half) is now built, see the session summary
+   in §1. Reporting is `BUILD-PLAN.md`'s Phase 2, not yet started.
 6. Phase 5: polish (task messaging, asset history, PM compliance KPI,
    bottom mobile nav's raised "My Work" center button opening a
    worker's private task view, per standing note)
@@ -233,6 +263,25 @@ Standing process rules now in force for every future session (see
     structural ideas, strip anything that doesn't match what's
     actually built. Not a wholesale swap to Brevo's own visual
     identity, still ArkWorkers' brand and stack.
+16. **Item 15 executed this session.** The Brevo audit happened
+    (skeleton loading, doubled focus rings, action-oriented empty
+    states, card-border-not-shadow rule adopted structurally), then a
+    separate, explicit, later decision brought in an actual
+    secondary interactive-purple/gold color layer too, on top of the
+    existing palette, not instead of it. See `DESIGN-SYSTEM.md` for
+    the final locked state and `CHANGELOG.md` for the full list of
+    what changed.
+17. **Going forward, `docs/BUILD-PLAN.md` is the live source of truth
+    for what's left to build, this list (§3) is not being kept in
+    sync with it turn by turn.** Read `BUILD-PLAN.md` for current,
+    accurate, checkbox-tracked status. This numbered list stays useful
+    for the original pre-launch build-phase history and the open
+    items that don't fit `BUILD-PLAN.md`'s post-launch feature
+    tracking (backups, physical-backup ownership, OTP cleanup,
+    frontend test framework), but don't treat items like "Phase 4:
+    scheduling and reporting" above as current without cross-checking
+    `BUILD-PLAN.md` first, it will drift out of sync faster than this
+    file gets updated.
 
 ## 4. Unknown Knowns (Implicit Design Patterns)
 

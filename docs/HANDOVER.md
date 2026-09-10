@@ -26,9 +26,15 @@ security, and drivers via a mobile-first PWA and Android app.
    finalized logo (assets in `docs/assets/logo/`)
 5. `ai-context.md` (repo root) — the current state snapshot; read this
    FIRST if you only read one document, then go deeper via the above
-6. `LESSONS.md` (repo root) - mistakes already made and fixed; check
+6. `docs/BUILD-PLAN.md`, the live, checkbox-tracked source of truth
+   for what's built vs. not, a real gap analysis from the actual code,
+   not a wishlist
+7. `docs/USER-STORIES.md`, every feature, per permission tier
+   (Prospective Worker, Staff Member, Manager, Admin), each story
+   tagged Built/Partial/Not built against real current state
+8. `LESSONS.md` (repo root) - mistakes already made and fixed; check
    before re-solving a problem that's already been hit
-7. `docs/TDD-PROTOCOL.md` - the binding rule for how code gets written
+9. `docs/TDD-PROTOCOL.md` - the binding rule for how code gets written
    and verified before it's pushed or deployed
 
 ## 3. Key People & Roles
@@ -61,25 +67,29 @@ only. See `SECURITY.md` §4 and `ARCHITECTURE.md` §4.
 ## 6. Current Status
 
 **Live at https://arkworkers.app (frontend) and https://api.arkworkers.app
-(backend), deployed this session.** Phase 1, Phase 2, the auth/org-
+(backend).** The original pre-launch Phase 1, Phase 2, the auth/org-
 structure rework, and Phase 3 (offline sync foundation, resumable
 chunked upload) are all complete and deployed. Real Login, Sign-up,
 Admin-requests, and My Work screens are built, tested against the
-real backend, and verified over real HTTPS in production, not just
-locally. Laravel backend (`arkworkers-api/`) has the full core data
-model, dual-mode auth (session cookie for the PWA, Bearer token for
-mobile/API clients), the account-request/invite-link pipeline, the
-department/role authorization model, task-completion conflict
-handling, resumable chunked upload, and CRUD/task endpoints, all
-tested (112 tests passing at last count, see `ai-context.md` for the
-current number). Frontend (`arkworkers-web/`) has real screens for
-sign-in, sign-up, admin approval, and worker task management with
-offline queueing and resumable proof upload. See `docs/DEPLOYMENT.md`
-for the live infrastructure and the real gotchas hit getting it
-deployed. **Next step: real device verification** (actually using the
-live site on a phone, offline and online) and a database backup
-schedule, which does not exist yet on the now-public deployment,
-flagged as a real gap in `DEPLOYMENT.md` §2.5.
+real backend, and verified over real HTTPS in production. Beyond
+that, `docs/BUILD-PLAN.md`'s own Phase 1 (finish what was already
+half-built) is also now complete: Routines (full CRUD, soft-delete
+only so task/proof history survives permanently, including surviving
+Asset pruning), Spaces (create/rename, breadcrumb drill-down), Asset
+creation, Asset Types admin, and restricted-space access grants (a
+restricted Space was previously unreachable by anyone except an Admin
+once created, this closed that gap). A full UI visual overhaul
+(Brevo-audited structural patterns plus a secondary color layer on
+top of the existing palette) happened alongside this. 148 tests
+passing (see `ai-context.md`/`CHANGELOG.md` for the current number,
+this file is not kept in sync turn by turn). Frontend
+(`arkworkers-web/`) has real screens for sign-in, sign-up, admin
+approval, worker task management, Spaces, and Asset Types. See
+`docs/DEPLOYMENT.md` for the live infrastructure and
+`docs/BUILD-PLAN.md` for exactly what's built vs. not, checkbox by
+checkbox. **Next step per `BUILD-PLAN.md`: Phase 2, Reporting.**
+Real-device verification and a database backup schedule are still
+open, both flagged in `DEPLOYMENT.md`.
 
 ## 7. What's NOT Decided Yet
 
