@@ -47,22 +47,31 @@ matters if this data is unrecoverable.
 Backend and frontend are out of sync in both directions here. Fix that
 before starting anything new.
 
-- [x] **Routines backend — done 2026-09-09.** `RoutineController` (full
-      CRUD) + `/routines` routes added, 14 new feature tests, full suite
-      green (126 passed, 250 assertions). Validates exactly one of
-      asset_id/asset_type_id, at least one of calendar_interval_days/
-      meter_threshold. `RoutinePolicy` and the model itself already
-      existed from an earlier session, just had no controller wired up.
-  - [ ] **Real decision needed: `destroy()` hard-deletes task/proof
-        history.** `routines.id` cascades onto `tasks.id` in the schema
-        (see the tasks table migration), so deleting a routine
-        permanently wipes every task and proof photo/video tied to it —
-        inconsistent with how Assets handle the same situation
-        (soft-delete, 30-day grace period, specifically to avoid this).
-        Flagged in the controller code, not silently resolved. Needs an
-        actual decision — soft-delete routines like assets, or restrict
-        deletion once a routine has task history — before this endpoint
-        is exposed to a real admin with real data to lose.
+- [x] **Routines backend — done 2026-09-09/10.** `RoutineController`
+      (full CRUD) + `/routines` routes, 130 tests passing total.
+      Validates exactly one of asset_id/asset_type_id, at least one of
+      calendar_interval_days/meter_threshold. `RoutinePolicy` and the
+      model itself already existed from an earlier session, just had no
+      controller wired up.
+  - [x] **Deletion preserves history — decided and fixed 2026-09-10.**
+        Deleting a routine is soft-delete only, deliberately never
+        `Prunable` the way Asset is — a routine's task/proof history
+        (who did the work, when, any photo proof) must stay permanently
+        reachable, not just for a 30-day grace period. `Task::routine()`
+        loads `withTrashed()` so history still shows the routine's name
+        after it's deleted.
+  - [ ] **Related, separate, not yet fixed: Asset pruning cascades through
+        Routines to Tasks.** `routines.asset_id` still cascades on
+        delete, and `Asset` IS `Prunable` (permanently removed 30 days
+        after decommission). When a decommissioned Asset is actually
+        pruned, its Routines get hard-deleted via cascade, which then
+        hard-deletes their Tasks too via `routines.id`'s cascade onto
+        `tasks.id` — silently reintroducing the exact history-loss
+        problem just fixed above, just via a different path. Not fixed
+        in this pass since it's a separate schema question (does
+        Task/proof history need to outlive Asset pruning too? Almost
+        certainly yes, for the same reason routines needed it) — flagged
+        for a decision, not silently resolved by guessing.
   - [ ] **Frontend still not built.** Tasks are still created directly
         (`POST /tasks`), bypassing the routine-schedule model
         entirely — there's no UI yet for an Admin to actually define a
