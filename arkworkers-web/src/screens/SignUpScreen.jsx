@@ -5,6 +5,8 @@ import AuthLayout from '../components/AuthLayout.jsx';
 import { fetchDepartments } from '../api/departments.js';
 import { submitAccountRequest } from '../api/accountRequests.js';
 
+const MINISTRY_OFFICES = ['Brother', 'Sister', 'Evangelist', 'Deacon', 'Deaconess', 'Pastor'];
+
 export default function SignUpScreen() {
   const { data: departments, isLoading: departmentsLoading } = useQuery({
     queryKey: ['departments'],
@@ -12,6 +14,8 @@ export default function SignUpScreen() {
   });
 
   const [name, setName] = useState('');
+  const [displayName, setDisplayName] = useState('');
+  const [title, setTitle] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [departmentIds, setDepartmentIds] = useState([]);
@@ -36,7 +40,7 @@ export default function SignUpScreen() {
 
     setSubmitting(true);
     try {
-      await submitAccountRequest({ name, email, phone, departmentIds });
+      await submitAccountRequest({ name, displayName, title, email, phone, departmentIds });
       setSubmitted(true);
     } catch (err) {
       setError(err.body?.message || 'Could not submit your request.');
@@ -84,6 +88,29 @@ export default function SignUpScreen() {
           onChange={(e) => setName(e.target.value)}
           required
         />
+
+        <label className="field-label" htmlFor="signup-display-name">Display name (optional)</label>
+        <input
+          id="signup-display-name"
+          type="text"
+          className="text-input"
+          placeholder="What you'd like to be called in the app"
+          value={displayName}
+          onChange={(e) => setDisplayName(e.target.value)}
+        />
+
+        <label className="field-label" htmlFor="signup-title">Ministry office (optional)</label>
+        <select
+          id="signup-title"
+          className="text-input"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        >
+          <option value="">None</option>
+          {MINISTRY_OFFICES.map((office) => (
+            <option key={office} value={office}>{office}</option>
+          ))}
+        </select>
 
         <label className="field-label" htmlFor="signup-email">Email</label>
         <input

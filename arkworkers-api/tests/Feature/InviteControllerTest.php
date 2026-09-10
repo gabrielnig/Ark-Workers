@@ -50,6 +50,23 @@ class InviteControllerTest extends TestCase
             ]);
     }
 
+    public function test_show_includes_display_name_and_ministry_office_when_set(): void
+    {
+        [$accountRequest, $token] = $this->approvedRequestWithToken([
+            'display_name' => 'Sister Chi',
+            'title' => 'Evangelist',
+        ]);
+
+        $this->getJson("/api/invites/{$token}")
+            ->assertOk()
+            ->assertJson([
+                'data' => [
+                    'display_name' => 'Sister Chi',
+                    'title' => 'Evangelist',
+                ],
+            ]);
+    }
+
     public function test_show_404s_for_an_unknown_token(): void
     {
         $this->getJson('/api/invites/'.Str::random(64))->assertStatus(404);
@@ -93,6 +110,25 @@ class InviteControllerTest extends TestCase
         $membership = $user->departments()->first();
         $this->assertSame($department->id, $membership->id);
         $this->assertSame($member->id, $membership->pivot->role_id);
+    }
+
+    public function test_activation_carries_display_name_and_ministry_office_onto_the_new_user(): void
+    {
+        $department = Department::factory()->create();
+        [$accountRequest, $token] = $this->approvedRequestWithToken([
+            'email' => 'chidinma@example.com',
+            'display_name' => 'Sister Chi',
+            'title' => 'Evangelist',
+        ]);
+        $accountRequest->departments()->attach($department);
+
+        $this->postJson("/api/invites/{$token}/activate", [
+            'password' => 'a-strong-password',
+        ])->assertOk();
+
+        $user = User::where('email', 'chidinma@example.com')->first();
+        $this->assertSame('Sister Chi', $user->display_name);
+        $this->assertSame('Evangelist', $user->title);
     }
 
     public function test_activation_marks_the_request_consumed_and_links_the_created_user(): void

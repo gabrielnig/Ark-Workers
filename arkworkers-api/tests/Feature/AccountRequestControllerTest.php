@@ -39,6 +39,38 @@ class AccountRequestControllerTest extends TestCase
         $this->assertCount(2, $accountRequest->departments);
     }
 
+    public function test_a_worker_can_submit_a_display_name_and_ministry_office(): void
+    {
+        $department = Department::factory()->create();
+
+        $this->postJson('/api/account-requests', [
+            'name' => 'Chidinma Okafor',
+            'display_name' => 'Sister Chi',
+            'title' => 'Evangelist',
+            'email' => 'chidinma@example.com',
+            'department_ids' => [$department->id],
+        ])->assertCreated();
+
+        $accountRequest = AccountRequest::where('email', 'chidinma@example.com')->first();
+        $this->assertSame('Sister Chi', $accountRequest->display_name);
+        $this->assertSame('Evangelist', $accountRequest->title);
+    }
+
+    public function test_display_name_and_title_are_optional(): void
+    {
+        $department = Department::factory()->create();
+
+        $this->postJson('/api/account-requests', [
+            'name' => 'Chidinma Okafor',
+            'email' => 'chidinma@example.com',
+            'department_ids' => [$department->id],
+        ])->assertCreated();
+
+        $accountRequest = AccountRequest::where('email', 'chidinma@example.com')->first();
+        $this->assertNull($accountRequest->display_name);
+        $this->assertNull($accountRequest->title);
+    }
+
     public function test_a_request_needs_at_least_one_department(): void
     {
         $this->postJson('/api/account-requests', [

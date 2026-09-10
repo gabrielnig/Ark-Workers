@@ -17,7 +17,15 @@ class AccountRequest extends Model
 
     public const STATUS_REJECTED = 'rejected';
 
-    protected $fillable = ['name', 'email', 'phone'];
+    protected $fillable = ['name', 'display_name', 'email', 'phone', 'title'];
+
+    /**
+     * Ministry offices offered on the sign-up form (curated dropdown,
+     * client-side). Not enforced here as a strict enum, same pattern
+     * as AssetType::category, this is a plain administrative label
+     * with zero permission weight, never checked by any policy.
+     */
+    public const MINISTRY_OFFICES = ['Brother', 'Sister', 'Evangelist', 'Deacon', 'Deaconess', 'Pastor'];
 
     protected function casts(): array
     {

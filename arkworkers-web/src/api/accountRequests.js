@@ -1,10 +1,12 @@
 import { apiFetch } from './client.js';
 
-export async function submitAccountRequest({ name, email, phone, departmentIds }) {
+export async function submitAccountRequest({ name, displayName, title, email, phone, departmentIds }) {
   return apiFetch('/api/account-requests', {
     method: 'POST',
     body: JSON.stringify({
       name,
+      display_name: displayName || null,
+      title: title || null,
       email,
       phone: phone || null,
       department_ids: departmentIds,

@@ -25,6 +25,8 @@ class AccountRequestController extends Controller
     {
         $data = Validator::make($request->all(), [
             'name' => ['required', 'string'],
+            'display_name' => ['nullable', 'string'],
+            'title' => ['nullable', 'string'],
             'email' => ['required', 'email'],
             'phone' => ['nullable', 'string'],
             'department_ids' => ['required', 'array', 'min:1'],
@@ -45,6 +47,8 @@ class AccountRequestController extends Controller
 
         $accountRequest = AccountRequest::create([
             'name' => $data['name'],
+            'display_name' => $data['display_name'] ?? null,
+            'title' => $data['title'] ?? null,
             'email' => $data['email'],
             'phone' => $data['phone'] ?? null,
         ]);

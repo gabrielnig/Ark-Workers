@@ -155,6 +155,33 @@ for this phase and has nowhere to render yet.
 
 ---
 
+## Out-of-plan fixes and additions, 2026-09-10 (same session)
+
+- [x] **Admin nav bug, fixed.** `/admin/requests` (the pending
+      sign-up requests screen) existed as a real route the whole time
+      but had no link anywhere in the UI, an Admin had no way to
+      reach it except typing the URL directly. Added a new "Admin"
+      nav item in `AppShell.jsx`, gated on `is_admin` specifically
+      (not the broader `can_manage`, matching `AccountRequestPolicy`),
+      same pattern as the Reports item added earlier this session.
+- [x] **Display name + ministry office, added to sign-up.** Two new
+      optional fields on the sign-up form: a free-text display name,
+      separate from the worker's full/baptismal name, and a curated
+      ministry-office dropdown (Brother, Sister, Evangelist, Deacon,
+      Deaconess, Pastor). Explicitly decided to carry zero permission
+      weight, reuses the existing `users.title` column (already
+      documented as "a plain label, never checked by any policy") for
+      the office rather than adding a new one. New `display_name`
+      column added to both `account_requests` and `users`. Both
+      fields flow end to end: sign-up form → `AccountRequest` →
+      invite activation → `User`, and both show on the Admin pending-
+      requests table. Backend validation is soft (nullable string,
+      no enforced enum), matching the existing `AssetType::category`
+      pattern, not a hardcoded fixed list at the database layer. 5
+      new tests, full suite green (163 passed, was 159).
+
+---
+
 ## Phase 3 — Vehicle Fleet
 
 PRD §5's full requirement (6+ vehicles, fuel/mileage/service logs,

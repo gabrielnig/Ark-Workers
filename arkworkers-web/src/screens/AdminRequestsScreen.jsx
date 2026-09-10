@@ -277,7 +277,10 @@ export default function AdminRequestsScreen() {
                         <div className="admin-name-cell">
                           <div className="admin-avatar">{initialsFor(r.name)}</div>
                           <div>
-                            <p className="admin-t-name">{r.name}</p>
+                            <p className="admin-t-name">
+                              {r.title ? `${r.title} ` : ''}{r.name}
+                              {r.display_name ? ` (${r.display_name})` : ''}
+                            </p>
                             <p className="admin-t-sub">{r.email}</p>
                           </div>
                         </div>
@@ -318,7 +321,10 @@ export default function AdminRequestsScreen() {
                     <div className="admin-req-top">
                       <div className="admin-avatar">{initialsFor(r.name)}</div>
                       <div className="admin-req-id">
-                        <p className="admin-t-name">{r.name}</p>
+                        <p className="admin-t-name">
+                          {r.title ? `${r.title} ` : ''}{r.name}
+                          {r.display_name ? ` (${r.display_name})` : ''}
+                        </p>
                         <p className="admin-t-sub">{r.email}</p>
                       </div>
                       <span className="admin-req-date">{timeAgo(r.created_at)}</span>

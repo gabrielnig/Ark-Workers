@@ -7,6 +7,7 @@ const NAV_ITEMS = [
   { key: 'spaces', label: 'Spaces', icon: '\uD83C\uDFE0', to: '/spaces' },
   { key: 'my-work', label: 'My Work', icon: '\u2713', to: '/my-work', primary: true },
   { key: 'reports', label: 'Reports', icon: '\uD83D\uDCCA', to: '/reports', managerOnly: true },
+  { key: 'admin', label: 'Admin', icon: '\u2699', to: '/admin/requests', adminOnly: true },
   { key: 'messages', label: 'Messages', icon: '\u2709' },
   { key: 'profile', label: 'Profile', icon: '\u25CF' },
 ];
@@ -28,9 +29,14 @@ export default function AppShell({ children }) {
   const { data: currentUser } = useCurrentUser();
 
   // Reports is manager/admin only (ReportController::dailySummary),
-  // hidden here rather than shown as a dead 403 link for a plain
-  // staff user.
-  const navItems = NAV_ITEMS.filter((item) => !item.managerOnly || currentUser?.can_manage);
+  // Admin is Admin-only (is_admin, not the broader can_manage), both
+  // hidden here rather than shown as a dead 403/redirect link for a
+  // user who can't reach them.
+  const navItems = NAV_ITEMS.filter((item) => {
+    if (item.managerOnly) return currentUser?.can_manage;
+    if (item.adminOnly) return currentUser?.is_admin;
+    return true;
+  });
 
   return (
     <div className="app-shell">

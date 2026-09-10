@@ -23,6 +23,8 @@ class InviteController extends Controller
         return response()->json([
             'data' => [
                 'name' => $accountRequest->name,
+                'display_name' => $accountRequest->display_name,
+                'title' => $accountRequest->title,
                 'email' => $accountRequest->email,
                 'departments' => $accountRequest->departments->pluck('name'),
             ],
@@ -43,6 +45,8 @@ class InviteController extends Controller
 
         $user = User::create([
             'name' => $accountRequest->name,
+            'display_name' => $accountRequest->display_name,
+            'title' => $accountRequest->title,
             'email' => $accountRequest->email,
             'phone' => $accountRequest->phone,
             'password' => $data['password'],
