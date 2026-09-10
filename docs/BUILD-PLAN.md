@@ -129,15 +129,29 @@ before starting anything new.
 The data-viz palette (`DESIGN-SYSTEM.md` §2.6) was built specifically
 for this phase and has nowhere to render yet.
 
-- [ ] **Daily Summary report backend.** PRD §7 requires completion
-      rates, overdue tasks, and asset issues, reportable daily. No job,
-      no endpoint exists for this at all — it's pure requirement right
-      now, zero implementation.
-- [ ] **Reports screen (frontend).** Nav placeholder only
-      (`AppShell.jsx`). `DESIGN-SYSTEM.md` §6.3 already specifies this
-      should read as a simple completion-rate bar, scannable in under a
-      minute — not a dense BI dashboard. Depends on the backend item
-      above.
+- [x] **Daily Summary report backend, done 2026-09-10.**
+      `DailySummaryService` + `ReportController::dailySummary`,
+      `GET /api/reports/daily-summary`, manager/admin only (Pastor
+      title carries no weight, matches locked decision). Computes
+      completion rate for tasks due today, the overdue task list, and
+      asset issues. "Asset issues" was undefined anywhere in the
+      PRD/ARCHITECTURE beyond the phrase itself, so it was implemented
+      as "assets currently carrying one or more overdue tasks",
+      derived from existing Task/Routine/Asset data rather than
+      inventing a new field. Restricted-space exclusion reuses
+      `TaskPolicy::view()`, same rule as Spaces/Assets/Tasks, not a
+      reimplementation. 11 new tests, full suite green (159 passed).
+- [x] **Reports screen (frontend), done 2026-09-10.** `ReportsScreen.jsx`
+      at `/reports`, gated by `RequireManager`. Completion-rate card
+      (moss/clay bar, per §6.3, not a dense dashboard), overdue-tasks
+      card (rust badge, asset/space/assignee/days-overdue rows), and
+      an asset-issues card, the first real use of the data-viz palette
+      (harbor/ochre/teal, §2.6) as a small horizontal bar chart ranking
+      assets by overdue-task count. Added as a new "Reports" nav item
+      in `AppShell.jsx` (sidebar + bottom nav), hidden entirely for a
+      non-manager rather than shown as a dead 403 link, there was no
+      pre-existing nav slot literally named Reports before this
+      session.
 
 ---
 

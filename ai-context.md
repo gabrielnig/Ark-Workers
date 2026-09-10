@@ -33,6 +33,14 @@ passing, 297 assertions** on the backend (was 112/229); no frontend
 test framework decided or set up yet (flagged, not silently resolved,
 see §3).
 
+**Phase 2, Reporting, complete as of 2026-09-10.** Daily Summary
+backend (`DailySummaryService`, `GET /api/reports/daily-summary`,
+manager/admin only) and the real Reports screen frontend
+(`ReportsScreen.jsx` at `/reports`), the first real use of the
+data-viz palette (`DESIGN-SYSTEM.md` §2.6). 159 backend tests
+passing (was 148). See `docs/BUILD-PLAN.md` Phase 2 for the full
+detail, including the "asset issues" interpretation decision.
+
 **Post-launch feature build now tracked in `docs/BUILD-PLAN.md`, not
 this file, read that first for anything beyond onboarding
 context.** That file uses its own Phase 1/2/3 numbering for

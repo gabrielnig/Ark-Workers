@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\AssetTypeController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DepartmentController;
 use App\Http\Controllers\Api\InviteController;
+use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\RoutineController;
 use App\Http\Controllers\Api\SpaceAccessGrantController;
 use App\Http\Controllers\Api\SpaceController;
@@ -68,6 +69,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/tasks/{task}/proofs/chunked/{session}/status', [ChunkedUploadController::class, 'status']);
     Route::post('/tasks/{task}/proofs/chunked/{session}/chunks/{index}', [ChunkedUploadController::class, 'uploadChunk']);
     Route::post('/tasks/{task}/proofs/chunked/{session}/complete', [ChunkedUploadController::class, 'complete']);
+
+    Route::get('/reports/daily-summary', [ReportController::class, 'dailySummary']);
 
     Route::get('/account-requests', [AccountRequestController::class, 'index']);
     Route::post('/account-requests/{accountRequest}/approve', [AccountRequestController::class, 'approve']);

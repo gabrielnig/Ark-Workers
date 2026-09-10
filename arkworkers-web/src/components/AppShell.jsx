@@ -1,10 +1,12 @@
 import { Link, useLocation } from 'react-router-dom';
+import { useCurrentUser } from '../hooks/useCurrentUser.js';
 import './AppShell.css';
 
 const NAV_ITEMS = [
   { key: 'home', label: 'Home', icon: '\u2302' },
   { key: 'spaces', label: 'Spaces', icon: '\uD83C\uDFE0', to: '/spaces' },
   { key: 'my-work', label: 'My Work', icon: '\u2713', to: '/my-work', primary: true },
+  { key: 'reports', label: 'Reports', icon: '\uD83D\uDCCA', to: '/reports', managerOnly: true },
   { key: 'messages', label: 'Messages', icon: '\u2709' },
   { key: 'profile', label: 'Profile', icon: '\u25CF' },
 ];
@@ -23,6 +25,12 @@ const NAV_ITEMS = [
  */
 export default function AppShell({ children }) {
   const location = useLocation();
+  const { data: currentUser } = useCurrentUser();
+
+  // Reports is manager/admin only (ReportController::dailySummary),
+  // hidden here rather than shown as a dead 403 link for a plain
+  // staff user.
+  const navItems = NAV_ITEMS.filter((item) => !item.managerOnly || currentUser?.can_manage);
 
   return (
     <div className="app-shell">
@@ -31,7 +39,7 @@ export default function AppShell({ children }) {
           <img src="/images/logo-icon.png" alt="ArkWorkers" />
           <span>ArkWorkers</span>
         </div>
-        {NAV_ITEMS.map((item) => {
+        {navItems.map((item) => {
           if (!item.to) {
             return (
               <div key={item.key} className="side-nav-item disabled">
@@ -55,7 +63,7 @@ export default function AppShell({ children }) {
       <div className="app-main">{children}</div>
 
       <nav className="bottom-nav">
-        {NAV_ITEMS.map((item) => {
+        {navItems.map((item) => {
           if (!item.to) {
             return (
               <div key={item.key} className="nav-item">
