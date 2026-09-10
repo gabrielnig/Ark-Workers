@@ -210,6 +210,29 @@ class AuthTest extends TestCase
             ->assertJsonFragment(['email' => $user->email]);
     }
 
+    public function test_current_user_response_includes_computed_can_manage(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $staff = User::factory()->create(['is_admin' => false]);
+
+        $adminToken = $admin->createToken('test')->plainTextToken;
+        $this->withHeader('Authorization', "Bearer {$adminToken}")
+            ->getJson('/api/user')
+            ->assertOk()
+            ->assertJsonFragment(['can_manage' => true]);
+
+        // Sanctum's guard caches the resolved user for the test's
+        // lifetime, must force it to re-resolve from the new token
+        // rather than silently reusing the admin's cached identity.
+        auth()->forgetGuards();
+
+        $staffToken = $staff->createToken('test')->plainTextToken;
+        $this->withHeader('Authorization', "Bearer {$staffToken}")
+            ->getJson('/api/user')
+            ->assertOk()
+            ->assertJsonFragment(['can_manage' => false]);
+    }
+
     public function test_a_request_with_no_matching_frontend_origin_still_gets_a_bearer_token(): void
     {
         $user = User::factory()->create(['password' => Hash::make('a-strong-password')]);

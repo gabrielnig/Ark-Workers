@@ -1,5 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
-import { fetchSpaces } from '../api/spaces.js';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { fetchSpaces, createSpace } from '../api/spaces.js';
+import { queryClient } from '../queryClient.js';
 
 /**
  * Only ever returns spaces SpacePolicy already scoped to this user —
@@ -11,5 +12,12 @@ export function useSpaces() {
   return useQuery({
     queryKey: ['spaces'],
     queryFn: fetchSpaces,
+  });
+}
+
+export function useCreateSpace() {
+  return useMutation({
+    mutationFn: createSpace,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['spaces'] }),
   });
 }

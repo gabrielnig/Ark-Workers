@@ -1,8 +1,9 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import AppShell from '../components/AppShell.jsx';
-import { useSpaces } from '../hooks/useSpaces.js';
+import { useSpaces, useCreateSpace } from '../hooks/useSpaces.js';
 import { useAssets } from '../hooks/useAssets.js';
+import { useCurrentUser } from '../hooks/useCurrentUser.js';
 import { imageForAssetType, DEFAULT_SPACE_IMAGE } from '../lib/assetTypeImages.js';
 import './SpacesScreen.css';
 
@@ -19,6 +20,12 @@ export default function SpacesScreen() {
 
   const { data: spaces, isLoading: spacesLoading } = useSpaces();
   const { data: assets, isLoading: assetsLoading } = useAssets();
+  const { data: currentUser } = useCurrentUser();
+  const createSpace = useCreateSpace();
+
+  const [showForm, setShowForm] = useState(false);
+  const [name, setName] = useState('');
+  const [isRestricted, setIsRestricted] = useState(false);
 
   const currentSpace = useMemo(
     () => spaces?.find((s) => s.id === currentSpaceId) ?? null,
@@ -48,6 +55,21 @@ export default function SpacesScreen() {
 
   const isLoading = spacesLoading || assetsLoading;
 
+  function handleCreateSpace(e) {
+    e.preventDefault();
+    if (!name.trim()) return;
+    createSpace.mutate(
+      { name: name.trim(), parent_space_id: currentSpaceId, is_restricted: isRestricted },
+      {
+        onSuccess: () => {
+          setName('');
+          setIsRestricted(false);
+          setShowForm(false);
+        },
+      }
+    );
+  }
+
   return (
     <AppShell>
       <div className="spaces-screen">
@@ -67,15 +89,76 @@ export default function SpacesScreen() {
           </div>
         )}
 
-        <h1 className="spaces-title">
-          {currentSpace ? currentSpace.name : 'Spaces'}
-          {currentSpace?.is_restricted && <span className="plum-badge">Restricted</span>}
-        </h1>
-        <p className="spaces-sub">
-          {currentSpace
-            ? 'Only staff with an explicit access grant can view this space\u2019s assets and tasks.'
-            : 'Everything the church manages, organized by physical location.'}
-        </p>
+        <div className="spaces-header-row">
+          <div>
+            <h1 className="spaces-title">
+              {currentSpace ? currentSpace.name : 'Spaces'}
+              {currentSpace?.is_restricted && <span className="plum-badge">Restricted</span>}
+            </h1>
+            <p className="spaces-sub">
+              {currentSpace
+                ? 'Only staff with an explicit access grant can view this space\u2019s assets and tasks.'
+                : 'Everything the church manages, organized by physical location.'}
+            </p>
+          </div>
+
+          {/* can_manage mirrors SpacePolicy::create() exactly (admin OR a
+              grants_management department role) - not just is_admin, so a
+              manager sees this too, not only an admin. */}
+          {currentUser?.can_manage && !showForm && (
+            <button className="btn-add-space" onClick={() => setShowForm(true)}>
+              + Add a Space
+            </button>
+          )}
+        </div>
+
+        {showForm && (
+          <form className="add-space-form" onSubmit={handleCreateSpace}>
+            <label className="field-label" htmlFor="new-space-name">
+              {currentSpace ? `New sub-space of ${currentSpace.name}` : 'New top-level Space'}
+            </label>
+            <input
+              id="new-space-name"
+              className="text-input"
+              type="text"
+              placeholder="Space name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              autoFocus
+            />
+            <label className="dept-check-row" style={{ padding: '0 0 14px' }}>
+              <input
+                type="checkbox"
+                checked={isRestricted}
+                onChange={(e) => setIsRestricted(e.target.checked)}
+              />
+              Restricted (only staff with an explicit access grant can see it)
+            </label>
+
+            {createSpace.isError && (
+              <div className="form-error">
+                {createSpace.error?.body?.message || 'Could not create the space. Please try again.'}
+              </div>
+            )}
+
+            <div className="add-space-actions">
+              <button type="submit" className="btn-primary" disabled={createSpace.isPending || !name.trim()}>
+                {createSpace.isPending ? 'Creating\u2026' : 'Create'}
+              </button>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => {
+                  setShowForm(false);
+                  setName('');
+                  setIsRestricted(false);
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        )}
 
         {isLoading && (
           <div className="space-grid" aria-hidden="true">

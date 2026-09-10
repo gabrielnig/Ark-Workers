@@ -38,6 +38,47 @@
   gap: 8px;
 }
 
+.spaces-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.btn-add-space {
+  font-family: var(--font-family-body);
+  font-weight: 700;
+  font-size: 13.5px;
+  color: #fff;
+  background: linear-gradient(0deg, var(--color-moss-900) 0%, var(--color-moss-600) 100%);
+  border: none;
+  border-radius: 16px;
+  padding: 10px 16px;
+  min-height: 44px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.add-space-form {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.add-space-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.add-space-actions .btn-primary,
+.add-space-actions .btn-secondary {
+  width: auto;
+  padding: 0 18px;
+}
+
 .spaces-sub {
   font-family: var(--font-family-body);
   font-size: 14px;

@@ -26,7 +26,18 @@ Route::post('/invites/{token}/activate', [InviteController::class, 'activate'])
     ->middleware('throttle:10,1');
 
 Route::get('/user', function (Request $request) {
-    return $request->user();
+    $user = $request->user();
+
+    // can_manage is computed (hasManagementPermission checks is_admin OR a
+    // grants_management department role), not a plain column, so it does
+    // not appear in default model serialization. Appended here explicitly
+    // since the frontend needs it to decide whether to show management
+    // actions (e.g. "Add a Space") rather than showing them to everyone
+    // and letting most requests 403.
+    return response()->json([
+        ...$user->toArray(),
+        'can_manage' => $user->hasManagementPermission(),
+    ]);
 })->middleware('auth:sanctum');
 
 Route::middleware('auth:sanctum')->group(function () {
