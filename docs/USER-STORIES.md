@@ -355,28 +355,32 @@ geometry, not a spinner, and the empty state offers "Clear filters" as
 a real action rather than a dead sentence when a search/filter
 combination matches nothing.
 
-### 5.2 Grant a specific person access to a restricted Space **[Not built]**
+### 5.2 Grant a specific person access to a restricted Space **[Built]**
 As an admin, I want to grant one named person (e.g. the specific
 cleaner who services the Prophet's Quarters kitchen) access to a
 restricted Space, without promoting them to Admin or exposing the
 Space to anyone else, so that the "dedicated staff, not the general
 crew" pattern from the PRD is actually usable.
 
-**Not built. This is currently the most consequential gap in the
-whole restricted-space feature.** The `space_access_grants` table
-exists and `SpacePolicy` checks it correctly, but there is no screen
-for an Admin to create a grant. Practically, this means a restricted
-Space, once marked restricted, is unreachable by anyone except an
-Admin, permanently, until this is built. Flagged as the top item in
-`BUILD-PLAN.md`'s remaining Phase 1 work.
+**How it works today:** viewing a restricted Space as an admin shows
+an "Access Grants" panel. Searching by name or email (a minimal,
+admin-only user lookup, not the full staff directory from §4.7, which
+still doesn't exist) surfaces matching people with a "Grant access"
+button next to each, disabled if they already have one. This closes
+what was, until now, the single biggest practical gap in the whole
+restricted-space feature: a restricted Space was previously
+unreachable by anyone except an Admin, permanently, since there was no
+way to create the exception.
 
-### 5.3 Revoke a restricted-space access grant **[Not built]**
+### 5.3 Revoke a restricted-space access grant **[Built]**
 As an admin, I want to remove someone's access to a restricted Space
 (they changed roles, left that duty, etc.), so that access stays
 current, not permanent by accident.
 
-**Not built**, same gap as §5.2, this is the other half of the same
-missing screen.
+**How it works today:** the same Access Grants panel lists everyone
+currently granted access, who granted it, and a Revoke button per row.
+Revoking immediately removes that person's ability to see the Space,
+enforced server-side (`SpacePolicy`), not just hidden from the list.
 
 ### 5.4 Create and manage Departments **[Not built]**
 As an admin, I want to add, rename, or remove a Department (e.g. add
