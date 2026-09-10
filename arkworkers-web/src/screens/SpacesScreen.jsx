@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import AppShell from '../components/AppShell.jsx';
 import AccessGrantsPanel from '../components/AccessGrantsPanel.jsx';
-import { useSpaces, useCreateSpace } from '../hooks/useSpaces.js';
+import { useSpaces, useCreateSpace, useUpdateSpace } from '../hooks/useSpaces.js';
 import { useAssets, useCreateAsset } from '../hooks/useAssets.js';
 import { useAssetTypes, useCreateAssetType } from '../hooks/useAssetTypes.js';
 import { useCurrentUser } from '../hooks/useCurrentUser.js';
@@ -25,12 +25,17 @@ export default function SpacesScreen() {
   const { data: assetTypes } = useAssetTypes();
   const { data: currentUser } = useCurrentUser();
   const createSpace = useCreateSpace();
+  const updateSpace = useUpdateSpace();
   const createAsset = useCreateAsset();
   const createAssetType = useCreateAssetType();
 
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState('');
   const [isRestricted, setIsRestricted] = useState(false);
+
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editIsRestricted, setEditIsRestricted] = useState(false);
 
   const [showAssetForm, setShowAssetForm] = useState(false);
   const [assetName, setAssetName] = useState('');
@@ -105,6 +110,22 @@ export default function SpacesScreen() {
     );
   }
 
+  function openEditForm() {
+    if (!currentSpace) return;
+    setEditName(currentSpace.name);
+    setEditIsRestricted(currentSpace.is_restricted);
+    setShowEditForm(true);
+  }
+
+  function handleUpdateSpace(e) {
+    e.preventDefault();
+    if (!editName.trim() || !currentSpaceId) return;
+    updateSpace.mutate(
+      { spaceId: currentSpaceId, name: editName.trim(), is_restricted: editIsRestricted },
+      { onSuccess: () => setShowEditForm(false) }
+    );
+  }
+
   function handleCreateAsset(e) {
     e.preventDefault();
     if (!assetName.trim() || !assetTypeId || !currentSpaceId) return;
@@ -160,6 +181,11 @@ export default function SpacesScreen() {
             <h1 className="spaces-title">
               {currentSpace ? currentSpace.name : 'Spaces'}
               {currentSpace?.is_restricted && <span className="plum-badge">Restricted</span>}
+              {currentSpace && currentUser?.can_manage && !showEditForm && (
+                <button className="edit-space-link" onClick={openEditForm} aria-label="Edit space">
+                  Edit
+                </button>
+              )}
             </h1>
             <p className="spaces-sub">
               {currentSpace
@@ -171,7 +197,7 @@ export default function SpacesScreen() {
           {/* can_manage mirrors SpacePolicy::create() exactly (admin OR a
               grants_management department role) - not just is_admin, so a
               manager sees this too, not only an admin. */}
-          {currentUser?.can_manage && !showForm && !showAssetForm && (
+          {currentUser?.can_manage && !showForm && !showAssetForm && !showEditForm && (
             <div className="spaces-header-actions">
               <button className="btn-add-space" onClick={() => setShowForm(true)}>
                 + Add a Space
@@ -187,6 +213,43 @@ export default function SpacesScreen() {
             </div>
           )}
         </div>
+
+        {showEditForm && (
+          <form className="add-space-form" onSubmit={handleUpdateSpace}>
+            <label className="field-label" htmlFor="edit-space-name">Rename this Space</label>
+            <input
+              id="edit-space-name"
+              className="text-input"
+              type="text"
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              autoFocus
+            />
+            <label className="dept-check-row" style={{ padding: '0 0 14px' }}>
+              <input
+                type="checkbox"
+                checked={editIsRestricted}
+                onChange={(e) => setEditIsRestricted(e.target.checked)}
+              />
+              Restricted (only staff with an explicit access grant can see it)
+            </label>
+
+            {updateSpace.isError && (
+              <div className="form-error">
+                {updateSpace.error?.body?.message || 'Could not save changes. Please try again.'}
+              </div>
+            )}
+
+            <div className="add-space-actions">
+              <button type="submit" className="btn-primary" disabled={updateSpace.isPending || !editName.trim()}>
+                {updateSpace.isPending ? 'Saving...' : 'Save'}
+              </button>
+              <button type="button" className="btn-secondary" onClick={() => setShowEditForm(false)}>
+                Cancel
+              </button>
+            </div>
+          </form>
+        )}
 
         {currentSpace?.is_restricted && currentUser?.is_admin && (
           <AccessGrantsPanel spaceId={currentSpace.id} />

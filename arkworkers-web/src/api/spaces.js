@@ -12,3 +12,11 @@ export async function createSpace({ name, parent_space_id, is_restricted }) {
   });
   return data;
 }
+
+export async function updateSpace(spaceId, { name, is_restricted }) {
+  const { data } = await apiFetch(`/api/spaces/${spaceId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ name, is_restricted }),
+  });
+  return data;
+}

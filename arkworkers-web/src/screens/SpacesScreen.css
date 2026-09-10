@@ -38,6 +38,21 @@
   gap: 8px;
 }
 
+.edit-space-link {
+  font-family: var(--font-family-body);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-interactive);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.edit-space-link:hover {
+  text-decoration: underline;
+}
+
 .spaces-header-row {
   display: flex;
   justify-content: space-between;

@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { fetchSpaces, createSpace } from '../api/spaces.js';
+import { fetchSpaces, createSpace, updateSpace } from '../api/spaces.js';
 import { queryClient } from '../queryClient.js';
 
 /**
@@ -18,6 +18,13 @@ export function useSpaces() {
 export function useCreateSpace() {
   return useMutation({
     mutationFn: createSpace,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['spaces'] }),
+  });
+}
+
+export function useUpdateSpace() {
+  return useMutation({
+    mutationFn: ({ spaceId, ...changes }) => updateSpace(spaceId, changes),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['spaces'] }),
   });
 }

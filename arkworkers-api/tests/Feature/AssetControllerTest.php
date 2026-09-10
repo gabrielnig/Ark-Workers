@@ -6,6 +6,7 @@ use App\Models\Asset;
 use App\Models\AssetType;
 use App\Models\Routine;
 use App\Models\Space;
+use App\Models\Task;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -122,5 +123,29 @@ class AssetControllerTest extends TestCase
         $this->artisan('model:prune', ['--model' => [Asset::class]]);
 
         $this->assertDatabaseMissing('assets', ['id' => $asset->id]);
+    }
+
+    public function test_pruning_an_asset_does_not_hard_delete_its_routines_or_tasks(): void
+    {
+        // Regression test for a real bug: routines.asset_id used to
+        // cascadeOnDelete, and Asset::prunable() results in a genuine
+        // forceDelete() (a real row deletion), which fires the FK
+        // constraint at the database level, bypassing SoftDeletes
+        // entirely. That was silently hard-deleting the asset's
+        // routines, which then cascaded again onto tasks via
+        // routines.id's own cascade, reintroducing the exact
+        // history-loss problem already fixed for direct routine
+        // deletion. asset_id is now nullOnDelete instead.
+        $asset = Asset::factory()->create();
+        $routine = Routine::factory()->create(['asset_id' => $asset->id]);
+        $task = Task::factory()->create(['routine_id' => $routine->id]);
+
+        $asset->decommission();
+        $asset->forceFill(['decommissioned_at' => now()->subDays(31)])->save();
+        $this->artisan('model:prune', ['--model' => [Asset::class]]);
+
+        $this->assertDatabaseMissing('assets', ['id' => $asset->id]);
+        $this->assertDatabaseHas('routines', ['id' => $routine->id, 'asset_id' => null]);
+        $this->assertDatabaseHas('tasks', ['id' => $task->id]);
     }
 }

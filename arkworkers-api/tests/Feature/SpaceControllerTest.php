@@ -69,6 +69,30 @@ class SpaceControllerTest extends TestCase
         $this->getJson('/api/spaces')->assertUnauthorized();
     }
 
+    public function test_a_manager_can_rename_a_space_and_toggle_its_restricted_flag(): void
+    {
+        $space = Space::factory()->create(['name' => 'Old Name', 'is_restricted' => false]);
+        $manager = $this->managerUser();
+
+        $this->actingAs($manager, 'sanctum')
+            ->patchJson("/api/spaces/{$space->id}", ['name' => 'New Name', 'is_restricted' => true])
+            ->assertOk();
+
+        $this->assertDatabaseHas('spaces', ['id' => $space->id, 'name' => 'New Name', 'is_restricted' => true]);
+    }
+
+    public function test_staff_cannot_rename_a_space(): void
+    {
+        $space = Space::factory()->create(['name' => 'Old Name']);
+        $cleaner = $this->staffUser();
+
+        $this->actingAs($cleaner, 'sanctum')
+            ->patchJson("/api/spaces/{$space->id}", ['name' => 'New Name'])
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('spaces', ['id' => $space->id, 'name' => 'Old Name']);
+    }
+
     public function test_deleting_a_space_that_still_has_assets_returns_a_clean_conflict_not_a_server_error(): void
     {
         $space = Space::factory()->create();
