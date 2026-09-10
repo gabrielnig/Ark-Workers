@@ -111,11 +111,18 @@ before starting anything new.
       default image. Gated by the new `RequireManager` component
       (mirrors `RequireAdmin` but checks `can_manage`, not `is_admin`,
       since managers can do this too per the policy).
-- [ ] **Restricted-space access grant admin UI.** `space_access_grants`
-      table exists, `SpacePolicy` checks it (`ARCHITECTURE.md` §4), but
-      there's no screen for an Admin to actually grant/revoke access to
-      a restricted Space. Right now a restricted Space, once created,
-      has no visible way to authorize anyone to see it.
+- [x] **Restricted-space access grant admin UI, done 2026-09-10.**
+      `SpaceAccessGrantController` (index/store/destroy) plus a
+      minimal `UserController` for the grant-search picker, both
+      admin only, matching `User::bypassesSpaceRestrictions()`, not
+      `hasManagementPermission()`. Frontend is `AccessGrantsPanel.jsx`,
+      shown only when viewing a restricted space as an admin: search,
+      grant, revoke. A real bug was caught and fixed before shipping:
+      `grantedBy()` snake-cases to `granted_by`, identical to the FK
+      column name, so naive serialization silently overwrote the
+      integer id with the nested user object, fixed with an explicit
+      response shape and a regression test. 14 new backend tests, full
+      suite green (145 passed).
 
 ---
 
