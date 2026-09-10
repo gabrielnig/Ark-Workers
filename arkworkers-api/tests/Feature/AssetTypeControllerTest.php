@@ -42,4 +42,16 @@ class AssetTypeControllerTest extends TestCase
             ->postJson('/api/asset-types', ['name' => 'Generator'])
             ->assertForbidden();
     }
+
+    public function test_a_manager_with_grants_management_can_also_create_an_asset_type(): void
+    {
+        // The frontend gates "Add an Asset Type" on can_manage, which is
+        // admin OR a grants_management department role, not admin only.
+        // This confirms the backend actually agrees with that.
+        $manager = $this->managerUser();
+
+        $this->actingAs($manager, 'sanctum')
+            ->postJson('/api/asset-types', ['name' => 'Projector'])
+            ->assertCreated();
+    }
 }

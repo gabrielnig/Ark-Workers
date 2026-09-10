@@ -30,6 +30,19 @@ const CATEGORY_IMAGES = {
   furniture: wm('Office with desk and chair at the Physiology Department Wellcome L0022518.jpg'),
 };
 
+/**
+ * Curated dropdown options for the Asset Type creation form, kept in
+ * this file (not duplicated in the screen component) so the labels
+ * shown to an admin and the keys imageForAssetType actually matches
+ * against can never drift apart.
+ */
+export const KNOWN_CATEGORIES = [
+  { value: 'HVAC', label: 'HVAC / air conditioning' },
+  { value: 'Audio', label: 'Audio / sound equipment' },
+  { value: 'Vehicle', label: 'Vehicle' },
+  { value: 'Furniture', label: 'Furniture' },
+];
+
 export function imageForAssetType(category) {
   if (!category) return DEFAULT_ASSET_IMAGE;
 

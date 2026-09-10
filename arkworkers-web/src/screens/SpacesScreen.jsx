@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import AppShell from '../components/AppShell.jsx';
 import { useSpaces, useCreateSpace } from '../hooks/useSpaces.js';
 import { useAssets, useCreateAsset } from '../hooks/useAssets.js';
-import { useAssetTypes } from '../hooks/useAssetTypes.js';
+import { useAssetTypes, useCreateAssetType } from '../hooks/useAssetTypes.js';
 import { useCurrentUser } from '../hooks/useCurrentUser.js';
-import { imageForAssetType, DEFAULT_SPACE_IMAGE } from '../lib/assetTypeImages.js';
+import { imageForAssetType, DEFAULT_SPACE_IMAGE, KNOWN_CATEGORIES } from '../lib/assetTypeImages.js';
 import './SpacesScreen.css';
 
 /**
@@ -25,6 +25,7 @@ export default function SpacesScreen() {
   const { data: currentUser } = useCurrentUser();
   const createSpace = useCreateSpace();
   const createAsset = useCreateAsset();
+  const createAssetType = useCreateAssetType();
 
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState('');
@@ -33,6 +34,9 @@ export default function SpacesScreen() {
   const [showAssetForm, setShowAssetForm] = useState(false);
   const [assetName, setAssetName] = useState('');
   const [assetTypeId, setAssetTypeId] = useState('');
+  const [showQuickType, setShowQuickType] = useState(false);
+  const [quickTypeName, setQuickTypeName] = useState('');
+  const [quickTypeCategory, setQuickTypeCategory] = useState('');
 
   const currentSpace = useMemo(
     () => spaces?.find((s) => s.id === currentSpaceId) ?? null,
@@ -62,6 +66,11 @@ export default function SpacesScreen() {
 
   const isLoading = spacesLoading || assetsLoading;
 
+  const existingAssetNames = useMemo(
+    () => Array.from(new Set((assets ?? []).map((a) => a.name))).sort(),
+    [assets]
+  );
+
   function handleCreateSpace(e) {
     e.preventDefault();
     if (!name.trim()) return;
@@ -87,6 +96,22 @@ export default function SpacesScreen() {
           setAssetName('');
           setAssetTypeId('');
           setShowAssetForm(false);
+        },
+      }
+    );
+  }
+
+  function handleQuickCreateType(e) {
+    e.preventDefault();
+    if (!quickTypeName.trim()) return;
+    createAssetType.mutate(
+      { name: quickTypeName.trim(), category: quickTypeCategory },
+      {
+        onSuccess: (newType) => {
+          setAssetTypeId(String(newType.id));
+          setQuickTypeName('');
+          setQuickTypeCategory('');
+          setShowQuickType(false);
         },
       }
     );
@@ -153,30 +178,87 @@ export default function SpacesScreen() {
               id="new-asset-name"
               className="text-input"
               type="text"
+              list="existing-asset-names"
               placeholder="Asset name (e.g. AC Unit - Wall Mount)"
               value={assetName}
               onChange={(e) => setAssetName(e.target.value)}
               autoFocus
             />
+            <datalist id="existing-asset-names">
+              {existingAssetNames.map((n) => (
+                <option key={n} value={n} />
+              ))}
+            </datalist>
 
-            {assetTypes?.length > 0 ? (
+            {assetTypes?.length > 0 && !showQuickType && (
               <select
                 className="text-input"
                 value={assetTypeId}
-                onChange={(e) => setAssetTypeId(e.target.value)}
+                onChange={(e) => {
+                  if (e.target.value === '__new__') {
+                    setShowQuickType(true);
+                    return;
+                  }
+                  setAssetTypeId(e.target.value);
+                }}
               >
-                <option value="">Select an asset type…</option>
+                <option value="">Select an asset type...</option>
                 {assetTypes.map((t) => (
                   <option key={t.id} value={t.id}>{t.name}</option>
                 ))}
+                <option value="__new__">+ New asset type...</option>
               </select>
-            ) : (
-              <p className="form-hint">
-                No asset types exist yet. An admin needs to add at least one
-                asset type before an asset can be created. That's not
-                built yet either.
-              </p>
             )}
+
+            {(!assetTypes?.length || showQuickType) && (
+              <div className="quick-type-panel">
+                <label className="field-label" htmlFor="quick-type-name">
+                  {assetTypes?.length ? 'New asset type' : 'No asset types exist yet, add the first one'}
+                </label>
+                <input
+                  id="quick-type-name"
+                  className="text-input"
+                  type="text"
+                  placeholder="e.g. Generator, Projector, Piano"
+                  value={quickTypeName}
+                  onChange={(e) => setQuickTypeName(e.target.value)}
+                />
+                <select
+                  className="text-input"
+                  value={quickTypeCategory}
+                  onChange={(e) => setQuickTypeCategory(e.target.value)}
+                >
+                  <option value="">Category: none</option>
+                  {KNOWN_CATEGORIES.map((c) => (
+                    <option key={c.value} value={c.value}>{c.label}</option>
+                  ))}
+                </select>
+
+                {createAssetType.isError && (
+                  <div className="form-error">
+                    {createAssetType.error?.body?.message || 'Could not create the asset type. Please try again.'}
+                  </div>
+                )}
+
+                <div className="add-space-actions">
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    onClick={handleQuickCreateType}
+                    disabled={createAssetType.isPending || !quickTypeName.trim()}
+                  >
+                    {createAssetType.isPending ? 'Adding...' : 'Add type'}
+                  </button>
+                  {assetTypes?.length > 0 && (
+                    <button type="button" className="btn-secondary" onClick={() => setShowQuickType(false)}>
+                      Cancel
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <Link to="/admin/asset-types" className="manage-types-link">Manage all asset types</Link>
 
             {createAsset.isError && (
               <div className="form-error">
@@ -190,7 +272,7 @@ export default function SpacesScreen() {
                 className="btn-primary"
                 disabled={createAsset.isPending || !assetName.trim() || !assetTypeId}
               >
-                {createAsset.isPending ? 'Creating\u2026' : 'Create'}
+                {createAsset.isPending ? 'Creating...' : 'Create'}
               </button>
               <button
                 type="button"
@@ -199,6 +281,7 @@ export default function SpacesScreen() {
                   setShowAssetForm(false);
                   setAssetName('');
                   setAssetTypeId('');
+                  setShowQuickType(false);
                 }}
               >
                 Cancel
