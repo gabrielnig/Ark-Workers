@@ -46,6 +46,12 @@
   flex-wrap: wrap;
 }
 
+.spaces-header-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .btn-add-space {
   font-family: var(--font-family-body);
   font-weight: 700;
@@ -58,6 +64,23 @@
   min-height: 44px;
   cursor: pointer;
   flex-shrink: 0;
+}
+
+.btn-add-space.secondary {
+  background: var(--color-surface);
+  color: var(--color-moss-600);
+  border: 1px solid var(--color-moss-600);
+}
+
+.form-hint {
+  font-family: var(--font-family-body);
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin: 0 0 14px;
 }
 
 .add-space-form {

@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import AppShell from '../components/AppShell.jsx';
 import { useSpaces, useCreateSpace } from '../hooks/useSpaces.js';
-import { useAssets } from '../hooks/useAssets.js';
+import { useAssets, useCreateAsset } from '../hooks/useAssets.js';
+import { useAssetTypes } from '../hooks/useAssetTypes.js';
 import { useCurrentUser } from '../hooks/useCurrentUser.js';
 import { imageForAssetType, DEFAULT_SPACE_IMAGE } from '../lib/assetTypeImages.js';
 import './SpacesScreen.css';
@@ -20,12 +21,18 @@ export default function SpacesScreen() {
 
   const { data: spaces, isLoading: spacesLoading } = useSpaces();
   const { data: assets, isLoading: assetsLoading } = useAssets();
+  const { data: assetTypes } = useAssetTypes();
   const { data: currentUser } = useCurrentUser();
   const createSpace = useCreateSpace();
+  const createAsset = useCreateAsset();
 
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState('');
   const [isRestricted, setIsRestricted] = useState(false);
+
+  const [showAssetForm, setShowAssetForm] = useState(false);
+  const [assetName, setAssetName] = useState('');
+  const [assetTypeId, setAssetTypeId] = useState('');
 
   const currentSpace = useMemo(
     () => spaces?.find((s) => s.id === currentSpaceId) ?? null,
@@ -70,6 +77,21 @@ export default function SpacesScreen() {
     );
   }
 
+  function handleCreateAsset(e) {
+    e.preventDefault();
+    if (!assetName.trim() || !assetTypeId || !currentSpaceId) return;
+    createAsset.mutate(
+      { name: assetName.trim(), asset_type_id: Number(assetTypeId), space_id: currentSpaceId },
+      {
+        onSuccess: () => {
+          setAssetName('');
+          setAssetTypeId('');
+          setShowAssetForm(false);
+        },
+      }
+    );
+  }
+
   return (
     <AppShell>
       <div className="spaces-screen">
@@ -105,12 +127,85 @@ export default function SpacesScreen() {
           {/* can_manage mirrors SpacePolicy::create() exactly (admin OR a
               grants_management department role) - not just is_admin, so a
               manager sees this too, not only an admin. */}
-          {currentUser?.can_manage && !showForm && (
-            <button className="btn-add-space" onClick={() => setShowForm(true)}>
-              + Add a Space
-            </button>
+          {currentUser?.can_manage && !showForm && !showAssetForm && (
+            <div className="spaces-header-actions">
+              <button className="btn-add-space" onClick={() => setShowForm(true)}>
+                + Add a Space
+              </button>
+              {/* Assets require a real space_id, no top-level "unassigned"
+                  bucket in the schema, so this only makes sense once
+                  you're actually inside a space. */}
+              {currentSpace && (
+                <button className="btn-add-space secondary" onClick={() => setShowAssetForm(true)}>
+                  + Add an Asset
+                </button>
+              )}
+            </div>
           )}
         </div>
+
+        {showAssetForm && (
+          <form className="add-space-form" onSubmit={handleCreateAsset}>
+            <label className="field-label" htmlFor="new-asset-name">
+              New asset in {currentSpace?.name}
+            </label>
+            <input
+              id="new-asset-name"
+              className="text-input"
+              type="text"
+              placeholder="Asset name (e.g. AC Unit - Wall Mount)"
+              value={assetName}
+              onChange={(e) => setAssetName(e.target.value)}
+              autoFocus
+            />
+
+            {assetTypes?.length > 0 ? (
+              <select
+                className="text-input"
+                value={assetTypeId}
+                onChange={(e) => setAssetTypeId(e.target.value)}
+              >
+                <option value="">Select an asset type…</option>
+                {assetTypes.map((t) => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+              </select>
+            ) : (
+              <p className="form-hint">
+                No asset types exist yet. An admin needs to add at least one
+                asset type before an asset can be created — that's not
+                built yet either.
+              </p>
+            )}
+
+            {createAsset.isError && (
+              <div className="form-error">
+                {createAsset.error?.body?.message || 'Could not create the asset. Please try again.'}
+              </div>
+            )}
+
+            <div className="add-space-actions">
+              <button
+                type="submit"
+                className="btn-primary"
+                disabled={createAsset.isPending || !assetName.trim() || !assetTypeId}
+              >
+                {createAsset.isPending ? 'Creating\u2026' : 'Create'}
+              </button>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => {
+                  setShowAssetForm(false);
+                  setAssetName('');
+                  setAssetTypeId('');
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        )}
 
         {showForm && (
           <form className="add-space-form" onSubmit={handleCreateSpace}>
