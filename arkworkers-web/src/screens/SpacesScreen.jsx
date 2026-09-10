@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import AppShell from '../components/AppShell.jsx';
+import AccessGrantsPanel from '../components/AccessGrantsPanel.jsx';
 import { useSpaces, useCreateSpace } from '../hooks/useSpaces.js';
 import { useAssets, useCreateAsset } from '../hooks/useAssets.js';
 import { useAssetTypes, useCreateAssetType } from '../hooks/useAssetTypes.js';
@@ -186,6 +187,10 @@ export default function SpacesScreen() {
             </div>
           )}
         </div>
+
+        {currentSpace?.is_restricted && currentUser?.is_admin && (
+          <AccessGrantsPanel spaceId={currentSpace.id} />
+        )}
 
         {showAssetForm && (
           <form className="add-space-form" onSubmit={handleCreateAsset}>

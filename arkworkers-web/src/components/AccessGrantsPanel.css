@@ -1,0 +1,73 @@
+.access-grants-panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.access-grants-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.access-grants-header h3 {
+  font-family: var(--font-family-display);
+  font-size: 15px;
+  margin: 0;
+}
+
+.grant-search {
+  margin-bottom: 14px;
+}
+
+.grant-search .text-input {
+  margin-bottom: 8px;
+}
+
+.grant-search-status {
+  font-family: var(--font-family-body);
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  padding: 6px 0;
+}
+
+.grant-search-results {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.grant-search-row,
+.grant-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 8px 12px;
+}
+
+.grant-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.grant-user-name {
+  font-family: var(--font-family-body);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.grant-user-email {
+  font-family: var(--font-family-body);
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
