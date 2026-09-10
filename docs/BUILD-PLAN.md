@@ -60,18 +60,14 @@ before starting anything new.
         reachable, not just for a 30-day grace period. `Task::routine()`
         loads `withTrashed()` so history still shows the routine's name
         after it's deleted.
-  - [ ] **Related, separate, not yet fixed: Asset pruning cascades through
-        Routines to Tasks.** `routines.asset_id` still cascades on
-        delete, and `Asset` IS `Prunable` (permanently removed 30 days
-        after decommission). When a decommissioned Asset is actually
-        pruned, its Routines get hard-deleted via cascade, which then
-        hard-deletes their Tasks too via `routines.id`'s cascade onto
-        `tasks.id` — silently reintroducing the exact history-loss
-        problem just fixed above, just via a different path. Not fixed
-        in this pass since it's a separate schema question (does
-        Task/proof history need to outlive Asset pruning too? Almost
-        certainly yes, for the same reason routines needed it) — flagged
-        for a decision, not silently resolved by guessing.
+  - [x] **Decided and fixed, 2026-09-10: Asset pruning no longer
+        cascades through Routines to Tasks.** `routines.asset_id`
+        changed from `cascadeOnDelete` to `nullOnDelete`. A pruned
+        Asset's Routines now survive (asset_id set to null instead of
+        the row being hard-deleted), so their Task/proof history
+        outlives Asset pruning the same way it already outlives direct
+        Routine deletion. Regression test confirms a pruned asset's
+        routine and that routine's task both remain intact.
   - [ ] **Frontend still not built.** Tasks are still created directly
         (`POST /tasks`), bypassing the routine-schedule model
         entirely — there's no UI yet for an Admin to actually define a
@@ -83,7 +79,9 @@ before starting anything new.
       restricted badge at every level, real (fixed, not random)
       photo thumbnails per Asset Type category. Enabled in `AppShell.jsx`
       nav alongside My Work; fixed a latent sidebar "active state" bug
-      this surfaced along the way (see commit `a0f8d80`).
+      this surfaced along the way (see commit `a0f8d80`). Rename/edit
+      (name + restricted flag) added later the same day, `update()`
+      had existed on the backend with zero UI ever calling it.
   - [ ] **No task-level drill-down yet.** §5's full spec is Space →
         Asset → Asset's routines/tasks. This screen stops at the Asset
         list — clicking into an asset does nothing yet, since there's
