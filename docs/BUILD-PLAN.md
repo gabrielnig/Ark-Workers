@@ -78,12 +78,17 @@ before starting anything new.
         recurring schedule through the app. This is still required
         before Routines is genuinely usable, the backend existing
         doesn't mean the PRD requirement is met yet.
-- [ ] **Spaces screen (frontend).** `SpaceController` is a full
-      `apiResource` already (`GET/POST/PATCH/DELETE /spaces`) — the
-      backend is done. Frontend has zero UI; "Spaces" is a disabled
-      sidebar placeholder in `AppShell.jsx`. This blocks the entire
-      Space → Asset → Task drill-down nav pattern locked in
-      `DESIGN-SYSTEM.md` §5, which nothing currently uses.
+- [x] **Spaces screen — done 2026-09-10.** `SpacesScreen.jsx` live at
+      `/spaces`, wired to the real backend. Breadcrumb drill-down,
+      restricted badge at every level, real (fixed, not random)
+      photo thumbnails per Asset Type category. Enabled in `AppShell.jsx`
+      nav alongside My Work; fixed a latent sidebar "active state" bug
+      this surfaced along the way (see commit `a0f8d80`).
+  - [ ] **No task-level drill-down yet.** §5's full spec is Space →
+        Asset → Asset's routines/tasks. This screen stops at the Asset
+        list — clicking into an asset does nothing yet, since there's
+        no Asset detail screen (deliberately not linked to a dead
+        route). That's the next item below.
 - [ ] **Assets screen (frontend).** Same situation — `AssetController`
       is a full `apiResource`, no frontend at all.
 - [ ] **Asset Types admin screen (frontend).** Backend has
