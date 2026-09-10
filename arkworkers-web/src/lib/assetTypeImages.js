@@ -10,24 +10,28 @@
  * breaking. Nothing here blocks an admin from creating a new asset
  * type today.
  *
- * Images are real, openly licensed photos on Wikimedia Commons
- * (CC-BY-SA), chosen once and fixed here, not a random keyword feed,
- * so the same category always shows the same image.
+ * Images are real, openly licensed photos originally sourced from
+ * Wikimedia Commons (CC-BY-SA), downloaded once and served locally
+ * from /images/asset-types/ rather than hotlinked. The site's CSP
+ * (img-src 'self' data: blob:, see SECURITY.md) blocks loading images
+ * from any external domain, on purpose, so a hotlinked Wikimedia URL
+ * silently fails to load. Bundling the files locally is the actual
+ * fix, not loosening that header, since the header is a deliberate
+ * security control, not an oversight.
  */
 
-const wm = (filename, width = 150) =>
-  `https://commons.wikimedia.org/wiki/Special:FilePath/File:${filename.replaceAll(' ', '_')}?width=${width}`;
+const asset = (filename) => `/images/asset-types/${filename}`;
 
-export const DEFAULT_ASSET_IMAGE = wm('Empty classroom.jpg');
-export const DEFAULT_SPACE_IMAGE = wm('Cades Cove Missionary Baptist Church - October 2023 - Sarah Stierch 04.jpg', 200);
+export const DEFAULT_ASSET_IMAGE = asset('asset-default.jpg');
+export const DEFAULT_SPACE_IMAGE = asset('space-default.jpg');
 
 const CATEGORY_IMAGES = {
-  hvac: wm('Wall mount air conditioner.jpg'),
-  ac: wm('Wall mount air conditioner.jpg'),
-  audio: wm('ADT Mixing Console.jpg'),
-  sound: wm('ADT Mixing Console.jpg'),
-  vehicle: wm('Copenhagen parking triangle.jpg'),
-  furniture: wm('Office with desk and chair at the Physiology Department Wellcome L0022518.jpg'),
+  hvac: asset('hvac.jpg'),
+  ac: asset('hvac.jpg'),
+  audio: asset('audio.jpg'),
+  sound: asset('audio.jpg'),
+  vehicle: asset('vehicle.jpg'),
+  furniture: asset('furniture.jpg'),
 };
 
 /**

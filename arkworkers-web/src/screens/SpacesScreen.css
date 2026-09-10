@@ -188,6 +188,13 @@
   margin: 0;
 }
 
+.space-card-counts {
+  font-family: var(--font-family-body);
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin-top: 4px;
+}
+
 .space-thumb {
   width: 52px;
   height: 52px;

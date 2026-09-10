@@ -64,6 +64,24 @@ export default function SpacesScreen() {
     return trail;
   }, [currentSpace, spaces]);
 
+  const spaceCounts = useMemo(() => {
+    const counts = {};
+    (spaces ?? []).forEach((s) => {
+      counts[s.id] = { subSpaces: 0, assets: 0 };
+    });
+    (spaces ?? []).forEach((s) => {
+      if (s.parent_space_id != null && counts[s.parent_space_id]) {
+        counts[s.parent_space_id].subSpaces += 1;
+      }
+    });
+    (assets ?? []).forEach((a) => {
+      if (counts[a.space_id]) {
+        counts[a.space_id].assets += 1;
+      }
+    });
+    return counts;
+  }, [spaces, assets]);
+
   const isLoading = spacesLoading || assetsLoading;
 
   const existingAssetNames = useMemo(
@@ -353,17 +371,23 @@ export default function SpacesScreen() {
           <>
             <div className="section-label">Sub-spaces</div>
             <div className="space-grid">
-              {childSpaces.map((space) => (
-                <div key={space.id} className="space-card" onClick={() => navigate(`/spaces/${space.id}`)}>
-                  <div className="space-thumb">
-                    <img src={DEFAULT_SPACE_IMAGE} alt="" />
+              {childSpaces.map((space) => {
+                const counts = spaceCounts[space.id] ?? { subSpaces: 0, assets: 0 };
+                return (
+                  <div key={space.id} className="space-card" onClick={() => navigate(`/spaces/${space.id}`)}>
+                    <div className="space-thumb">
+                      <img src={DEFAULT_SPACE_IMAGE} alt="" />
+                    </div>
+                    <div className="space-card-top">
+                      <h3>{space.name}</h3>
+                      {space.is_restricted && <span className="plum-badge small">Restricted</span>}
+                    </div>
+                    <div className="space-card-counts">
+                      {counts.subSpaces} sub-space{counts.subSpaces === 1 ? '' : 's'} · {counts.assets} asset{counts.assets === 1 ? '' : 's'}
+                    </div>
                   </div>
-                  <div className="space-card-top">
-                    <h3>{space.name}</h3>
-                    {space.is_restricted && <span className="plum-badge small">Restricted</span>}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </>
         )}
