@@ -3,7 +3,7 @@
  * anything, since asset types are fully modular per PRD's "no code
  * changes" requirement) to a representative photo.
  *
- * This is a stopgap, not a real icon system — the actual icon-set
+ * This is a stopgap, not a real icon system. The actual icon-set
  * decision is still open (DESIGN-SYSTEM.md §8, BUILD-PLAN.md Phase 5).
  * A brand-new AssetType category that isn't in this list still works
  * correctly, it just falls back to DEFAULT_ASSET_IMAGE rather than
@@ -11,7 +11,7 @@
  * type today.
  *
  * Images are real, openly licensed photos on Wikimedia Commons
- * (CC-BY-SA), chosen once and fixed here — not a random/keyword feed,
+ * (CC-BY-SA), chosen once and fixed here, not a random keyword feed,
  * so the same category always shows the same image.
  */
 

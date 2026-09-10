@@ -91,8 +91,8 @@ class RoutineController extends Controller
     {
         $this->authorize('delete', $routine);
 
-        // Soft delete only (Routine uses SoftDeletes, not Prunable — see
-        // the model). This routine stops appearing in active listings
+        // Soft delete only, Routine uses SoftDeletes, not Prunable, see
+        // the model. This routine stops appearing in active listings
         // and can no longer generate new tasks, but every task and proof
         // it already produced stays fully intact and permanently
         // reachable, not just for a grace period the way a decommissioned

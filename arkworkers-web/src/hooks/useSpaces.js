@@ -3,7 +3,7 @@ import { fetchSpaces, createSpace } from '../api/spaces.js';
 import { queryClient } from '../queryClient.js';
 
 /**
- * Only ever returns spaces SpacePolicy already scoped to this user —
+ * Only ever returns spaces SpacePolicy already scoped to this user ,
  * a restricted space without a grant is excluded from the response
  * entirely, not just hidden client-side (SECURITY.md 4.2). Same "sync
  * as little as possible" rule as useTasks.

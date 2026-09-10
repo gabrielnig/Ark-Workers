@@ -173,7 +173,7 @@ export default function SpacesScreen() {
             ) : (
               <p className="form-hint">
                 No asset types exist yet. An admin needs to add at least one
-                asset type before an asset can be created — that's not
+                asset type before an asset can be created. That's not
                 built yet either.
               </p>
             )}

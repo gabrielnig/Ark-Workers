@@ -15,7 +15,7 @@ const NAV_ITEMS = [
  * those screens do not exist yet.
  *
  * My Work keeps the raised center bubble in the bottom nav regardless
- * of current page — that's the single highest-frequency primary
+ * of current page. That's the single highest-frequency primary
  * action (DESIGN-SYSTEM.md §5), not a "you are here" indicator. The
  * sidebar's filled/current state IS a "you are here" indicator, based
  * on the actual route, so two real routes don't both show as

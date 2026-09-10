@@ -249,8 +249,8 @@ class RoutineControllerTest extends TestCase
 
     public function test_a_deleted_routine_is_never_eligible_for_pruning(): void
     {
-        // Unlike Asset, Routine is soft-deleted only, never Prunable —
-        // task/proof history must stay reachable permanently, not just
+        // Unlike Asset, Routine is soft-deleted only, never Prunable.
+        // Task/proof history must stay reachable permanently, not just
         // for a grace period. model:prune should simply have nothing to
         // do for routines, not silently wipe them after some window.
         $routine = Routine::factory()->create();
