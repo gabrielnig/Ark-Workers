@@ -96,20 +96,21 @@ before starting anything new.
       same pattern as Space creation. Type is picked from a real
       `/api/asset-types` list, with an honest message (not a broken
       empty dropdown) if no asset types exist yet.
-  - [ ] **Blocked in practice until Asset Types exist.** The next item
-        below is a real dependency, not just a nice-to-have — until an
-        admin can create at least one Asset Type, this form has nothing
-        to put in its dropdown.
+  - [x] **No longer blocked.** Asset Types admin screen + inline
+        quick-create are done, see the item below.
   - [ ] **Still no Asset detail screen.** Clicking an asset row still
         does nothing (deliberately, see the Spaces entry above). Asset
         editing/decommissioning and the Asset → Routine/Task
         drill-down both depend on this screen existing.
-- [ ] **Asset Types admin screen (frontend).** Backend has
-      `GET/POST/PATCH /asset-types`, no UI. This is what lets Admins add
-      new Asset Types (PRD's "fully modular, no code changes" requirement)
-      — right now that requirement is unmet in practice even though the
-      API supports it. This is now the actual blocker on Asset creation
-      being usable end-to-end, not just a parallel gap.
+- [x] **Asset Types admin screen — done 2026-09-10.** `AssetTypesScreen.jsx`
+      at `/admin/asset-types` (list + create), plus inline quick-create
+      right on the Add Asset form itself so an admin never has to leave
+      the Spaces screen for the common case. Category is a curated
+      dropdown matching `assetTypeImages.js`'s known categories, with
+      an "Other" free-text fallback that still degrades safely to the
+      default image. Gated by the new `RequireManager` component
+      (mirrors `RequireAdmin` but checks `can_manage`, not `is_admin`,
+      since managers can do this too per the policy).
 - [ ] **Restricted-space access grant admin UI.** `space_access_grants`
       table exists, `SpacePolicy` checks it (`ARCHITECTURE.md` §4), but
       there's no screen for an Admin to actually grant/revoke access to
