@@ -88,19 +88,31 @@ relying on this deployment for anything beyond testing.
 
 **Decided:** simple git-pull based deploy, no CI/CD.
 
+**Ownership note (fixed 2026-09-10):** the previous version of this
+sequence chowned `storage`/`bootstrap/cache` to `www-data` at the very
+end, which meant the *next* deploy's `composer install` — run as
+`arkdev` — immediately hit a permissions error trying to write during
+its own post-install step. Ownership now flips to `arkdev` at the
+start of every deploy and back to `www-data` at the end, so each
+deploy is self-contained instead of depending on how the previous one
+left things.
+
 ```bash
 cd /var/www/arkworkers
 git pull
 
 cd arkworkers-api
+sudo chown -R arkdev:arkdev storage bootstrap/cache
 composer install --no-dev --optimize-autoloader
 php artisan migrate --force
+php artisan config:clear && php artisan cache:clear && php artisan config:cache
 sudo chown -R www-data:www-data storage bootstrap/cache
 
 cd ../arkworkers-web
 npm install
 npm run build
 
+sudo systemctl reload php8.3-fpm
 sudo systemctl reload nginx
 ```
 
@@ -108,6 +120,14 @@ No zero-downtime strategy set up (blue-green, etc.), a `git pull` plus
 rebuild causes a brief window where the frontend `dist/` is being
 overwritten. Acceptable at this scale and stage, revisit if this
 becomes a real problem in practice.
+
+**Deeper fix worth considering, not done yet:** this `arkdev`/
+`www-data` ownership flip has now caused two separate deploy hiccups
+(the frontend `dist/` folder earlier, `storage`/`bootstrap/cache`
+here). A shared Unix group with both users in it, and the deploy
+directories group-writable, would remove the need to flip ownership
+on every single deploy at all — worth doing once this workflow proves
+itself out rather than patching the symptom each time it recurs.
 
 ## 4. Rollback Procedure
 
