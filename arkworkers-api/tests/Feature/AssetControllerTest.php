@@ -27,6 +27,21 @@ class AssetControllerTest extends TestCase
         $this->assertEquals([$visibleAsset->id], $ids->all());
     }
 
+    public function test_index_includes_the_assets_type_and_category(): void
+    {
+        // The Spaces screen picks a representative photo per asset
+        // based on asset_type.category, this must actually be present
+        // in the response or every asset silently falls back to the
+        // same generic image.
+        $assetType = AssetType::factory()->create(['category' => 'HVAC']);
+        Asset::factory()->create(['asset_type_id' => $assetType->id]);
+        $admin = $this->adminUser();
+
+        $response = $this->actingAs($admin, 'sanctum')->getJson('/api/assets');
+
+        $this->assertEquals('HVAC', $response->json('data.0.asset_type.category'));
+    }
+
     public function test_cannot_create_an_asset_in_a_restricted_space_without_a_grant(): void
     {
         $space = Space::factory()->create(['is_restricted' => true]);

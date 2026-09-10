@@ -14,7 +14,7 @@ class AssetController extends Controller
     public function index(Request $request): JsonResponse
     {
         $assets = Asset::query()
-            ->with('space')
+            ->with(['space', 'assetType'])
             ->get()
             ->filter(fn (Asset $asset) => $request->user()->can('view', $asset))
             ->values();
@@ -25,6 +25,8 @@ class AssetController extends Controller
     public function show(Request $request, Asset $asset): JsonResponse
     {
         $this->authorize('view', $asset);
+
+        $asset->load(['space', 'assetType']);
 
         return response()->json(['data' => $asset]);
     }

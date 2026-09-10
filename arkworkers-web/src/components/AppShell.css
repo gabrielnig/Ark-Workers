@@ -40,6 +40,16 @@
   text-decoration: none;
 }
 
+.nav-item.enabled {
+  opacity: 1;
+  color: var(--color-text-secondary);
+}
+
+.nav-item.enabled.current {
+  color: var(--color-moss-600);
+  font-weight: 800;
+}
+
 .nav-icon {
   font-size: 16px;
 }
@@ -120,10 +130,13 @@
     text-decoration: none;
   }
 
-  .side-nav-item.active {
+  .side-nav-item.enabled {
+    opacity: 1;
+  }
+
+  .side-nav-item.enabled.current {
     background: var(--color-moss-600);
     color: #fff;
-    opacity: 1;
   }
 
   .app-main {

@@ -4,6 +4,7 @@ import SignUpScreen from './screens/SignUpScreen.jsx';
 import AdminRequestsScreen from './screens/AdminRequestsScreen.jsx';
 import MyWorkScreen from './screens/MyWorkScreen.jsx';
 import TaskDetailScreen from './screens/TaskDetailScreen.jsx';
+import SpacesScreen from './screens/SpacesScreen.jsx';
 import RequireAdmin from './components/RequireAdmin.jsx';
 import RequireAuth from './components/RequireAuth.jsx';
 
@@ -34,6 +35,22 @@ function App() {
           element={
             <RequireAuth>
               <TaskDetailScreen />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/spaces"
+          element={
+            <RequireAuth>
+              <SpacesScreen />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/spaces/:spaceId"
+          element={
+            <RequireAuth>
+              <SpacesScreen />
             </RequireAuth>
           }
         />
