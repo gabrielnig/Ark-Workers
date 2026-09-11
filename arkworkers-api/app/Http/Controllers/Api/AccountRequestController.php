@@ -28,7 +28,7 @@ class AccountRequestController extends Controller
             'display_name' => ['nullable', 'string'],
             'title' => ['nullable', 'string'],
             'email' => ['required', 'email'],
-            'phone' => ['nullable', 'string'],
+            'phone' => ['required', 'string'],
             'department_ids' => ['required', 'array', 'min:1'],
             'department_ids.*' => ['integer', 'exists:departments,id'],
         ])->validate();

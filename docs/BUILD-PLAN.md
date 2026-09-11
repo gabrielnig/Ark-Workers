@@ -179,6 +179,10 @@ for this phase and has nowhere to render yet.
       no enforced enum), matching the existing `AssetType::category`
       pattern, not a hardcoded fixed list at the database layer. 5
       new tests, full suite green (163 passed, was 159).
+- [x] **Phone made required at sign-up.** Was optional,
+      `AccountRequestController::store` now requires it, same as
+      name/email. Frontend label and `required` attribute updated to
+      match. 1 new test, full suite green (164 passed).
 
 ---
 

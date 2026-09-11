@@ -124,7 +124,7 @@ export default function SignUpScreen() {
           required
         />
 
-        <label className="field-label" htmlFor="signup-phone">Phone (optional)</label>
+        <label className="field-label" htmlFor="signup-phone">Phone</label>
         <input
           id="signup-phone"
           type="tel"
@@ -132,6 +132,7 @@ export default function SignUpScreen() {
           placeholder="+234 800 000 0000"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
+          required
         />
 
         <label className="field-label">Departments</label>
