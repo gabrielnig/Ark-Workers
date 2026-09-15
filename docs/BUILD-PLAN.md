@@ -91,6 +91,21 @@ before starting anything new.
         that already existed for exactly this ("standalone assign-now
         path," per that controller's own docblock). A real decision
         on auto-assignment is still open, worth its own conversation.
+  - [x] **UX polish pass, 2026-09-15.** `window.confirm()` replaced
+        with a real `ConfirmDialog.jsx` for both decommission and
+        routine deletion, no native browser popup anywhere on this
+        screen. `AssigneePicker.jsx` rebuilt from a bare search box
+        into a real click-to-open dropdown, name only (email dropped
+        from display, still matched server-side), the default staff
+        list (`UserController::index` with no search term) shows
+        immediately on open rather than waiting for 2+ typed
+        characters, typing narrows that same list live. The due-date
+        field's blank-looking empty state (a native `<input
+        type="date">` quirk, no visible affordance that it's a date
+        picker until clicked) got a calendar icon + "Select due date"
+        placeholder overlay, `pointer-events: none` so the native
+        picker still opens normally underneath, not a rebuilt
+        component.
 - [x] **Spaces screen — done 2026-09-10.** `SpacesScreen.jsx` live at
       `/spaces`, wired to the real backend. Breadcrumb drill-down,
       restricted badge at every level, real (fixed, not random)

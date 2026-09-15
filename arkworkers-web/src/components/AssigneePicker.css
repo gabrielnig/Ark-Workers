@@ -1,13 +1,59 @@
 .assignee-picker {
   position: relative;
+  margin-bottom: 16px;
+}
+
+.dropdown-trigger {
+  width: 100%;
+  height: var(--touch-target-min);
+  border-radius: var(--radius-control);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  padding: 0 16px;
+  font-family: var(--font-family-body);
+  font-size: 15px;
+  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  text-align: left;
+}
+
+.dropdown-trigger:focus {
+  outline: none;
+  border-color: var(--color-interactive);
+  box-shadow: 0 0 0 1px var(--color-interactive) inset;
+}
+
+.dropdown-placeholder {
+  color: #B0A89A;
+}
+
+.dropdown-chevron {
+  color: var(--color-text-secondary);
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+.assignee-panel {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  box-shadow: var(--shadow-overlay-sm);
+  padding: 8px;
+}
+
+.assignee-search-input {
+  margin-bottom: 8px !important;
 }
 
 .assignee-results {
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-control);
-  background: var(--color-surface);
-  margin-top: -10px;
-  margin-bottom: 16px;
   max-height: 200px;
   overflow-y: auto;
 }
@@ -15,40 +61,31 @@
 .assignee-status {
   font-size: 12.5px;
   color: var(--color-text-secondary);
-  padding: 10px 14px;
+  padding: 10px 6px;
   margin: 0;
 }
 
 .assignee-result-row {
   width: 100%;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 8px;
   min-height: var(--touch-target-min);
-  padding: 0 14px;
+  padding: 0 10px;
   border: none;
   background: none;
-  border-bottom: 1px solid var(--color-border);
+  border-radius: 10px;
   cursor: pointer;
   text-align: left;
 }
 
-.assignee-result-row:last-child {
-  border-bottom: none;
-}
-
-.assignee-result-row:hover {
+.assignee-result-row:hover,
+.assignee-result-row:focus {
   background: var(--color-bg);
+  outline: none;
 }
 
 .assignee-name {
   font-size: 13.5px;
   font-weight: 600;
   color: var(--color-text-primary);
-}
-
-.assignee-email {
-  font-size: 12px;
-  color: var(--color-text-secondary);
 }

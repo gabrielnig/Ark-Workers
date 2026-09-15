@@ -243,6 +243,33 @@
   margin-bottom: 0;
 }
 
+.date-field {
+  position: relative;
+}
+
+.date-field input[type='date'] {
+  width: 100%;
+}
+
+.date-field-placeholder {
+  position: absolute;
+  left: 16px;
+  top: 0;
+  height: var(--touch-target-min);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-family-body);
+  font-size: 15px;
+  color: #B0A89A;
+  pointer-events: none;
+  background: var(--color-surface);
+}
+
+.date-field-icon {
+  font-size: 14px;
+}
+
 .requires-proof-check {
   display: flex;
   align-items: center;

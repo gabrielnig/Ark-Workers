@@ -3,6 +3,7 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import AppShell from '../components/AppShell.jsx';
 import Dropdown from '../components/Dropdown.jsx';
 import AssigneePicker from '../components/AssigneePicker.jsx';
+import ConfirmDialog from '../components/ConfirmDialog.jsx';
 import { useAsset, useUpdateAsset, useDecommissionAsset } from '../hooks/useAssets.js';
 import { useRoutinesForAsset, useCreateRoutine, useDeleteRoutine } from '../hooks/useRoutines.js';
 import { useTasksForRoutine, useCreateTask } from '../hooks/useTasks.js';
@@ -35,6 +36,7 @@ export default function AssetDetailScreen() {
   const [renaming, setRenaming] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
   const [showAddRoutine, setShowAddRoutine] = useState(false);
+  const [confirmDecommission, setConfirmDecommission] = useState(false);
 
   const canManage = !!currentUser?.can_manage;
   const canDecommission = !!currentUser?.is_admin;
@@ -51,8 +53,10 @@ export default function AssetDetailScreen() {
   }
 
   function handleDecommission() {
-    if (!window.confirm(`Decommission "${asset.name}"? Its history stays intact for 30 days.`)) return;
-    decommissionAsset.mutate(undefined, { onSuccess: () => navigate(`/spaces/${asset.space.id}`) });
+    decommissionAsset.mutate(undefined, {
+      onSuccess: () => navigate(`/spaces/${asset.space.id}`),
+    });
+    setConfirmDecommission(false);
   }
 
   if (isLoading) {
@@ -99,7 +103,7 @@ export default function AssetDetailScreen() {
                 <button
                   className="icon-btn danger"
                   title="Decommission"
-                  onClick={handleDecommission}
+                  onClick={() => setConfirmDecommission(true)}
                   disabled={decommissionAsset.isPending}
                 >
                   &#128465;
@@ -161,6 +165,16 @@ export default function AssetDetailScreen() {
             />
           )}
         </div>
+
+        <ConfirmDialog
+          open={confirmDecommission}
+          title="Decommission this asset?"
+          message={`"${asset.name}" and its history will stay intact for 30 days, then be permanently removed.`}
+          confirmLabel="Decommission"
+          danger
+          onConfirm={handleDecommission}
+          onCancel={() => setConfirmDecommission(false)}
+        />
       </div>
     </AppShell>
   );
@@ -188,6 +202,7 @@ function RoutineRow({ routine, assetId, canManage }) {
   const deleteRoutine = useDeleteRoutine(assetId);
   const createTask = useCreateTask(routine.id);
   const [showAssign, setShowAssign] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   return (
     <div className="routine-row">
@@ -202,11 +217,7 @@ function RoutineRow({ routine, assetId, canManage }) {
             className="icon-btn small danger"
             title="Delete routine"
             disabled={deleteRoutine.isPending}
-            onClick={() => {
-              if (window.confirm(`Delete routine "${routine.name}"? Existing task history stays intact.`)) {
-                deleteRoutine.mutate(routine.id);
-              }
-            }}
+            onClick={() => setConfirmDelete(true)}
           >
             &#10005;
           </button>
@@ -238,6 +249,19 @@ function RoutineRow({ routine, assetId, canManage }) {
           error={createTask.error}
         />
       )}
+
+      <ConfirmDialog
+        open={confirmDelete}
+        title="Delete this routine?"
+        message={`Existing task history for "${routine.name}" stays intact, only the schedule itself is removed.`}
+        confirmLabel="Delete"
+        danger
+        onConfirm={() => {
+          deleteRoutine.mutate(routine.id);
+          setConfirmDelete(false);
+        }}
+        onCancel={() => setConfirmDelete(false)}
+      />
     </div>
   );
 }
@@ -255,13 +279,21 @@ function AssignTaskForm({ onCancel, onCreate, pending, error }) {
   return (
     <form className="assign-task-form" onSubmit={handleSubmit}>
       <AssigneePicker value={assignee} onSelect={setAssignee} />
-      <input
-        className="text-input"
-        type="date"
-        value={dueAt}
-        onChange={(e) => setDueAt(e.target.value)}
-        required
-      />
+      <div className="date-field">
+        <input
+          className="text-input"
+          type="date"
+          value={dueAt}
+          onChange={(e) => setDueAt(e.target.value)}
+          required
+        />
+        {!dueAt && (
+          <span className="date-field-placeholder">
+            <span className="date-field-icon" aria-hidden="true">&#128197;</span>
+            Select due date
+          </span>
+        )}
+      </div>
       {error && <div className="form-error">{error.body?.message || 'Could not assign the task.'}</div>}
       <div className="add-space-actions">
         <button type="submit" className="btn-primary" disabled={pending || !assignee || !dueAt}>

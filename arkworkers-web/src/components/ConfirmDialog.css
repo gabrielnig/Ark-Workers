@@ -1,0 +1,48 @@
+.confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(51, 43, 36, 0.45);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.confirm-dialog {
+  width: 100%;
+  max-width: 360px;
+  background: var(--color-surface);
+  border-radius: var(--radius-card);
+  padding: 20px;
+  box-shadow: var(--shadow-overlay-sm);
+}
+
+.confirm-title {
+  font-family: var(--font-family-display);
+  font-size: 16px;
+  margin: 0 0 8px;
+}
+
+.confirm-message {
+  font-family: var(--font-family-body);
+  font-size: 13.5px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  margin: 0 0 20px;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.confirm-actions .btn-primary,
+.confirm-actions .btn-secondary {
+  flex: 1;
+}
+
+.btn-primary.danger {
+  background: var(--color-rust-600);
+  border-color: var(--color-rust-600);
+}
