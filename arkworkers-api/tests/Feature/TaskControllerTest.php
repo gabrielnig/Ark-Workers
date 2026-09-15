@@ -41,6 +41,21 @@ class TaskControllerTest extends TestCase
         $this->assertEquals([$visibleTask->id], $ids->all());
     }
 
+    public function test_index_can_filter_by_routine_id(): void
+    {
+        $space = Space::factory()->create(['is_restricted' => false]);
+        $routineA = $this->routineIn($space);
+        $routineB = $this->routineIn($space);
+        $taskA = Task::factory()->create(['routine_id' => $routineA->id]);
+        Task::factory()->create(['routine_id' => $routineB->id]);
+
+        $response = $this->actingAs($this->staffUser(), 'sanctum')
+            ->getJson("/api/tasks?routine_id={$routineA->id}");
+
+        $ids = collect($response->json('data'))->pluck('id');
+        $this->assertEquals([$taskA->id], $ids->all());
+    }
+
     public function test_a_manager_can_manually_assign_a_task_in_an_unrestricted_space(): void
     {
         $space = Space::factory()->create(['is_restricted' => false]);

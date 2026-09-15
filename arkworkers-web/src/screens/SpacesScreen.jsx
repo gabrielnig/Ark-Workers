@@ -464,17 +464,14 @@ export default function SpacesScreen() {
             {spaceAssets.length > 0 ? (
               <div className="asset-list">
                 {spaceAssets.map((asset) => (
-                  // Not a link yet: there's no Asset detail screen built
-                  // (next item in the build plan after this one). A
-                  // plain row now, not a dead /assets/:id link.
-                  <div key={asset.id} className="asset-row">
+                  <Link key={asset.id} to={`/assets/${asset.id}`} className="asset-row">
                     <div className="asset-thumb">
                       <img src={imageForAssetType(asset.asset_type?.category)} alt="" />
                     </div>
                     <div className="asset-info">
                       <h4>{asset.name}</h4>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             ) : (

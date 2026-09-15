@@ -10,12 +10,14 @@ class UserControllerTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_only_admin_can_search_users(): void
+    public function test_staff_cannot_search_users_but_manager_and_admin_can(): void
     {
+        $staff = $this->staffUser();
         $manager = $this->managerUser();
         $admin = $this->adminUser();
 
-        $this->actingAs($manager, 'sanctum')->getJson('/api/users')->assertForbidden();
+        $this->actingAs($staff, 'sanctum')->getJson('/api/users')->assertForbidden();
+        $this->actingAs($manager, 'sanctum')->getJson('/api/users')->assertOk();
         $this->actingAs($admin, 'sanctum')->getJson('/api/users')->assertOk();
     }
 

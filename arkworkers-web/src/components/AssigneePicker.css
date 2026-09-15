@@ -1,0 +1,54 @@
+.assignee-picker {
+  position: relative;
+}
+
+.assignee-results {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  margin-top: -10px;
+  margin-bottom: 16px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.assignee-status {
+  font-size: 12.5px;
+  color: var(--color-text-secondary);
+  padding: 10px 14px;
+  margin: 0;
+}
+
+.assignee-result-row {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--touch-target-min);
+  padding: 0 14px;
+  border: none;
+  background: none;
+  border-bottom: 1px solid var(--color-border);
+  cursor: pointer;
+  text-align: left;
+}
+
+.assignee-result-row:last-child {
+  border-bottom: none;
+}
+
+.assignee-result-row:hover {
+  background: var(--color-bg);
+}
+
+.assignee-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.assignee-email {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}

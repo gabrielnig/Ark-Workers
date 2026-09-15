@@ -241,6 +241,8 @@
   border: 1px solid var(--color-border);
   border-radius: 16px;
   padding: 10px 14px;
+  text-decoration: none;
+  color: inherit;
 }
 
 .asset-thumb {

@@ -1,5 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
-import { fetchTasks } from '../api/tasks.js';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { fetchTasks, fetchTasksForRoutine, createTask } from '../api/tasks.js';
+import { queryClient } from '../queryClient.js';
 
 /**
  * Only ever returns tasks the backend's SpacePolicy/TaskPolicy already
@@ -12,5 +13,20 @@ export function useTasks() {
   return useQuery({
     queryKey: ['tasks'],
     queryFn: fetchTasks,
+  });
+}
+
+export function useTasksForRoutine(routineId) {
+  return useQuery({
+    queryKey: ['tasks', 'routine', routineId],
+    queryFn: () => fetchTasksForRoutine(routineId),
+    enabled: !!routineId,
+  });
+}
+
+export function useCreateTask(routineId) {
+  return useMutation({
+    mutationFn: createTask,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tasks', 'routine', routineId] }),
   });
 }

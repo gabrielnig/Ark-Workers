@@ -17,6 +17,7 @@ class TaskController extends Controller
     {
         $tasks = Task::query()
             ->with('routine.asset.space')
+            ->when($request->filled('routine_id'), fn ($query) => $query->where('routine_id', $request->integer('routine_id')))
             ->get()
             ->filter(fn (Task $task) => $request->user()->can('view', $task))
             ->values();

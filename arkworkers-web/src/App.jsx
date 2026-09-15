@@ -5,6 +5,7 @@ import AdminRequestsScreen from './screens/AdminRequestsScreen.jsx';
 import MyWorkScreen from './screens/MyWorkScreen.jsx';
 import TaskDetailScreen from './screens/TaskDetailScreen.jsx';
 import SpacesScreen from './screens/SpacesScreen.jsx';
+import AssetDetailScreen from './screens/AssetDetailScreen.jsx';
 import AssetTypesScreen from './screens/AssetTypesScreen.jsx';
 import ReportsScreen from './screens/ReportsScreen.jsx';
 import RequireAdmin from './components/RequireAdmin.jsx';
@@ -54,6 +55,14 @@ function App() {
           element={
             <RequireAuth>
               <SpacesScreen />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/assets/:assetId"
+          element={
+            <RequireAuth>
+              <AssetDetailScreen />
             </RequireAuth>
           }
         />

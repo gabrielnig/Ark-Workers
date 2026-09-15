@@ -77,12 +77,20 @@ before starting anything new.
         outlives Asset pruning the same way it already outlives direct
         Routine deletion. Regression test confirms a pruned asset's
         routine and that routine's task both remain intact.
-  - [ ] **Frontend still not built.** Tasks are still created directly
-        (`POST /tasks`), bypassing the routine-schedule model
-        entirely — there's no UI yet for an Admin to actually define a
-        recurring schedule through the app. This is still required
-        before Routines is genuinely usable, the backend existing
-        doesn't mean the PRD requirement is met yet.
+  - [x] **Frontend done, 2026-09-15.** `AssetDetailScreen.jsx` at
+        `/assets/:assetId`. An Admin/manager can now define a real
+        recurring schedule through the app (calendar-interval or
+        meter-based, with a proof-required flag) instead of only via
+        the backend. **No automatic task generation exists yet**, a
+        routine here is a saved schedule definition, not a
+        self-driving one, there's no default-assignee concept
+        anywhere in the schema, so auto-generating a task with no
+        real answer for "assigned to whom" would mean inventing an
+        assignment policy that was never decided. "+ Assign a task"
+        is the manual path instead, reusing the `POST /tasks` endpoint
+        that already existed for exactly this ("standalone assign-now
+        path," per that controller's own docblock). A real decision
+        on auto-assignment is still open, worth its own conversation.
 - [x] **Spaces screen — done 2026-09-10.** `SpacesScreen.jsx` live at
       `/spaces`, wired to the real backend. Breadcrumb drill-down,
       restricted badge at every level, real (fixed, not random)
@@ -91,11 +99,10 @@ before starting anything new.
       this surfaced along the way (see commit `a0f8d80`). Rename/edit
       (name + restricted flag) added later the same day, `update()`
       had existed on the backend with zero UI ever calling it.
-  - [ ] **No task-level drill-down yet.** §5's full spec is Space →
-        Asset → Asset's routines/tasks. This screen stops at the Asset
-        list — clicking into an asset does nothing yet, since there's
-        no Asset detail screen (deliberately not linked to a dead
-        route). That's the next item below.
+  - [x] **No task-level drill-down anymore, 2026-09-15.** §5's full
+        spec is Space → Asset → Asset's routines/tasks. Asset rows are
+        now real links to `/assets/:assetId`, see the Routines entry
+        above and the Asset Types entry below.
 - [x] **Assets — done 2026-09-10, as a form inside Spaces, not a
       separate screen.** `Asset` always requires a real `space_id`
       (no "unassigned" bucket in the schema), so creation lives inside
@@ -105,10 +112,10 @@ before starting anything new.
       empty dropdown) if no asset types exist yet.
   - [x] **No longer blocked.** Asset Types admin screen + inline
         quick-create are done, see the item below.
-  - [ ] **Still no Asset detail screen.** Clicking an asset row still
-        does nothing (deliberately, see the Spaces entry above). Asset
-        editing/decommissioning and the Asset → Routine/Task
-        drill-down both depend on this screen existing.
+  - [x] **Asset detail screen done, 2026-09-15.** Editing (rename,
+        manager+) and decommissioning (Admin only, per `AssetPolicy`)
+        both now have real UI, no longer dead actions. See the
+        Routines frontend entry above for the drill-down itself.
 - [x] **Asset Types admin screen — done 2026-09-10.** `AssetTypesScreen.jsx`
       at `/admin/asset-types` (list + create), plus inline quick-create
       right on the Add Asset form itself so an admin never has to leave
@@ -118,11 +125,25 @@ before starting anything new.
       default image. Gated by the new `RequireManager` component
       (mirrors `RequireAdmin` but checks `can_manage`, not `is_admin`,
       since managers can do this too per the policy).
+- [x] **`UserController` search widened to manager-level, done
+      2026-09-15.** Was admin-only, originally built only to power the
+      restricted-space grant picker. Now also powers the new "assign a
+      task" assignee search on the Asset Detail screen, a
+      manager-level action per `TaskPolicy::create()`, so the gate
+      needed to match, not stay narrower than the action it was
+      blocking. `TaskController::index` also gained an optional
+      `routine_id` filter (same pattern `RoutineController::index`
+      already used for `asset_id`/`asset_type_id`), so the Routines
+      section can show each routine's own tasks without fetching every
+      task the user can see and filtering client-side.
 - [x] **Restricted-space access grant admin UI, done 2026-09-10.**
-      `SpaceAccessGrantController` (index/store/destroy) plus a
-      minimal `UserController` for the grant-search picker, both
-      admin only, matching `User::bypassesSpaceRestrictions()`, not
-      `hasManagementPermission()`. Frontend is `AccessGrantsPanel.jsx`,
+      `SpaceAccessGrantController` (index/store/destroy), admin only,
+      matching `User::bypassesSpaceRestrictions()`, not
+      `hasManagementPermission()`. Originally paired with an
+      admin-only `UserController` for the grant-search picker, that
+      controller's gate was later widened to manager-level, see the
+      entry above, `SpaceAccessGrantController` itself is unaffected
+      and still Admin only. Frontend is `AccessGrantsPanel.jsx`,
       shown only when viewing a restricted space as an admin: search,
       grant, revoke. A real bug was caught and fixed before shipping:
       `grantedBy()` snake-cases to `granted_by`, identical to the FK
