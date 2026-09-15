@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import AuthLayout from '../components/AuthLayout.jsx';
+import PasswordField from '../components/PasswordField.jsx';
 import { login } from '../api/auth.js';
 
 export default function LoginScreen() {
@@ -62,10 +63,8 @@ export default function LoginScreen() {
         />
 
         <label className="field-label" htmlFor="login-password">Password</label>
-        <input
+        <PasswordField
           id="login-password"
-          type="password"
-          className="text-input"
           placeholder="Enter your password"
           autoComplete="current-password"
           value={password}

@@ -169,6 +169,32 @@ before starting anything new.
 
 ---
 
+## Out-of-plan fixes and additions, 2026-09-16 (same session as above)
+
+- [x] **Investigated a tester report of a missing sign-up password
+      field.** Verified directly against the live production bundle
+      (not just the repo) that the password/confirm-password fields
+      were genuinely deployed and working, this was not a real bug.
+      Most likely explanation: the tester loaded the page before that
+      deploy went out, or hit a stale browser cache, `index.html` is
+      served with no explicit `Cache-Control` header, only
+      `Last-Modified`/`ETag`, which leaves the caching behavior up to
+      each browser's own heuristics. Worth adding an explicit
+      no-cache header on `index.html` at some point so this class of
+      confusion stops recurring as more people test, not urgent today.
+- [x] **Password show/hide toggle, done 2026-09-16.** New
+      `PasswordField.jsx`, an eye icon + Show/Hide text button next to
+      every password input. Used on both sign-up (password and
+      confirm password) and sign-in.
+- [x] **Toast confirmation on successful sign-up, done 2026-09-16.**
+      New reusable `Toast.jsx` (auto-dismissing, top of screen, our
+      own styling, same "never a native browser popup" reasoning as
+      `ConfirmDialog.jsx`). Fires "Your request has been sent
+      successfully" alongside the existing "Account created"
+      confirmation screen, not instead of it.
+
+---
+
 ## Phase 2 — Reporting
 
 The data-viz palette (`DESIGN-SYSTEM.md` §2.6) was built specifically

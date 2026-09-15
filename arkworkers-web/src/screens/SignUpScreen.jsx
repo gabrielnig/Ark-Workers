@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import AuthLayout from '../components/AuthLayout.jsx';
 import Dropdown from '../components/Dropdown.jsx';
+import PasswordField from '../components/PasswordField.jsx';
+import Toast from '../components/Toast.jsx';
 import { fetchDepartments } from '../api/departments.js';
 import { submitAccountRequest } from '../api/accountRequests.js';
 
@@ -31,6 +33,7 @@ export default function SignUpScreen() {
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [showToast, setShowToast] = useState(false);
 
   function toggleDepartment(id) {
     setDepartmentIds((current) =>
@@ -70,6 +73,7 @@ export default function SignUpScreen() {
         departmentIds,
       });
       setSubmitted(true);
+      setShowToast(true);
     } catch (err) {
       setError(err.body?.message || 'Could not create your account.');
     } finally {
@@ -79,16 +83,19 @@ export default function SignUpScreen() {
 
   if (submitted) {
     return (
-      <AuthLayout tagline="Laborers in the vineyard">
-        <h1 className="form-heading">Account created</h1>
-        <p className="form-subheading">
-          Your admin will review it. You'll be able to log in with the email and
-          password you just set, once approved.
-        </p>
-        <p className="form-footnote">
-          <Link to="/login">Back to sign in</Link>
-        </p>
-      </AuthLayout>
+      <>
+        <Toast message={showToast ? 'Your request has been sent successfully.' : null} onDismiss={() => setShowToast(false)} />
+        <AuthLayout tagline="Laborers in the vineyard">
+          <h1 className="form-heading">Account created</h1>
+          <p className="form-subheading">
+            Your admin will review it. You'll be able to log in with the email and
+            password you just set, once approved.
+          </p>
+          <p className="form-footnote">
+            <Link to="/login">Back to sign in</Link>
+          </p>
+        </AuthLayout>
+      </>
     );
   }
 
@@ -161,10 +168,8 @@ export default function SignUpScreen() {
         />
 
         <label className="field-label" htmlFor="signup-password">Password</label>
-        <input
+        <PasswordField
           id="signup-password"
-          type="password"
-          className="text-input"
           placeholder="At least 12 characters"
           autoComplete="new-password"
           value={password}
@@ -173,10 +178,8 @@ export default function SignUpScreen() {
         />
 
         <label className="field-label" htmlFor="signup-password-confirmation">Confirm password</label>
-        <input
+        <PasswordField
           id="signup-password-confirmation"
-          type="password"
-          className="text-input"
           placeholder="Type your password again"
           autoComplete="new-password"
           value={passwordConfirmation}
