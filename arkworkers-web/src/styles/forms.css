@@ -162,6 +162,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  min-height: var(--touch-target-min);
   padding: 10px;
   font-family: var(--font-family-body);
   font-size: 14px;

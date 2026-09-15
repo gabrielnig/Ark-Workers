@@ -183,6 +183,27 @@ for this phase and has nowhere to render yet.
       `AccountRequestController::store` now requires it, same as
       name/email. Frontend label and `required` attribute updated to
       match. 1 new test, full suite green (164 passed).
+- [x] **Mobile sign-up bug: ministry office field replaced with a
+      custom dropdown, done 2026-09-15.** Reported unable to
+      populate departments/ministry office on iPhone and some Samsung
+      phones. Verified the API/CORS/data layer directly against the
+      live site, all working correctly, not a backend or data issue.
+      The ministry office field was a native `<select>` styled with a
+      custom height/padding and no `-webkit-appearance` reset, a
+      well-known cause of broken or unresponsive rendering in iOS
+      Safari specifically. Replaced it with a fully custom
+      `Dropdown.jsx` component (own trigger button, own option list,
+      no native OS picker involved at all), which was also an
+      explicit standing preference, not just a bugfix. Also bumped
+      `.dept-check-row` to the standard 44px touch-target minimum,
+      defensively, since the report bundled departments and office
+      together. Could not reproduce a code-level department-checkbox
+      bug through review or the live API check, if it recurs after
+      this fix, worth asking whether it was opened through an in-app
+      browser (WhatsApp, Instagram) rather than Safari/Chrome
+      directly, a common source of this exact class of bug.
+      `AssetTypesScreen`'s category field is still a native `<select>`,
+      same treatment would apply there if wanted.
 
 ---
 

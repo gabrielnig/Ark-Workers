@@ -2,10 +2,17 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import AuthLayout from '../components/AuthLayout.jsx';
+import Dropdown from '../components/Dropdown.jsx';
 import { fetchDepartments } from '../api/departments.js';
 import { submitAccountRequest } from '../api/accountRequests.js';
 
-const MINISTRY_OFFICES = ['Brother', 'Sister', 'Evangelist', 'Deacon', 'Deaconess', 'Pastor'];
+const MINISTRY_OFFICE_OPTIONS = [
+  { value: '', label: 'None' },
+  ...['Brother', 'Sister', 'Evangelist', 'Deacon', 'Deaconess', 'Pastor'].map((office) => ({
+    value: office,
+    label: office,
+  })),
+];
 
 export default function SignUpScreen() {
   const { data: departments, isLoading: departmentsLoading } = useQuery({
@@ -100,17 +107,13 @@ export default function SignUpScreen() {
         />
 
         <label className="field-label" htmlFor="signup-title">Ministry office (optional)</label>
-        <select
+        <Dropdown
           id="signup-title"
-          className="text-input"
           value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        >
-          <option value="">None</option>
-          {MINISTRY_OFFICES.map((office) => (
-            <option key={office} value={office}>{office}</option>
-          ))}
-        </select>
+          onChange={setTitle}
+          options={MINISTRY_OFFICE_OPTIONS}
+          placeholder="None"
+        />
 
         <label className="field-label" htmlFor="signup-email">Email</label>
         <input
