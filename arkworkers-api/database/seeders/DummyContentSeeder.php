@@ -237,14 +237,14 @@ class DummyContentSeeder extends Seeder
             VehicleLog::create([
                 'vehicle_id' => $vehicle->id,
                 'type' => VehicleLog::TYPE_FUEL,
-                'value' => fake()->randomFloat(2, 30, 80),
+                'value' => mt_rand(3000, 8000) / 100,
                 'logged_at' => now()->subDays(3),
             ]);
 
             VehicleLog::create([
                 'vehicle_id' => $vehicle->id,
                 'type' => VehicleLog::TYPE_MILEAGE,
-                'value' => fake()->numberBetween(20000, 150000),
+                'value' => mt_rand(20000, 150000),
                 'logged_at' => now()->subDay(),
             ]);
         }
