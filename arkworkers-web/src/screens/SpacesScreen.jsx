@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import AppShell from '../components/AppShell.jsx';
 import AccessGrantsPanel from '../components/AccessGrantsPanel.jsx';
+import Dropdown from '../components/Dropdown.jsx';
 import { useSpaces, useCreateSpace, useUpdateSpace } from '../hooks/useSpaces.js';
 import { useAssets, useCreateAsset } from '../hooks/useAssets.js';
 import { useAssetTypes, useCreateAssetType } from '../hooks/useAssetTypes.js';
@@ -277,23 +278,22 @@ export default function SpacesScreen() {
             </datalist>
 
             {assetTypes?.length > 0 && !showQuickType && (
-              <select
-                className="text-input"
+              <Dropdown
                 value={assetTypeId}
-                onChange={(e) => {
-                  if (e.target.value === '__new__') {
+                onChange={(value) => {
+                  if (value === '__new__') {
                     setShowQuickType(true);
                     return;
                   }
-                  setAssetTypeId(e.target.value);
+                  setAssetTypeId(value);
                 }}
-              >
-                <option value="">Select an asset type...</option>
-                {assetTypes.map((t) => (
-                  <option key={t.id} value={t.id}>{t.name}</option>
-                ))}
-                <option value="__new__">+ New asset type...</option>
-              </select>
+                options={[
+                  { value: '', label: 'Select an asset type...' },
+                  ...assetTypes.map((t) => ({ value: String(t.id), label: t.name })),
+                  { value: '__new__', label: '+ New asset type...' },
+                ]}
+                placeholder="Select an asset type..."
+              />
             )}
 
             {(!assetTypes?.length || showQuickType) && (
@@ -309,16 +309,12 @@ export default function SpacesScreen() {
                   value={quickTypeName}
                   onChange={(e) => setQuickTypeName(e.target.value)}
                 />
-                <select
-                  className="text-input"
+                <Dropdown
                   value={quickTypeCategory}
-                  onChange={(e) => setQuickTypeCategory(e.target.value)}
-                >
-                  <option value="">Category: none</option>
-                  {KNOWN_CATEGORIES.map((c) => (
-                    <option key={c.value} value={c.value}>{c.label}</option>
-                  ))}
-                </select>
+                  onChange={setQuickTypeCategory}
+                  options={[{ value: '', label: 'Category: none' }, ...KNOWN_CATEGORIES]}
+                  placeholder="Category: none"
+                />
 
                 {createAssetType.isError && (
                   <div className="form-error">

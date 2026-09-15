@@ -214,6 +214,13 @@ for this phase and has nowhere to render yet.
       Admin (admin only), and Profile. The desktop sidebar is
       unaffected, it lists everything flat since it isn't
       space-constrained the way a phone's bottom bar is.
+- [x] **Remaining native `<select>` elements replaced app-wide, done
+      2026-09-15.** Two more were found beyond the sign-up form's
+      ministry office: `AssetTypesScreen`'s category picker, and
+      `SpacesScreen`'s asset-type picker (including its inline
+      "+ New asset type..." quick-create option) and its quick-create
+      category picker. All three now use the same `Dropdown.jsx`
+      component, no native OS picker anywhere in the app anymore.
 
 ---
 

@@ -1,8 +1,15 @@
 import { useState } from 'react';
 import AppShell from '../components/AppShell.jsx';
+import Dropdown from '../components/Dropdown.jsx';
 import { useAssetTypes, useCreateAssetType } from '../hooks/useAssetTypes.js';
 import { imageForAssetType, KNOWN_CATEGORIES } from '../lib/assetTypeImages.js';
 import './AssetTypesScreen.css';
+
+const CATEGORY_OPTIONS = [
+  { value: '', label: 'None' },
+  ...KNOWN_CATEGORIES,
+  { value: '__other__', label: 'Other (type below)' },
+];
 
 /**
  * Lets an admin (or a grants_management manager) add a new Asset Type
@@ -70,18 +77,13 @@ export default function AssetTypesScreen() {
             />
 
             <label className="field-label" htmlFor="new-type-category">Category (for photo matching)</label>
-            <select
+            <Dropdown
               id="new-type-category"
-              className="text-input"
               value={category}
-              onChange={(e) => setCategory(e.target.value)}
-            >
-              <option value="">None</option>
-              {KNOWN_CATEGORIES.map((c) => (
-                <option key={c.value} value={c.value}>{c.label}</option>
-              ))}
-              <option value="__other__">Other (type below)</option>
-            </select>
+              onChange={setCategory}
+              options={CATEGORY_OPTIONS}
+              placeholder="None"
+            />
 
             {category === '__other__' && (
               <input
