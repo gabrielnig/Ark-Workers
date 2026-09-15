@@ -10,11 +10,13 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
+  const [pendingApproval, setPendingApproval] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit(event) {
     event.preventDefault();
     setError(null);
+    setPendingApproval(false);
     setSubmitting(true);
 
     try {
@@ -22,7 +24,11 @@ export default function LoginScreen() {
       await queryClient.invalidateQueries({ queryKey: ['currentUser'] });
       navigate('/');
     } catch (err) {
-      setError(err.body?.message || 'Could not sign in. Check your email and password.');
+      if (err.status === 403) {
+        setPendingApproval(true);
+      } else {
+        setError(err.body?.message || 'Could not sign in. Check your email and password.');
+      }
     } finally {
       setSubmitting(false);
     }
@@ -32,6 +38,13 @@ export default function LoginScreen() {
     <AuthLayout tagline="Laborers in the vineyard">
       <h1 className="form-heading">Sign in</h1>
       <p className="form-subheading">Welcome back.</p>
+
+      {pendingApproval && (
+        <div className="info-box">
+          <span className="dot"></span>
+          <p>Your account is still awaiting admin approval. You'll be able to log in once it's approved.</p>
+        </div>
+      )}
 
       {error && <p className="form-error">{error}</p>}
 

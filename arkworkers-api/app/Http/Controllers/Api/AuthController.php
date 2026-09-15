@@ -14,10 +14,15 @@ use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 use Laravel\Sanctum\TransientToken;
 
 /**
- * Email + password auth, with an email-OTP step at signup to verify
- * the address. No SMS anywhere, per the decision to avoid that cost
- * entirely. Phone is an optional profile field only, never used for
- * login or verification.
+ * Email + password auth. No SMS anywhere, per the decision to avoid
+ * that cost entirely. Phone is an optional profile field only, never
+ * used for login or verification.
+ *
+ * email_verified_at doubles as the admin-approval gate for the
+ * current sign-up flow (AccountRequestController), not literal email
+ * ownership, see that controller's docblock. The email-OTP endpoint
+ * below predates that redesign and is unused by the current sign-up
+ * form, left in place, not yet removed.
  */
 class AuthController extends Controller
 {
@@ -85,7 +90,7 @@ class AuthController extends Controller
         if (! $user->email_verified_at) {
             RateLimiter::hit($key, self::DECAY_SECONDS);
 
-            return response()->json(['message' => 'Please verify your email before logging in.'], 403);
+            return response()->json(['message' => 'Your account is awaiting admin approval.'], 403);
         }
 
         RateLimiter::clear($key);

@@ -1,6 +1,15 @@
 import { apiFetch } from './client.js';
 
-export async function submitAccountRequest({ name, displayName, title, email, phone, departmentIds }) {
+export async function submitAccountRequest({
+  name,
+  displayName,
+  title,
+  email,
+  phone,
+  password,
+  passwordConfirmation,
+  departmentIds,
+}) {
   return apiFetch('/api/account-requests', {
     method: 'POST',
     body: JSON.stringify({
@@ -9,6 +18,8 @@ export async function submitAccountRequest({ name, displayName, title, email, ph
       title: title || null,
       email,
       phone: phone || null,
+      password,
+      password_confirmation: passwordConfirmation,
       department_ids: departmentIds,
     }),
   });

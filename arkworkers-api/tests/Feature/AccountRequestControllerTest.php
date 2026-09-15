@@ -2,11 +2,12 @@
 
 namespace Tests\Feature;
 
-use App\Models\AccountRequest;
 use App\Models\Department;
+use App\Models\Role;
 use App\Models\User;
-use App\Notifications\AccountRequestApproved;
+use App\Notifications\SignUpApproved;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
 use Tests\TestCase;
@@ -21,118 +22,129 @@ class AccountRequestControllerTest extends TestCase
         RateLimiter::clear('*');
     }
 
-    public function test_a_worker_can_submit_a_request_with_multiple_departments(): void
+    private function validPayload(array $overrides = []): array
     {
-        $cleaning = Department::factory()->create();
-        $choir = Department::factory()->create();
-
-        $this->postJson('/api/account-requests', [
+        return array_merge([
             'name' => 'Chidinma Okafor',
             'email' => 'chidinma@example.com',
             'phone' => '+2348035550142',
-            'department_ids' => [$cleaning->id, $choir->id],
-        ])->assertCreated();
+            'password' => 'a-strong-password',
+            'password_confirmation' => 'a-strong-password',
+        ], $overrides);
+    }
 
-        $accountRequest = AccountRequest::where('email', 'chidinma@example.com')->first();
-        $this->assertNotNull($accountRequest);
-        $this->assertTrue($accountRequest->isPending());
-        $this->assertCount(2, $accountRequest->departments);
+    public function test_a_worker_can_sign_up_with_a_password_and_multiple_departments(): void
+    {
+        $cleaning = Department::factory()->create();
+        $choir = Department::factory()->create();
+        $member = Role::factory()->create(['name' => 'Member', 'grants_management' => false]);
+        $cleaning->roles()->attach($member);
+        $choir->roles()->attach($member);
+
+        $this->postJson('/api/account-requests', $this->validPayload([
+            'department_ids' => [$cleaning->id, $choir->id],
+        ]))->assertCreated();
+
+        $user = User::where('email', 'chidinma@example.com')->first();
+        $this->assertNotNull($user);
+        $this->assertNull($user->email_verified_at);
+        $this->assertCount(2, $user->departments);
+        $this->assertTrue(Hash::check('a-strong-password', $user->password));
     }
 
     public function test_a_worker_can_submit_a_display_name_and_ministry_office(): void
     {
         $department = Department::factory()->create();
 
-        $this->postJson('/api/account-requests', [
-            'name' => 'Chidinma Okafor',
+        $this->postJson('/api/account-requests', $this->validPayload([
             'display_name' => 'Sister Chi',
             'title' => 'Evangelist',
-            'email' => 'chidinma@example.com',
-            'phone' => '+2348035550142',
             'department_ids' => [$department->id],
-        ])->assertCreated();
+        ]))->assertCreated();
 
-        $accountRequest = AccountRequest::where('email', 'chidinma@example.com')->first();
-        $this->assertSame('Sister Chi', $accountRequest->display_name);
-        $this->assertSame('Evangelist', $accountRequest->title);
+        $user = User::where('email', 'chidinma@example.com')->first();
+        $this->assertSame('Sister Chi', $user->display_name);
+        $this->assertSame('Evangelist', $user->title);
     }
 
-    public function test_display_name_and_title_are_optional_but_phone_is_not(): void
+    public function test_display_name_and_title_are_optional_but_phone_and_password_are_not(): void
     {
         $department = Department::factory()->create();
 
-        $this->postJson('/api/account-requests', [
-            'name' => 'Chidinma Okafor',
-            'email' => 'chidinma@example.com',
-            'phone' => '+2348035550142',
+        $this->postJson('/api/account-requests', $this->validPayload([
             'department_ids' => [$department->id],
-        ])->assertCreated();
+        ]))->assertCreated();
 
-        $accountRequest = AccountRequest::where('email', 'chidinma@example.com')->first();
-        $this->assertNull($accountRequest->display_name);
-        $this->assertNull($accountRequest->title);
+        $user = User::where('email', 'chidinma@example.com')->first();
+        $this->assertNull($user->display_name);
+        $this->assertNull($user->title);
     }
 
     public function test_a_request_needs_a_phone_number(): void
     {
         $department = Department::factory()->create();
+        $payload = $this->validPayload(['department_ids' => [$department->id]]);
+        unset($payload['phone']);
 
-        $this->postJson('/api/account-requests', [
-            'name' => 'Chidinma Okafor',
-            'email' => 'chidinma@example.com',
+        $this->postJson('/api/account-requests', $payload)->assertStatus(422);
+    }
+
+    public function test_signup_needs_a_password_of_at_least_twelve_characters(): void
+    {
+        $department = Department::factory()->create();
+
+        $this->postJson('/api/account-requests', $this->validPayload([
             'department_ids' => [$department->id],
-        ])->assertStatus(422);
+            'password' => 'short',
+            'password_confirmation' => 'short',
+        ]))->assertStatus(422);
+    }
+
+    public function test_signup_needs_password_confirmation_to_match(): void
+    {
+        $department = Department::factory()->create();
+
+        $this->postJson('/api/account-requests', $this->validPayload([
+            'department_ids' => [$department->id],
+            'password_confirmation' => 'a-different-password',
+        ]))->assertStatus(422);
     }
 
     public function test_a_request_needs_at_least_one_department(): void
     {
-        $this->postJson('/api/account-requests', [
-            'name' => 'Chidinma Okafor',
-            'email' => 'chidinma@example.com',
+        $this->postJson('/api/account-requests', $this->validPayload([
             'department_ids' => [],
-        ])->assertStatus(422);
+        ]))->assertStatus(422);
     }
 
-    public function test_cannot_request_with_an_email_that_already_has_an_account(): void
+    public function test_cannot_sign_up_with_an_email_that_already_has_an_account(): void
     {
-        $existing = User::factory()->create(['email' => 'taken@example.com']);
+        User::factory()->create(['email' => 'taken@example.com']);
         $department = Department::factory()->create();
 
-        $this->postJson('/api/account-requests', [
-            'name' => 'Someone',
+        $this->postJson('/api/account-requests', $this->validPayload([
             'email' => 'taken@example.com',
             'department_ids' => [$department->id],
-        ])->assertStatus(422);
+        ]))->assertStatus(422);
     }
 
-    public function test_cannot_submit_a_second_request_while_one_is_still_pending(): void
+    public function test_a_newly_signed_up_user_cannot_log_in_before_approval(): void
     {
         $department = Department::factory()->create();
-        AccountRequest::factory()->create(['email' => 'pending@example.com']);
 
-        $this->postJson('/api/account-requests', [
-            'name' => 'Someone',
-            'email' => 'pending@example.com',
+        $this->postJson('/api/account-requests', $this->validPayload([
             'department_ids' => [$department->id],
-        ])->assertStatus(422);
+        ]))->assertCreated();
+
+        $this->postJson('/api/auth/login', [
+            'email' => 'chidinma@example.com',
+            'password' => 'a-strong-password',
+        ])->assertStatus(403);
     }
 
-    public function test_can_resubmit_after_a_previous_request_was_rejected(): void
+    public function test_only_admin_can_list_pending_signups(): void
     {
-        $department = Department::factory()->create();
-        AccountRequest::factory()->rejected()->create(['email' => 'retry@example.com']);
-
-        $this->postJson('/api/account-requests', [
-            'name' => 'Someone',
-            'email' => 'retry@example.com',
-            'phone' => '+2348035550142',
-            'department_ids' => [$department->id],
-        ])->assertCreated();
-    }
-
-    public function test_only_admin_can_list_pending_requests(): void
-    {
-        AccountRequest::factory()->create();
+        User::factory()->create(['email_verified_at' => null]);
 
         $this->actingAs($this->staffUser(), 'sanctum')
             ->getJson('/api/account-requests')
@@ -144,11 +156,10 @@ class AccountRequestControllerTest extends TestCase
             ->assertJsonCount(1, 'data');
     }
 
-    public function test_pending_list_excludes_already_reviewed_requests(): void
+    public function test_pending_list_excludes_already_approved_users(): void
     {
-        AccountRequest::factory()->create();
-        AccountRequest::factory()->approved()->create();
-        AccountRequest::factory()->rejected()->create();
+        User::factory()->create(['email_verified_at' => null]);
+        User::factory()->create(['email_verified_at' => now()]);
 
         $this->actingAs($this->adminUser(), 'sanctum')
             ->getJson('/api/account-requests')
@@ -156,86 +167,80 @@ class AccountRequestControllerTest extends TestCase
             ->assertJsonCount(1, 'data');
     }
 
-    public function test_admin_can_approve_a_request_and_it_sends_an_invite(): void
+    public function test_admin_can_approve_a_pending_signup_and_it_can_then_log_in(): void
     {
         Notification::fake();
 
-        $accountRequest = AccountRequest::factory()->create(['email' => 'applicant@example.com']);
+        $pending = User::factory()->create([
+            'email' => 'applicant@example.com',
+            'email_verified_at' => null,
+        ]);
 
         $this->actingAs($this->adminUser(), 'sanctum')
-            ->postJson("/api/account-requests/{$accountRequest->id}/approve")
+            ->postJson("/api/account-requests/{$pending->id}/approve")
             ->assertOk();
 
-        $accountRequest->refresh();
-        $this->assertSame(AccountRequest::STATUS_APPROVED, $accountRequest->status);
-        $this->assertNotNull($accountRequest->invite_token_hash);
-        $this->assertNotNull($accountRequest->invite_expires_at);
+        $pending->refresh();
+        $this->assertNotNull($pending->email_verified_at);
 
-        Notification::assertSentOnDemand(
-            AccountRequestApproved::class,
-            fn ($notification, $channels, $notifiable) => $notifiable->routes['mail'] === 'applicant@example.com'
-        );
+        Notification::assertSentTo($pending, SignUpApproved::class);
     }
 
-    public function test_only_admin_can_approve_a_request(): void
+    public function test_only_admin_can_approve_a_signup(): void
     {
-        $accountRequest = AccountRequest::factory()->create();
+        $pending = User::factory()->create(['email_verified_at' => null]);
 
         $this->actingAs($this->managerUser(), 'sanctum')
-            ->postJson("/api/account-requests/{$accountRequest->id}/approve")
+            ->postJson("/api/account-requests/{$pending->id}/approve")
             ->assertForbidden();
     }
 
-    public function test_cannot_approve_an_already_reviewed_request(): void
+    public function test_cannot_approve_an_already_approved_user(): void
     {
-        $accountRequest = AccountRequest::factory()->approved()->create();
+        $alreadyApproved = User::factory()->create(['email_verified_at' => now()]);
 
         $this->actingAs($this->adminUser(), 'sanctum')
-            ->postJson("/api/account-requests/{$accountRequest->id}/approve")
+            ->postJson("/api/account-requests/{$alreadyApproved->id}/approve")
             ->assertStatus(422);
     }
 
-    public function test_admin_can_reject_a_request_and_no_account_is_ever_created(): void
+    public function test_admin_can_reject_a_pending_signup_and_the_account_is_deleted(): void
     {
-        $accountRequest = AccountRequest::factory()->create();
+        $pending = User::factory()->create([
+            'email' => 'applicant@example.com',
+            'email_verified_at' => null,
+        ]);
 
         $this->actingAs($this->adminUser(), 'sanctum')
-            ->postJson("/api/account-requests/{$accountRequest->id}/reject")
+            ->postJson("/api/account-requests/{$pending->id}/reject")
             ->assertOk();
 
-        $accountRequest->refresh();
-        $this->assertSame(AccountRequest::STATUS_REJECTED, $accountRequest->status);
-        $this->assertNull($accountRequest->invite_token_hash);
-        $this->assertDatabaseMissing('users', ['email' => $accountRequest->email]);
+        $this->assertDatabaseMissing('users', ['email' => 'applicant@example.com']);
     }
 
-    public function test_only_admin_can_reject_a_request(): void
+    public function test_only_admin_can_reject_a_signup(): void
     {
-        $accountRequest = AccountRequest::factory()->create();
+        $pending = User::factory()->create(['email_verified_at' => null]);
 
         $this->actingAs($this->staffUser(), 'sanctum')
-            ->postJson("/api/account-requests/{$accountRequest->id}/reject")
+            ->postJson("/api/account-requests/{$pending->id}/reject")
             ->assertForbidden();
     }
 
-    public function test_submitting_more_than_five_requests_a_minute_from_one_source_is_throttled(): void
+    public function test_submitting_more_than_five_signups_a_minute_from_one_source_is_throttled(): void
     {
         $department = Department::factory()->create();
 
         for ($i = 0; $i < 5; $i++) {
-            $this->postJson('/api/account-requests', [
-                'name' => 'Someone',
+            $this->postJson('/api/account-requests', $this->validPayload([
                 'email' => "someone{$i}@example.com",
-                'phone' => '+2348035550142',
                 'department_ids' => [$department->id],
-            ])->assertCreated();
+            ]))->assertCreated();
         }
 
-        $this->postJson('/api/account-requests', [
-            'name' => 'One Too Many',
+        $this->postJson('/api/account-requests', $this->validPayload([
             'email' => 'onetoomany@example.com',
-            'phone' => '+2348035550142',
             'department_ids' => [$department->id],
-        ])->assertStatus(429);
+        ]))->assertStatus(429);
     }
 }

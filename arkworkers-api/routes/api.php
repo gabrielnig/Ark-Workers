@@ -73,6 +73,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/reports/daily-summary', [ReportController::class, 'dailySummary']);
 
     Route::get('/account-requests', [AccountRequestController::class, 'index']);
-    Route::post('/account-requests/{accountRequest}/approve', [AccountRequestController::class, 'approve']);
-    Route::post('/account-requests/{accountRequest}/reject', [AccountRequestController::class, 'reject']);
+    Route::post('/account-requests/{user}/approve', [AccountRequestController::class, 'approve']);
+    Route::post('/account-requests/{user}/reject', [AccountRequestController::class, 'reject']);
 });

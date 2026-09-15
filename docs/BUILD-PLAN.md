@@ -221,6 +221,45 @@ for this phase and has nowhere to render yet.
       "+ New asset type..." quick-create option) and its quick-create
       category picker. All three now use the same `Dropdown.jsx`
       component, no native OS picker anywhere in the app anymore.
+- [x] **Sign-up redesigned: password set at sign-up, approval just
+      lifts a login block, done 2026-09-15.** Explicit decision to
+      stop depending on the not-yet-working mailer for the core
+      approval loop. A worker now sets email + password (12+ chars,
+      confirmed) directly on the sign-up form, `User` is created
+      immediately with `email_verified_at` null.
+      `AuthController::login` already blocked login while that column
+      is null (previously the OTP-verification gate, that endpoint is
+      unused dead code per `ai-context.md`), so approving is now
+      nothing more than an Admin setting that one timestamp, no token,
+      no link, no mailer dependency for the block itself. Rejecting
+      deletes the `User` row outright (department memberships cascade
+      with it), matching "rejected means no account exists," not a
+      disabled one. `AccountRequestApproved` still sends an
+      informational "you're approved" email via `SignUpApproved`, but
+      that's a courtesy notice now, not load-bearing, login already
+      works the moment Admin clicks approve regardless of whether that
+      email ever arrives.
+
+      The older `AccountRequest` + invite-token flow
+      (`AccountRequestApproved`, `InviteController`, `invites/{token}`
+      routes) was **not deleted**, it's simply no longer wired to the
+      public sign-up form, all still functional and covered by its
+      own passing tests, in case it's ever wanted again. Admin
+      approve/reject now operate on `User` rows directly
+      (`GET /api/account-requests` returns
+      `User::whereNull('email_verified_at')`), same URL shapes as
+      before so the frontend `AdminRequestsScreen` needed only a copy
+      fix, not a rebuild. 3 old tests removed (they tested the deleted
+      `AccountRequest`-creation behavior of `store()`), rewritten as
+      17 new ones covering the full password/approval/rejection/login
+      cycle. Full suite green (165 passed).
+
+      **Known gap, worth a decision later:** the sign-up email itself
+      is now never verified in any way, previously the invite-link
+      click proved the applicant controlled that inbox. Low risk
+      today since Admin still reviews every request by name/phone/
+      department before approving, but worth knowing this trade was
+      made on purpose, not overlooked.
 
 ---
 

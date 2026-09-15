@@ -75,17 +75,27 @@ changes, not additions:**
    token. Detection is automatic via Sanctum's
    `EnsureFrontendRequestsAreStateful::fromFrontend()`, no manual
    "is this mobile" flag anywhere.
-2. Self-service registration removed entirely. Replaced with an
-   admin-approval pipeline: a worker submits a sign-up request (name,
-   email, phone, department_ids, no password) via
-   `POST /api/account-requests`, an Admin approves or rejects it, and
-   approval emails a single-use expiring invite link
-   (`GET/POST /api/invites/{token}`) that lets the worker set a
-   password and activate the account. The invite link itself is the
-   email-verification step now, OTP is unused for this flow (the
-   `verifyEmailOtp` endpoint and `OtpCode` model still exist but have
-   no caller producing valid codes anymore, flagged as a cleanup item
-   below, not yet removed).
+2. Self-service registration removed entirely. Redesigned again
+   2026-09-15: a worker now submits name, email, phone,
+   department_ids, AND a password directly via
+   `POST /api/account-requests`, a `User` row is created immediately
+   with `email_verified_at` null. `AuthController::login` blocks
+   login while that's null, so an Admin approving
+   (`POST /api/account-requests/{user}/approve`) is just setting that
+   one timestamp, no token, no link, no mailer dependency for the
+   block itself, an "informational only" approval email
+   (`SignUpApproved`) is sent but login already works regardless of
+   whether it arrives. Rejecting deletes the `User` row outright. The
+   email address itself is never verified under this flow, an
+   accepted trade for not depending on a working mailer to unblock
+   anyone, see `BUILD-PLAN.md`'s "Known gap" note on this. The older
+   invite-token flow (`GET/POST /api/invites/{token}`,
+   `AccountRequestApproved`, the `AccountRequest` model) still exists
+   and still works, just no longer wired to the sign-up form, kept in
+   case it's wanted again rather than deleted. OTP is unused by
+   either flow (the `verifyEmailOtp` endpoint and `OtpCode` model
+   still exist but have no caller producing valid codes anymore,
+   flagged as a cleanup item below, not yet removed).
 
 **Authorization model also fully reworked**, replacing the old single
 `role` enum column entirely:
@@ -163,8 +173,8 @@ Standing process rules now in force for every future session (see
   not be redesigned again without a real reason, it's now the second
   time this specific piece has been reworked
 - **Account creation model**, admin-approval only, no self-service.
-  Request → Admin approve/reject → single-use invite link → worker
-  sets password → active. Locked this session, see §1 above for the
+  Worker sets email+password at sign-up → Admin approve/reject lifts
+  or deletes → active. Redesigned 2026-09-15, see §1 above for the
   concrete endpoints
 - **Color/type/component design system**, finalized in
   `DESIGN-SYSTEM.md`. Typography updated this session to Plus Jakarta

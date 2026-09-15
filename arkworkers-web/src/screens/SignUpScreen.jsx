@@ -25,6 +25,8 @@ export default function SignUpScreen() {
   const [title, setTitle] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
+  const [passwordConfirmation, setPasswordConfirmation] = useState('');
   const [departmentIds, setDepartmentIds] = useState([]);
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -45,12 +47,31 @@ export default function SignUpScreen() {
       return;
     }
 
+    if (password.length < 12) {
+      setError('Password must be at least 12 characters.');
+      return;
+    }
+
+    if (password !== passwordConfirmation) {
+      setError('Passwords do not match.');
+      return;
+    }
+
     setSubmitting(true);
     try {
-      await submitAccountRequest({ name, displayName, title, email, phone, departmentIds });
+      await submitAccountRequest({
+        name,
+        displayName,
+        title,
+        email,
+        phone,
+        password,
+        passwordConfirmation,
+        departmentIds,
+      });
       setSubmitted(true);
     } catch (err) {
-      setError(err.body?.message || 'Could not submit your request.');
+      setError(err.body?.message || 'Could not create your account.');
     } finally {
       setSubmitting(false);
     }
@@ -59,9 +80,10 @@ export default function SignUpScreen() {
   if (submitted) {
     return (
       <AuthLayout tagline="Laborers in the vineyard">
-        <h1 className="form-heading">Request sent</h1>
+        <h1 className="form-heading">Account created</h1>
         <p className="form-subheading">
-          Your admin will review it. You'll get an email invite once you're approved.
+          Your admin will review it. You'll be able to log in with the email and
+          password you just set, once approved.
         </p>
         <p className="form-footnote">
           <Link to="/login">Back to sign in</Link>
@@ -77,8 +99,8 @@ export default function SignUpScreen() {
       <div className="info-box">
         <span className="dot"></span>
         <p>
-          No password needed yet. Once your admin approves this request, you'll get an
-          email invite to finish setting up your account.
+          Your account needs admin approval before you can log in. Set your
+          password now, you'll use it once approved.
         </p>
       </div>
 
@@ -138,6 +160,30 @@ export default function SignUpScreen() {
           required
         />
 
+        <label className="field-label" htmlFor="signup-password">Password</label>
+        <input
+          id="signup-password"
+          type="password"
+          className="text-input"
+          placeholder="At least 12 characters"
+          autoComplete="new-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+
+        <label className="field-label" htmlFor="signup-password-confirmation">Confirm password</label>
+        <input
+          id="signup-password-confirmation"
+          type="password"
+          className="text-input"
+          placeholder="Type your password again"
+          autoComplete="new-password"
+          value={passwordConfirmation}
+          onChange={(e) => setPasswordConfirmation(e.target.value)}
+          required
+        />
+
         <label className="field-label">Departments</label>
         <p className="form-subheading" style={{ marginBottom: 8 }}>Select all that apply.</p>
         <div className="dept-checklist">
@@ -155,7 +201,7 @@ export default function SignUpScreen() {
         </div>
 
         <button type="submit" className="btn-primary" disabled={submitting}>
-          {submitting ? 'Sending...' : 'Send request'}
+          {submitting ? 'Creating account...' : 'Create account'}
         </button>
       </form>
 

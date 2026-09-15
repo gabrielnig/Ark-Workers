@@ -152,7 +152,8 @@ export default function AdminRequestsScreen() {
           <div>
             <h1 className="admin-page-title">Pending requests</h1>
             <p className="admin-page-sub">
-              Review and approve or reject sign-up requests. Approving sends an email invite link.
+              Review and approve or reject sign-up requests. The worker already set their
+              own password at sign-up, approving just lets them log in.
             </p>
           </div>
         </div>
