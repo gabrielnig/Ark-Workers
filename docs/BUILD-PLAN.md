@@ -399,6 +399,43 @@ for this phase and has nowhere to render yet.
       "Vehicles screen, admin-only" per the original plan, worth
       confirming that's still right given `VehiclePolicy` already
       also allows the assigned driver in, not just Admin/manager.
+- [x] **Vehicle repair/incident tracking, backend done, 2026-09-16.**
+      Explicit request: beyond the simple fuel/mileage/service value
+      log, a full "report a broken part → mechanic → parts → cost →
+      before/after photos → resolved" trail. New
+      `VehicleIncidentController` + `VehicleIncidentPhotoController`.
+      Reporting a problem is driver-or-manager (same as logging fuel),
+      resolving it (mechanic name, parts used, cost, status) is
+      manager-only, that's real bookkeeping, not something a driver
+      does. Marking a status "completed" stamps `resolved_at`
+      automatically, never client-supplied. Photos are a plain
+      synchronous upload, deliberately not the chunked/resumable
+      session `ChunkedUploadController` uses for Task proofs, that
+      machinery exists for large video proofs over a flaky field
+      connection, a handful of repair photos don't need it. 11 new
+      tests, full suite green (195 passed). **Not yet wired into any
+      UI**, this is backend-only until the Vehicles frontend above
+      gets built.
+- [x] **Dummy content seeder, done 2026-09-16.** New
+      `database/seeders/DummyContentSeeder.php`, run manually via
+      `php artisan db:seed --class=DummyContentSeeder`, not part of
+      the default seeder chain. 8 Spaces (the real named areas of the
+      building, per Unique directly, `Prophet's Office` and
+      `Prophet's Quarters` seeded restricted), 20 AssetTypes covering
+      a realistic venue inventory (HVAC, audio, lighting, furniture,
+      windows/doors, flooring, generators, cameras, fire safety, and
+      more), 48 Assets spread realistically across every Space, and
+      the 7 real vehicles the Prophet has (also per Unique directly,
+      labeled "Prophet's <name>"), with document-expiry dates
+      deliberately spread across expired/expiring-soon/valid so the
+      new screen has a real example of every badge state, not just
+      the happy path. Sample fuel/mileage logs and two sample repair
+      incidents included. Every insert uses `firstOrCreate`, safe to
+      re-run, confirmed locally (48 assets stayed 48 on a second run).
+      The asset-type list and specific assets under each space are
+      Claude's own reasonable inventory of what a church/event venue
+      has, not claimed to be accurate to the actual building, freely
+      editable from the app afterward.
 
 ---
 

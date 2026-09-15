@@ -55,6 +55,14 @@ class Vehicle extends Model
     }
 
     /**
+     * @return HasMany<VehicleIncident, $this>
+     */
+    public function incidents(): HasMany
+    {
+        return $this->hasMany(VehicleIncident::class);
+    }
+
+    /**
      * Document types with no expiry date recorded at all don't count
      * as expired or expiring, that's a data-completeness gap, not a
      * compliance one, the UI surfaces those separately.
