@@ -78,6 +78,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/reports/daily-summary', [ReportController::class, 'dailySummary']);
 
     Route::get('/staff', [StaffController::class, 'index']);
+    Route::get('/staff/department-options', [StaffController::class, 'departmentOptions']);
+    Route::patch('/staff/{user}/admin', [StaffController::class, 'updateAdmin']);
+    Route::post('/staff/{user}/departments', [StaffController::class, 'joinDepartment']);
+    Route::delete('/staff/{user}/departments/{department}', [StaffController::class, 'leaveDepartment']);
 
     Route::apiResource('vehicles', VehicleController::class);
     Route::get('/vehicles/{vehicle}/logs', [VehicleLogController::class, 'index']);

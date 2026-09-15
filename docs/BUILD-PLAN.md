@@ -451,13 +451,21 @@ for this phase and has nowhere to render yet.
       (`UserController`) repurposed, that one's docblock already said
       this was coming. Built directly from already-approved visual
       patterns (card rows, badges) rather than a fresh mockup round,
-      given the explicit urgency. **View only, no editing yet**, see
-      the item below.
-- [ ] **Editing a worker's departments/roles, or promoting/demoting
-      Admin, from the Staff directory.** Explicitly requested
-      2026-09-16 ("admin needs to be able to assign user roles,
-      promote roles... give admin access"), not built yet, the
-      directory above is read-only for now.
+      given the explicit urgency. Editing added same day, see below.
+- [x] **Editing a worker's departments/roles, or promoting/demoting
+      Admin, from the Staff directory, done 2026-09-16.** Every write
+      here (`StaffController::updateAdmin`/`joinDepartment`/
+      `leaveDepartment`) is Admin-only, not the broader
+      `hasManagementPermission()`, same reasoning as
+      `AccountRequestController`, who has company-wide access isn't a
+      department manager's call, even for their own department. An
+      Admin cannot change their own Admin status (a deliberate
+      lockout guard, not an oversight), a different Admin can. Inline
+      "Edit" per row on `StaffScreen.jsx`, Admin toggle, remove-from-
+      department with a `ConfirmDialog`, and an add-to-department flow
+      that only offers departments the worker isn't already in, with
+      roles scoped to whichever department is picked. 11 new tests,
+      full suite green (206 passed).
 - [ ] **Department/Role management UI.** Both are already
       admin-manageable at the data layer (`department_role`,
       `department_user` pivot tables) — no UI exists to actually manage
