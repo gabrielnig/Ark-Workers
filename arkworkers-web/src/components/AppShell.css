@@ -38,6 +38,10 @@
   opacity: 0.45;
   font-weight: 600;
   text-decoration: none;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-family-body);
 }
 
 .nav-item.enabled {
@@ -81,6 +85,60 @@
   color: var(--color-moss-600);
   font-weight: 800;
   font-size: 10px;
+}
+
+.nav-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(51, 43, 36, 0.4);
+  z-index: 40;
+  display: flex;
+  align-items: flex-end;
+}
+
+.nav-drawer {
+  width: 100%;
+  background: var(--color-surface);
+  border-radius: 20px 20px 0 0;
+  padding: 10px 8px calc(env(safe-area-inset-bottom, 0px) + 12px);
+}
+
+.nav-drawer-handle {
+  width: 40px;
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--color-border);
+  margin: 4px auto 12px;
+}
+
+.nav-drawer-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: var(--touch-target-min);
+  padding: 0 16px;
+  border-radius: var(--radius-control);
+  font-family: var(--font-family-body);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  text-decoration: none;
+  opacity: 0.45;
+}
+
+.nav-drawer-item.enabled {
+  opacity: 1;
+}
+
+.nav-drawer-item.enabled.current {
+  background: var(--color-bg);
+  color: var(--color-moss-600);
+}
+
+.nav-drawer-item .nav-icon {
+  font-size: 18px;
+  width: 22px;
+  text-align: center;
 }
 
 @media (min-width: 900px) {

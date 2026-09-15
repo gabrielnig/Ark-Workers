@@ -1,15 +1,16 @@
+import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useCurrentUser } from '../hooks/useCurrentUser.js';
 import './AppShell.css';
 
 const NAV_ITEMS = [
-  { key: 'home', label: 'Home', icon: '\u2302' },
-  { key: 'spaces', label: 'Spaces', icon: '\uD83C\uDFE0', to: '/spaces' },
-  { key: 'my-work', label: 'My Work', icon: '\u2713', to: '/my-work', primary: true },
-  { key: 'reports', label: 'Reports', icon: '\uD83D\uDCCA', to: '/reports', managerOnly: true },
-  { key: 'admin', label: 'Admin', icon: '\u2699', to: '/admin/requests', adminOnly: true },
-  { key: 'messages', label: 'Messages', icon: '\u2709' },
-  { key: 'profile', label: 'Profile', icon: '\u25CF' },
+  { key: 'home', label: 'Home', icon: '\u2302', bottom: 'primary' },
+  { key: 'spaces', label: 'Spaces', icon: '\uD83C\uDFE0', to: '/spaces', bottom: 'primary' },
+  { key: 'my-work', label: 'My Work', icon: '\u2713', to: '/my-work', primary: true, bottom: 'primary' },
+  { key: 'messages', label: 'Messages', icon: '\u2709', bottom: 'primary' },
+  { key: 'reports', label: 'Reports', icon: '\uD83D\uDCCA', to: '/reports', managerOnly: true, bottom: 'more' },
+  { key: 'admin', label: 'Admin', icon: '\u2699', to: '/admin/requests', adminOnly: true, bottom: 'more' },
+  { key: 'profile', label: 'Profile', icon: '\u25CF', bottom: 'more' },
 ];
 
 /**
@@ -23,10 +24,40 @@ const NAV_ITEMS = [
  * sidebar's filled/current state IS a "you are here" indicator, based
  * on the actual route, so two real routes don't both show as
  * selected simultaneously.
+ *
+ * The bottom nav is capped at 5 icons on purpose, Home, Spaces, My
+ * Work, Messages, and a "More" drawer. Reports and Admin only exist
+ * for a manager/Admin, so they live inside the More drawer instead of
+ * as extra top-level icons, that's what kept pushing an Admin's bar
+ * to 7 icons before. The sidebar has room to show everything flat,
+ * so it isn't affected by this split.
  */
 export default function AppShell({ children }) {
   const location = useLocation();
   const { data: currentUser } = useCurrentUser();
+  const [moreOpen, setMoreOpen] = useState(false);
+  const drawerRef = useRef(null);
+
+  useEffect(() => {
+    if (!moreOpen) return;
+
+    function handleOutsideClick(event) {
+      if (drawerRef.current && !drawerRef.current.contains(event.target)) {
+        setMoreOpen(false);
+      }
+    }
+
+    function handleEscape(event) {
+      if (event.key === 'Escape') setMoreOpen(false);
+    }
+
+    document.addEventListener('pointerdown', handleOutsideClick);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('pointerdown', handleOutsideClick);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [moreOpen]);
 
   // Reports is manager/admin only (ReportController::dailySummary),
   // Admin is Admin-only (is_admin, not the broader can_manage), both
@@ -37,6 +68,9 @@ export default function AppShell({ children }) {
     if (item.adminOnly) return currentUser?.is_admin;
     return true;
   });
+
+  const bottomPrimaryItems = navItems.filter((item) => item.bottom === 'primary');
+  const bottomMoreItems = navItems.filter((item) => item.bottom === 'more');
 
   return (
     <div className="app-shell">
@@ -69,7 +103,7 @@ export default function AppShell({ children }) {
       <div className="app-main">{children}</div>
 
       <nav className="bottom-nav">
-        {navItems.map((item) => {
+        {bottomPrimaryItems.map((item) => {
           if (!item.to) {
             return (
               <div key={item.key} className="nav-item">
@@ -100,7 +134,46 @@ export default function AppShell({ children }) {
             </Link>
           );
         })}
+
+        <button
+          type="button"
+          className={`nav-item enabled${moreOpen ? ' current' : ''}`}
+          onClick={() => setMoreOpen(true)}
+        >
+          <span className="nav-icon">&#8942;</span>
+          More
+        </button>
       </nav>
+
+      {moreOpen && (
+        <div className="nav-drawer-backdrop">
+          <div className="nav-drawer" ref={drawerRef}>
+            <div className="nav-drawer-handle" />
+            {bottomMoreItems.map((item) => {
+              if (!item.to) {
+                return (
+                  <div key={item.key} className="nav-drawer-item disabled">
+                    <span className="nav-icon">{item.icon}</span>
+                    {item.label}
+                  </div>
+                );
+              }
+              const isCurrent = location.pathname.startsWith(item.to);
+              return (
+                <Link
+                  key={item.key}
+                  to={item.to}
+                  className={`nav-drawer-item enabled${isCurrent ? ' current' : ''}`}
+                  onClick={() => setMoreOpen(false)}
+                >
+                  <span className="nav-icon">{item.icon}</span>
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

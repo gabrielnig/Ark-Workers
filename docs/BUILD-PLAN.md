@@ -204,6 +204,16 @@ for this phase and has nowhere to render yet.
       directly, a common source of this exact class of bug.
       `AssetTypesScreen`'s category field is still a native `<select>`,
       same treatment would apply there if wanted.
+- [x] **Mobile bottom nav capped at 5 icons, done 2026-09-15.** An
+      Admin had grown to 7 icons (Home, Spaces, My Work, Reports,
+      Admin, Messages, Profile) once Reports and Admin were added as
+      separate top-level items, reported as visibly too many on a real
+      phone. Bottom nav is now fixed at exactly 5 regardless of role,
+      Home, Spaces, My Work (center), Messages, and a "More" button
+      that opens a bottom drawer holding Reports (manager/admin),
+      Admin (admin only), and Profile. The desktop sidebar is
+      unaffected, it lists everything flat since it isn't
+      space-constrained the way a phone's bottom bar is.
 
 ---
 
