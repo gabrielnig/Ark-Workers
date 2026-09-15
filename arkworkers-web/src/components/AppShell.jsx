@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { key: 'my-work', label: 'My Work', icon: '\u2713', to: '/my-work', primary: true, bottom: 'primary' },
   { key: 'messages', label: 'Messages', icon: '\u2709', bottom: 'primary' },
   { key: 'reports', label: 'Reports', icon: '\uD83D\uDCCA', to: '/reports', managerOnly: true, bottom: 'more' },
+  { key: 'staff', label: 'Staff', icon: '\uD83D\uDC65', to: '/staff', managerOnly: true, bottom: 'more' },
   { key: 'admin', label: 'Admin', icon: '\u2699', to: '/admin/requests', adminOnly: true, bottom: 'more' },
   { key: 'profile', label: 'Profile', icon: '\u25CF', bottom: 'more' },
 ];

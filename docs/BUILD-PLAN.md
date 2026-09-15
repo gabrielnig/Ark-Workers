@@ -441,10 +441,23 @@ for this phase and has nowhere to render yet.
 
 ## Phase 4 — Staff & org-structure admin
 
-- [ ] **Staff directory screen.** "Staff" is an admin-only nav
-      placeholder. Departments/roles are currently seed-data only
-      (`DepartmentRoleSeeder`) with no admin UI to view or edit workers,
-      their department memberships, or their per-department roles.
+- [x] **Staff directory screen, done 2026-09-16 (built quickly, urgent
+      request).** `StaffScreen.jsx` at `/staff`, manager+, lists every
+      approved worker (`email_verified_at` not null, someone still
+      pending admin approval belongs on the Admin requests screen, not
+      here) with their departments and per-department role, search by
+      name/email/department. New `StaffController::index`, a real
+      endpoint, not the capped-20 assignee/grant picker
+      (`UserController`) repurposed, that one's docblock already said
+      this was coming. Built directly from already-approved visual
+      patterns (card rows, badges) rather than a fresh mockup round,
+      given the explicit urgency. **View only, no editing yet**, see
+      the item below.
+- [ ] **Editing a worker's departments/roles, or promoting/demoting
+      Admin, from the Staff directory.** Explicitly requested
+      2026-09-16 ("admin needs to be able to assign user roles,
+      promote roles... give admin access"), not built yet, the
+      directory above is read-only for now.
 - [ ] **Department/Role management UI.** Both are already
       admin-manageable at the data layer (`department_role`,
       `department_user` pivot tables) — no UI exists to actually manage

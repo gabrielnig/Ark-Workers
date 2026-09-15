@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DepartmentController;
 use App\Http\Controllers\Api\InviteController;
 use App\Http\Controllers\Api\ReportController;
+use App\Http\Controllers\Api\StaffController;
 use App\Http\Controllers\Api\RoutineController;
 use App\Http\Controllers\Api\SpaceAccessGrantController;
 use App\Http\Controllers\Api\SpaceController;
@@ -75,6 +76,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/tasks/{task}/proofs/chunked/{session}/complete', [ChunkedUploadController::class, 'complete']);
 
     Route::get('/reports/daily-summary', [ReportController::class, 'dailySummary']);
+
+    Route::get('/staff', [StaffController::class, 'index']);
 
     Route::apiResource('vehicles', VehicleController::class);
     Route::get('/vehicles/{vehicle}/logs', [VehicleLogController::class, 'index']);

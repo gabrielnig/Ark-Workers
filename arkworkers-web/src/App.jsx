@@ -8,6 +8,7 @@ import SpacesScreen from './screens/SpacesScreen.jsx';
 import AssetDetailScreen from './screens/AssetDetailScreen.jsx';
 import AssetTypesScreen from './screens/AssetTypesScreen.jsx';
 import ReportsScreen from './screens/ReportsScreen.jsx';
+import StaffScreen from './screens/StaffScreen.jsx';
 import RequireAdmin from './components/RequireAdmin.jsx';
 import RequireAuth from './components/RequireAuth.jsx';
 import RequireManager from './components/RequireManager.jsx';
@@ -79,6 +80,14 @@ function App() {
           element={
             <RequireManager>
               <ReportsScreen />
+            </RequireManager>
+          }
+        />
+        <Route
+          path="/staff"
+          element={
+            <RequireManager>
+              <StaffScreen />
             </RequireManager>
           }
         />
