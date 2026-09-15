@@ -79,7 +79,10 @@ class AuthController extends Controller
             return response()->json(['message' => 'Too many attempts. Try again later.'], 429);
         }
 
-        $user = User::where('email', $data['email'])->first();
+        // Case-insensitive on purpose, see AccountRequestController's
+        // note on this. Covers accounts created before that
+        // normalization existed too, not just new ones.
+        $user = User::whereRaw('LOWER(email) = ?', [strtolower(trim($data['email']))])->first();
 
         if (! $user || ! Hash::check($data['password'], $user->password)) {
             RateLimiter::hit($key, self::DECAY_SECONDS);

@@ -102,6 +102,25 @@ class AuthTest extends TestCase
         $response->assertStatus(401)->assertJson(['message' => 'Invalid email or password.']);
     }
 
+    public function test_login_email_is_case_insensitive(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'Chidinma@Example.com',
+            'password' => Hash::make('a-strong-password'),
+            'email_verified_at' => now(),
+        ]);
+
+        $this->postJson('/api/auth/login', [
+            'email' => 'chidinma@example.com',
+            'password' => 'a-strong-password',
+        ])->assertOk();
+
+        $this->postJson('/api/auth/login', [
+            'email' => 'CHIDINMA@EXAMPLE.COM',
+            'password' => 'a-strong-password',
+        ])->assertOk();
+    }
+
     public function test_login_is_blocked_for_an_unverified_email(): void
     {
         $user = User::factory()->unverified()->create(['password' => Hash::make('a-strong-password')]);

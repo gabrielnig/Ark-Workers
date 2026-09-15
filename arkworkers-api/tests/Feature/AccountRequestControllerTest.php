@@ -128,6 +128,30 @@ class AccountRequestControllerTest extends TestCase
         ]))->assertStatus(422);
     }
 
+    public function test_cannot_sign_up_with_an_email_that_only_differs_by_case(): void
+    {
+        User::factory()->create(['email' => 'Taken@Example.com']);
+        $department = Department::factory()->create();
+
+        $this->postJson('/api/account-requests', $this->validPayload([
+            'email' => 'taken@example.com',
+            'department_ids' => [$department->id],
+        ]))->assertStatus(422);
+    }
+
+    public function test_signup_email_is_stored_lowercase_regardless_of_how_it_was_typed(): void
+    {
+        $department = Department::factory()->create();
+
+        $this->postJson('/api/account-requests', $this->validPayload([
+            'email' => 'Chidinma@Example.com',
+            'department_ids' => [$department->id],
+        ]))->assertCreated();
+
+        $this->assertDatabaseHas('users', ['email' => 'chidinma@example.com']);
+        $this->assertDatabaseMissing('users', ['email' => 'Chidinma@Example.com']);
+    }
+
     public function test_a_newly_signed_up_user_cannot_log_in_before_approval(): void
     {
         $department = Department::factory()->create();

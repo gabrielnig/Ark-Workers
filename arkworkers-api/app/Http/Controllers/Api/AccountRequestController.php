@@ -41,7 +41,16 @@ class AccountRequestController extends Controller
             'department_ids.*' => ['integer', 'exists:departments,id'],
         ])->validate();
 
-        if (User::where('email', $data['email'])->exists()) {
+        // Emails are effectively case-insensitive everywhere else
+        // (mail servers, every other login system), but a plain
+        // string column is not, "John@x.com" and "john@x.com" would
+        // otherwise silently create two different accounts. Normalize
+        // once here so every account going forward is consistent,
+        // AuthController::login does a case-insensitive lookup
+        // separately to also cover accounts created before this fix.
+        $data['email'] = strtolower(trim($data['email']));
+
+        if (User::whereRaw('LOWER(email) = ?', [$data['email']])->exists()) {
             return response()->json([
                 'message' => 'An account with this email already exists.',
             ], 422);

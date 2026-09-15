@@ -369,6 +369,17 @@ for this phase and has nowhere to render yet.
       made with a working mailer in hand, not by default because the
       mailer still isn't finished. Don't let this quietly become
       permanent.
+- [x] **Real bug fixed: login email lookup was case-sensitive, done
+      2026-09-16.** Reported as "an approved worker can't log in,
+      wrong email or password", diagnosed to a genuine bug, not user
+      error, nowhere in sign-up or login normalized email casing, so
+      "John@x.com" and "john@x.com" were treated as different accounts
+      entirely. `AccountRequestController::store` now lowercases the
+      email before the duplicate check and before creating the `User`
+      row. `AuthController::login` does a case-insensitive lookup
+      (`LOWER(email) = ?`), which also covers accounts created before
+      this fix, not just new ones. 3 new tests, full suite green
+      (209 passed).
 
 ---
 
