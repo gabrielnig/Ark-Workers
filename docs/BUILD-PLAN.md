@@ -39,6 +39,15 @@ matters if this data is unrecoverable.
       breaking `@capacitor/cli` bump, risking the working Android setup
       for a vulnerability in an inactive code path. Deferred to when
       iOS actually gets prioritized, not left as unreviewed noise.
+- [ ] **Finish the SMTP/mailer setup (Brevo), paused mid-way
+      2026-09-15, must not still be unfinished at project conclusion.**
+      Explicitly confirmed by Unique as a hard requirement before the
+      project is considered done, not optional polish. Was mid-setup
+      (domain authentication + SMTP key generated) when deploy
+      permission issues took priority; picking this back up is what
+      unblocks properly re-securing Phase 2's sign-up redesign below,
+      which is itself an explicitly temporary stopgap that depends on
+      this getting finished.
 
 ---
 
@@ -254,12 +263,27 @@ for this phase and has nowhere to render yet.
       17 new ones covering the full password/approval/rejection/login
       cycle. Full suite green (165 passed).
 
-      **Known gap, worth a decision later:** the sign-up email itself
-      is now never verified in any way, previously the invite-link
-      click proved the applicant controlled that inbox. Low risk
-      today since Admin still reviews every request by name/phone/
-      department before approving, but worth knowing this trade was
-      made on purpose, not overlooked.
+      **Explicitly temporary, not a final decision:** Unique confirmed
+      2026-09-15 this whole password-at-signup/no-email-verification
+      design is a deliberate stopgap for the build/testing period
+      only, to let testers get in without the mailer being finished.
+      It is not meant to still be the flow at launch. The sign-up
+      email itself is never verified under this flow, previously the
+      invite-link click proved the applicant controlled that inbox,
+      that check is gone for now. Low risk today since Admin still
+      reviews every request by name/phone/department before approving.
+
+      **Before this project is considered done, this needs revisiting**
+      once the Brevo SMTP setup (paused mid-way this session, see the
+      chat history around 2026-09-15) is actually finished and
+      confirmed delivering real email. At that point, come back to
+      this decision and either restore real email verification onto
+      this flow (e.g. re-enable the OTP step, or bring back an
+      invite-link click as proof of inbox ownership) or make a
+      deliberate informed call to keep it password-only, but a call
+      made with a working mailer in hand, not by default because the
+      mailer still isn't finished. Don't let this quietly become
+      permanent.
 
 ---
 
