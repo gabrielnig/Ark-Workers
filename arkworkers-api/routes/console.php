@@ -19,3 +19,8 @@ Schedule::command('model:prune', ['--model' => Asset::class])->daily();
 // completed) and their orphaned chunk files 24 hours after the
 // session's expiry, per ChunkUploadSession::prunable().
 Schedule::command('model:prune', ['--model' => ChunkUploadSession::class])->daily();
+
+// PRD.md §5's document-expiry alerting (BUILD-PLAN.md Phase 3). The
+// Vehicles screen shows this live regardless, this is the separate
+// periodic email digest so an Admin doesn't have to remember to look.
+Schedule::command('vehicles:document-expiry-digest')->dailyAt('07:00');

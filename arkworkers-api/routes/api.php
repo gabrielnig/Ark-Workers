@@ -13,6 +13,8 @@ use App\Http\Controllers\Api\SpaceController;
 use App\Http\Controllers\Api\ChunkedUploadController;
 use App\Http\Controllers\Api\TaskController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\VehicleController;
+use App\Http\Controllers\Api\VehicleLogController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -71,6 +73,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/tasks/{task}/proofs/chunked/{session}/complete', [ChunkedUploadController::class, 'complete']);
 
     Route::get('/reports/daily-summary', [ReportController::class, 'dailySummary']);
+
+    Route::apiResource('vehicles', VehicleController::class);
+    Route::get('/vehicles/{vehicle}/logs', [VehicleLogController::class, 'index']);
+    Route::post('/vehicles/{vehicle}/logs', [VehicleLogController::class, 'store']);
+    Route::delete('/vehicle-logs/{vehicleLog}', [VehicleLogController::class, 'destroy']);
 
     Route::get('/account-requests', [AccountRequestController::class, 'index']);
     Route::post('/account-requests/{user}/approve', [AccountRequestController::class, 'approve']);

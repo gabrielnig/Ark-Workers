@@ -48,6 +48,29 @@ matters if this data is unrecoverable.
       unblocks properly re-securing Phase 2's sign-up redesign below,
       which is itself an explicitly temporary stopgap that depends on
       this getting finished.
+- [ ] **URGENT, reported 2026-09-16: session appears to not persist
+      across a page reload, and Admin approve/reject was failing
+      completely silently.** Two separate things:
+      1. The silent-failure half is fixed, done 2026-09-16.
+         `AdminRequestsScreen`'s approve/reject had no error handling
+         at all, any failure (auth, network, validation) looked
+         identical to nothing happening when clicked. Now surfaces a
+         real error message, and a 401/419 specifically gets a
+         "your session looks expired" message rather than a generic
+         one, since that's almost certainly what a silent approve
+         click actually was.
+      2. **The actual session-persistence cause is still
+         unconfirmed, needs a live check on the VPS, not fixable from
+         a read of the repo alone.** Cookie config looked correct
+         when last verified directly against production (`domain=
+         .arkworkers.app; secure; httponly; samesite=lax` on both
+         `arkworkers-session` and `XSRF-TOKEN`, `Max-Age=7200`).
+         Strongest lead: this started being noticed right around the
+         manual `.env` edits for Brevo SMTP, worth specifically
+         checking `APP_KEY` is still intact and `SESSION_DOMAIN`
+         wasn't accidentally touched, a changed `APP_KEY` alone would
+         make every previously-issued session cookie unreadable and
+         match this exact symptom.
 
 ---
 
@@ -351,19 +374,31 @@ for this phase and has nowhere to render yet.
 
 ## Phase 3 — Vehicle Fleet
 
-PRD §5's full requirement (6+ vehicles, fuel/mileage/service logs,
-document expiry tracking) — the `vehicles` table migration exists and
-nothing else does.
-
-- [ ] **`VehicleController` + routes.** Doesn't exist yet.
-- [ ] **Vehicle logs backend** (fuel/mileage/service, per
-      `ARCHITECTURE.md` §3's `vehicle_logs` table — check whether that
-      migration exists yet or still needs writing).
-- [ ] **Document expiry tracking + alerting** — insurance,
-      roadworthiness, license, registration papers (PRD §5). This needs
-      a scheduled job, same pattern as the eventual routine due-date
-      checks.
-- [ ] **Vehicles screen (frontend, admin-only)** — nav placeholder only.
+- [x] **Backend done, 2026-09-16.** `VehicleController` (full CRUD),
+      `VehicleLogController` (fuel/mileage/service), both with real
+      policies: fleet management is manager+ (`VehiclePolicy`), but
+      the assigned driver can additionally view their own vehicle and
+      log against it themselves, without needing management
+      permission, same reasoning as a worker completing their own
+      Task. Added a `name` field to `vehicles` (was plate-number-only,
+      nothing else in the app identifies things by code alone) and a
+      `logged_by_user_id` on `vehicle_logs` (audit fact, not PRD-
+      required but matches `tasks.completed_by`'s existing pattern).
+      Document-expiry tracking is computed live on every response
+      (`Vehicle::expiredDocuments()`/`expiringSoonDocuments()`,
+      30-day warning window) rather than needing a job to run first.
+      Alerting is a separate daily scheduled command,
+      `vehicles:document-expiry-digest`, emails every Admin a digest,
+      real infrastructure that works and is tested today, but actual
+      delivery depends on the Brevo mailer being finished (Phase 0),
+      the live-computed badges are the reliable path until then. 18
+      new tests, full suite green (184 passed).
+- [ ] **Frontend not built yet.** Mockup shown and pending approval,
+      list screen with expiry-status badges + a detail screen for
+      documents and logs, same list→detail pattern as Spaces→Asset.
+      "Vehicles screen, admin-only" per the original plan, worth
+      confirming that's still right given `VehiclePolicy` already
+      also allows the assigned driver in, not just Admin/manager.
 
 ---
 

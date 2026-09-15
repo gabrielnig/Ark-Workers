@@ -5,9 +5,24 @@ import {
   approveAccountRequest,
   rejectAccountRequest,
 } from '../api/accountRequests.js';
+import Toast from '../components/Toast.jsx';
 import './AdminRequestsScreen.css';
 
 const SIDEBAR_ITEMS = ['Dashboard', 'Pending requests', 'Workers', 'Spaces', 'Tasks', 'Settings'];
+
+/**
+ * A failed approve/reject used to fail completely silently, no catch
+ * anywhere, so an auth/session problem looked identical to nothing
+ * happening at all when clicked. 401/419 specifically get a message
+ * pointing at re-logging in, since those mean the click never
+ * actually reached the server as this admin.
+ */
+function describeError(err, action) {
+  if (err.status === 401 || err.status === 419) {
+    return 'Your session looks expired. Try refreshing the page and signing in again, then retry.';
+  }
+  return err.body?.message || `Could not ${action} this request. Please try again.`;
+}
 
 function timeAgo(dateString) {
   const seconds = Math.floor((Date.now() - new Date(dateString).getTime()) / 1000);
@@ -63,6 +78,8 @@ export default function AdminRequestsScreen() {
   const [activeDepartment, setActiveDepartment] = useState('All departments');
   const [selectedIds, setSelectedIds] = useState([]);
   const [busyIds, setBusyIds] = useState([]);
+  const [errorMessage, setErrorMessage] = useState(null);
+  const [toastMessage, setToastMessage] = useState(null);
 
   const departmentNames = useMemo(() => {
     if (!requests) return [];
@@ -87,10 +104,14 @@ export default function AdminRequestsScreen() {
 
   async function handleApprove(id) {
     setBusyIds((ids) => [...ids, id]);
+    setErrorMessage(null);
     try {
       await approveAccountRequest(id);
       await queryClient.invalidateQueries({ queryKey: ['accountRequests'] });
       setSelectedIds((ids) => ids.filter((i) => i !== id));
+      setToastMessage('Approved.');
+    } catch (err) {
+      setErrorMessage(describeError(err, 'approve'));
     } finally {
       setBusyIds((ids) => ids.filter((i) => i !== id));
     }
@@ -98,10 +119,14 @@ export default function AdminRequestsScreen() {
 
   async function handleReject(id) {
     setBusyIds((ids) => [...ids, id]);
+    setErrorMessage(null);
     try {
       await rejectAccountRequest(id);
       await queryClient.invalidateQueries({ queryKey: ['accountRequests'] });
       setSelectedIds((ids) => ids.filter((i) => i !== id));
+      setToastMessage('Rejected.');
+    } catch (err) {
+      setErrorMessage(describeError(err, 'reject'));
     } finally {
       setBusyIds((ids) => ids.filter((i) => i !== id));
     }
@@ -109,10 +134,14 @@ export default function AdminRequestsScreen() {
 
   async function handleApproveSelected() {
     setBusyIds((ids) => [...ids, ...selectedIds]);
+    setErrorMessage(null);
     try {
       await Promise.all(selectedIds.map((id) => approveAccountRequest(id)));
       await queryClient.invalidateQueries({ queryKey: ['accountRequests'] });
+      setToastMessage('Approved.');
       setSelectedIds([]);
+    } catch (err) {
+      setErrorMessage(describeError(err, 'approve'));
     } finally {
       setBusyIds([]);
     }
@@ -132,6 +161,7 @@ export default function AdminRequestsScreen() {
 
   return (
     <div className="admin-shell">
+      <Toast message={toastMessage} onDismiss={() => setToastMessage(null)} />
       <aside className="admin-sidebar">
         <div className="admin-sidebar-brand">
           <img src="/images/logo-icon.png" alt="ArkWorkers" />
@@ -157,6 +187,8 @@ export default function AdminRequestsScreen() {
             </p>
           </div>
         </div>
+
+        {errorMessage && <div className="form-error" style={{ margin: '0 0 16px' }}>{errorMessage}</div>}
 
         <div className="admin-stat-row">
           <div className="admin-stat-card">
