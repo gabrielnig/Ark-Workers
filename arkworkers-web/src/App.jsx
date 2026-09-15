@@ -9,6 +9,8 @@ import AssetDetailScreen from './screens/AssetDetailScreen.jsx';
 import AssetTypesScreen from './screens/AssetTypesScreen.jsx';
 import ReportsScreen from './screens/ReportsScreen.jsx';
 import StaffScreen from './screens/StaffScreen.jsx';
+import VehiclesScreen from './screens/VehiclesScreen.jsx';
+import VehicleDetailScreen from './screens/VehicleDetailScreen.jsx';
 import RequireAdmin from './components/RequireAdmin.jsx';
 import RequireAuth from './components/RequireAuth.jsx';
 import RequireManager from './components/RequireManager.jsx';
@@ -89,6 +91,22 @@ function App() {
             <RequireManager>
               <StaffScreen />
             </RequireManager>
+          }
+        />
+        <Route
+          path="/vehicles"
+          element={
+            <RequireAuth>
+              <VehiclesScreen />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/vehicles/:vehicleId"
+          element={
+            <RequireAuth>
+              <VehicleDetailScreen />
+            </RequireAuth>
           }
         />
         <Route path="/" element={<RequireAuth><MyWorkScreen /></RequireAuth>} />

@@ -393,12 +393,23 @@ for this phase and has nowhere to render yet.
       delivery depends on the Brevo mailer being finished (Phase 0),
       the live-computed badges are the reliable path until then. 18
       new tests, full suite green (184 passed).
-- [ ] **Frontend not built yet.** Mockup shown and pending approval,
-      list screen with expiry-status badges + a detail screen for
-      documents and logs, same list→detail pattern as Spaces→Asset.
-      "Vehicles screen, admin-only" per the original plan, worth
-      confirming that's still right given `VehiclePolicy` already
-      also allows the assigned driver in, not just Admin/manager.
+- [x] **Frontend done, 2026-09-16.** `VehiclesScreen.jsx` (list,
+      `/vehicles`, viewable by anyone per `VehiclePolicy::viewAny`,
+      "+ Add vehicle" manager+) and `VehicleDetailScreen.jsx`
+      (`/vehicles/:vehicleId`), same list→detail pattern as
+      Spaces→Asset. Not Admin-gated at the route level, matching
+      `VehiclePolicy` already allowing the assigned driver in too,
+      write actions inside the screen are individually gated
+      (rename/delete manager+, log/report-a-problem driver-or-manager,
+      resolution fields manager-only) rather than the whole screen.
+      Documents section shows all four types with expired/soon/valid/
+      not-set badges and a manager+ edit form. Logs section with
+      type/value/date + delete. Repairs & problems section is the
+      full incident UI: report → expand to see description, before/
+      after photo grids (upload via a plain file input, matches the
+      backend's plain synchronous upload, no chunking), and a
+      manager-only "Update repair details" form for status/mechanic/
+      parts/cost. Added to the More nav drawer.
 - [x] **Vehicle repair/incident tracking, backend done, 2026-09-16.**
       Explicit request: beyond the simple fuel/mileage/service value
       log, a full "report a broken part → mechanic → parts → cost →
@@ -413,9 +424,8 @@ for this phase and has nowhere to render yet.
       session `ChunkedUploadController` uses for Task proofs, that
       machinery exists for large video proofs over a flaky field
       connection, a handful of repair photos don't need it. 11 new
-      tests, full suite green (195 passed). **Not yet wired into any
-      UI**, this is backend-only until the Vehicles frontend above
-      gets built.
+      tests, full suite green (195 passed). Now wired into
+      `VehicleDetailScreen.jsx` above.
 - [x] **Dummy content seeder, done 2026-09-16.** New
       `database/seeders/DummyContentSeeder.php`, run manually via
       `php artisan db:seed --class=DummyContentSeeder`, not part of
